@@ -6,6 +6,9 @@ import { PropertiesPanel } from './PropertiesPanel';
 import { BottomPanel } from './BottomPanel';
 import { ResizableDivider } from '@/components';
 import { useKeyboardShortcuts } from './useKeyboardShortcuts';
+import { ShortcutsHelpDialog } from './ShortcutsHelpDialog';
+import { ErrorBoundary } from './ErrorBoundary';
+import { ToastContainer } from '@/components/Toast';
 import styles from './editor.module.css';
 
 const LS_KEY = 'mlp:layout';
@@ -43,6 +46,12 @@ const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(ma
 export const EditorPage = () => {
   useKeyboardShortcuts();
   const [prefs, setPrefs] = useState<LayoutPrefs>(() => loadPrefs());
+  const [helpOpen, setHelpOpen] = useState(false);
+  useEffect(() => {
+    const onToggle = () => setHelpOpen((v) => !v);
+    window.addEventListener('mlp:toggleShortcutsHelp', onToggle);
+    return () => window.removeEventListener('mlp:toggleShortcutsHelp', onToggle);
+  }, []);
 
   useEffect(() => {
     try {
@@ -61,6 +70,7 @@ export const EditorPage = () => {
   const toggleCollapsed = () => setPrefs((p) => ({ ...p, bottomCollapsed: !p.bottomCollapsed }));
 
   return (
+    <ErrorBoundary>
     <div
       className={styles.shell}
       style={{
@@ -88,6 +98,9 @@ export const EditorPage = () => {
         />
       ) : null}
       <BottomPanel collapsed={prefs.bottomCollapsed} onToggleCollapsed={toggleCollapsed} />
+      <ShortcutsHelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <ToastContainer />
     </div>
+    </ErrorBoundary>
   );
 };

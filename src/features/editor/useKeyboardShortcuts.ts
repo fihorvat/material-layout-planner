@@ -65,6 +65,10 @@ export const useKeyboardShortcuts = (): void => {
         } else if (key === 's') {
           const es = useEditorStore.getState();
           es.setSnap(!es.snapEnabled);
+        } else if (key === 'm') {
+          useEditorStore.getState().setActiveTool('patternOrigin');
+        } else if (e.key === '?' || e.key === 'F1') {
+          window.dispatchEvent(new CustomEvent('mlp:toggleShortcutsHelp'));
         }
       }
     };

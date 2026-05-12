@@ -61,8 +61,8 @@ This is the master index for all implementation tasks. Each task is a self-conta
 | T33 | PDF cut list & cutting diagram pages | M8 | T31, T28, T29 | review |
 | T34 | Background image import & calibration | M9 | T06 | review |
 | T35 | Project dashboard & JSON import/export | M10 | T04 | review |
-| T36 | Keyboard shortcuts & polish | M10 | T09, T35 | todo |
-| T37 | Acceptance testing & bug-fix pass | M10 | all above | todo |
+| T36 | Keyboard shortcuts & polish | M10 | T09, T35 | review |
+| T37 | Acceptance testing & bug-fix pass | M10 | all above | review |
 
 ## Milestone mapping
 
