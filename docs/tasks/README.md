@@ -52,10 +52,10 @@ This is the master index for all implementation tasks. Each task is a self-conta
 | T24 | Edge rules & physical overlap | M5 | T23, T18 | review |
 | T25 | Material layout rendering | M5 | T23, T24 | review |
 | T26 | Validation & warnings system | M5 | T25 | review |
-| T27 | Optimization engine (worker) | M6 | T25, T26 | todo |
-| T28 | Cut list & grouping | M7 | T25 | todo |
-| T29 | Cutting diagrams | M7 | T28 | todo |
-| T30 | Waste calculation & layout stats | M7 | T25 | todo |
+| T27 | Optimization engine (worker) | M6 | T25, T26 | review |
+| T28 | Cut list & grouping | M7 | T25 | review |
+| T29 | Cutting diagrams | M7 | T28 | review |
+| T30 | Waste calculation & layout stats | M7 | T25 | review |
 | T31 | PDF infrastructure & summary/instructions pages | M8 | T28, T30 | todo |
 | T32 | PDF technical drawing & material layout pages | M8 | T31, T25 | todo |
 | T33 | PDF cut list & cutting diagram pages | M8 | T31, T28, T29 | todo |

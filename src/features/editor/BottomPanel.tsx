@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Tabs, type TabItem } from '@/components';
 import { SurfaceList } from '@/features/surfaces/SurfaceList';
+import { MaterialCutListTable } from '@/features/materialLayout/MaterialCutListTable';
+import { ProjectStatsPanel } from '@/features/materialLayout/ProjectStatsPanel';
+import { WarningsPanel } from './WarningsPanel';
 import styles from './editor.module.css';
 
 const TABS: TabItem[] = [
@@ -49,11 +52,11 @@ const BottomBody = ({ id }: { id: string }) => {
     case 'layouts':
       return <p>No layouts yet. Assign a material and pattern to a surface.</p>;
     case 'cutList':
-      return <p>No cut list yet. Generate a material layout first.</p>;
+      return <MaterialCutListTable />;
     case 'warnings':
-      return <p>No warnings.</p>;
+      return <WarningsPanel />;
     case 'stats':
-      return <p>No stats yet.</p>;
+      return <ProjectStatsPanel />;
     default:
       return null;
   }
