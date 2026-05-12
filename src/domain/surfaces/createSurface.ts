@@ -1,0 +1,41 @@
+import type { Point2D, Surface, RectangleEntity, PolygonEntity } from '@/types';
+import { defaultSurfaceStyle } from '@/types';
+import { ensureCCW, ensureCW } from '@/domain/geometry';
+import { newSurfaceId } from '@/domain/ids';
+
+export type CreateSurfaceInput = {
+  name: string;
+  outerBoundary: Point2D[];
+  holes?: Point2D[][];
+};
+
+export const createSurface = (input: CreateSurfaceInput): Surface => {
+  return {
+    id: newSurfaceId(),
+    name: input.name,
+    outerBoundary: ensureCCW(input.outerBoundary),
+    holes: (input.holes ?? []).map((h) => ensureCW(h)),
+    materialId: null,
+    placementPatternId: null,
+    edgeRules: [],
+    connections: [],
+    showName: true,
+    showDimensions: false,
+    showArea: false,
+    style: defaultSurfaceStyle(),
+  };
+};
+
+export const rectangleToSurface = (rect: RectangleEntity, name: string): Surface => {
+  const points = [
+    { x: rect.origin.x, y: rect.origin.y },
+    { x: rect.origin.x + rect.widthMm, y: rect.origin.y },
+    { x: rect.origin.x + rect.widthMm, y: rect.origin.y + rect.heightMm },
+    { x: rect.origin.x, y: rect.origin.y + rect.heightMm },
+  ];
+  return createSurface({ name, outerBoundary: points });
+};
+
+export const polygonToSurface = (poly: PolygonEntity, name: string): Surface => {
+  return createSurface({ name, outerBoundary: poly.points });
+};

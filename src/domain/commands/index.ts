@@ -16,3 +16,18 @@ export {
   updateLabelCommand,
   deleteLabelCommand,
 } from './builtin/labelCommands';
+export {
+  createSurfaceCommand,
+  updateSurfaceCommand,
+  renameSurfaceCommand,
+  deleteSurfaceCommand,
+  addSurfaceHoleCommand,
+  removeSurfaceHoleCommand,
+  updateSurfaceHoleCommand,
+} from './builtin/surfaceCommands';
+export { splitSurfaceCommand } from './builtin/splitSurfaceCommand';
+export {
+  addConnectionCommand,
+  updateConnectionCommand,
+  deleteConnectionCommand,
+} from './builtin/connectionCommands';

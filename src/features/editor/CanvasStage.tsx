@@ -8,6 +8,10 @@ import { useResizeObserver } from './canvas/useResizeObserver';
 import { useViewportInteractions } from './canvas/useViewportInteractions';
 import { useSelectTool } from '@/features/drawingTools/SelectTool';
 import { ConstructionEntities } from '@/features/drawingTools/ConstructionEntities';
+import { SurfaceLayer } from '@/features/surfaces/SurfaceLayer';
+import { LabelRenderer } from '@/features/drawingTools/label/LabelRenderer';
+import { DimensionRenderer } from '@/features/drawingTools/dimension/DimensionRenderer';
+import { useProjectStore } from '@/state';
 import styles from './editor.module.css';
 
 export const CanvasStage = () => {
@@ -18,6 +22,7 @@ export const CanvasStage = () => {
   const activeTool = useEditorStore((s) => s.activeTool);
   const handlers = useViewportInteractions(stageRef);
   const select = useSelectTool(stageRef);
+  const project = useProjectStore((s) => s.project);
 
   const isSelect = activeTool === 'select';
   const onMouseDown = (e: { evt: MouseEvent }) => {
@@ -61,6 +66,9 @@ export const CanvasStage = () => {
             <GridLayer widthPx={width} heightPx={height} />
             <LayersRoot
               construction={<ConstructionEntities />}
+              surfaces={<SurfaceLayer />}
+              dimensions={<DimensionRenderer dimensions={project.dimensions} project={project} />}
+              labels={<LabelRenderer labels={project.labels} project={project} />}
               helpers={select.overlays}
             />
           </Layer>

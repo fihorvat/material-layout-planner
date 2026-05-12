@@ -40,10 +40,10 @@ This is the master index for all implementation tasks. Each task is a self-conta
 | T12 | Polygon tool | M2 | T07, T08, T09 | review |
 | T13 | Dimension tool & rendering | M2 | T07, T10 | review |
 | T14 | Label tool | M2 | T09 | review |
-| T15 | Surfaces (create, render, validate) | M3 | T11, T12, T13 | todo |
-| T16 | Openings | M3 | T15 | todo |
-| T17 | Surface splitting | M3 | T15 | todo |
-| T18 | Surface connections | M3 | T15 | todo |
+| T15 | Surfaces (create, render, validate) | M3 | T11, T12, T13 | review |
+| T16 | Openings | M3 | T15 | review |
+| T17 | Surface splitting | M3 | T15 | review |
+| T18 | Surface connections | M3 | T15 | review |
 | T19 | Materials (model, editor, list) | M4 | T15 | todo |
 | T20 | Placement patterns (model & panel) | M4 | T19 | todo |
 | T21 | Manual offset (numeric + mouse) | M4 | T20 | todo |

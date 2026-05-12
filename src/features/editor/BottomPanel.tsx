@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Tabs, type TabItem } from '@/components';
+import { SurfaceList } from '@/features/surfaces/SurfaceList';
 import styles from './editor.module.css';
 
 const TABS: TabItem[] = [
@@ -42,7 +43,7 @@ export const BottomPanel = ({ collapsed, onToggleCollapsed }: BottomPanelProps) 
 const BottomBody = ({ id }: { id: string }) => {
   switch (id) {
     case 'surfaces':
-      return <p>No surfaces yet. Draw geometry and convert it into a surface.</p>;
+      return <SurfaceList />;
     case 'materials':
       return <p>No materials yet. Create a material in the Materials panel.</p>;
     case 'layouts':
