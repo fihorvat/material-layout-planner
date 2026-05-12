@@ -34,12 +34,12 @@ This is the master index for all implementation tasks. Each task is a self-conta
 | T06 | Canvas stage (Konva, grid, pan/zoom) | M1 | T05 | review |
 | T07 | Geometry utilities & unit parser | M2 | T02 | review |
 | T08 | Command pattern & undo/redo | M2 | T03 | review |
-| T09 | Select tool | M2 | T06, T08 | todo |
-| T10 | Line tool | M2 | T07, T08, T09 | todo |
-| T11 | Rectangle tool | M2 | T07, T08, T09 | todo |
-| T12 | Polygon tool | M2 | T07, T08, T09 | todo |
-| T13 | Dimension tool & rendering | M2 | T07, T10 | todo |
-| T14 | Label tool | M2 | T09 | todo |
+| T09 | Select tool | M2 | T06, T08 | review |
+| T10 | Line tool | M2 | T07, T08, T09 | review |
+| T11 | Rectangle tool | M2 | T07, T08, T09 | review |
+| T12 | Polygon tool | M2 | T07, T08, T09 | review |
+| T13 | Dimension tool & rendering | M2 | T07, T10 | review |
+| T14 | Label tool | M2 | T09 | review |
 | T15 | Surfaces (create, render, validate) | M3 | T11, T12, T13 | todo |
 | T16 | Openings | M3 | T15 | todo |
 | T17 | Surface splitting | M3 | T15 | todo |

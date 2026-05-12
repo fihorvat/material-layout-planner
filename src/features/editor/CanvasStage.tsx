@@ -6,6 +6,8 @@ import { GridLayer } from './canvas/GridLayer';
 import { LayersRoot } from './canvas/LayersRoot';
 import { useResizeObserver } from './canvas/useResizeObserver';
 import { useViewportInteractions } from './canvas/useViewportInteractions';
+import { useSelectTool } from '@/features/drawingTools/SelectTool';
+import { ConstructionEntities } from '@/features/drawingTools/ConstructionEntities';
 import styles from './editor.module.css';
 
 export const CanvasStage = () => {
@@ -13,7 +15,29 @@ export const CanvasStage = () => {
   const stageRef = useRef<Konva.Stage | null>(null);
   const { width, height } = useResizeObserver(containerRef);
   const viewport = useEditorStore((s) => s.viewport);
+  const activeTool = useEditorStore((s) => s.activeTool);
   const handlers = useViewportInteractions(stageRef);
+  const select = useSelectTool(stageRef);
+
+  const isSelect = activeTool === 'select';
+  const onMouseDown = (e: { evt: MouseEvent }) => {
+    handlers.onMouseDown(e);
+    if (isSelect) {
+      select.onStagePointerDown(e as unknown as { evt: PointerEvent });
+    }
+  };
+  const onMouseMove = (e: { evt: MouseEvent }) => {
+    handlers.onMouseMove(e);
+    if (isSelect) {
+      select.onStagePointerMove();
+    }
+  };
+  const onMouseUp = (e: { evt: MouseEvent }) => {
+    handlers.onMouseUp();
+    if (isSelect) {
+      select.onStagePointerUp(e as unknown as { evt: PointerEvent });
+    }
+  };
 
   return (
     <div ref={containerRef} className={styles.canvasArea} role="region" aria-label="Drawing canvas">
@@ -23,9 +47,9 @@ export const CanvasStage = () => {
           width={width}
           height={height}
           onWheel={handlers.onWheel}
-          onMouseDown={handlers.onMouseDown}
-          onMouseMove={handlers.onMouseMove}
-          onMouseUp={handlers.onMouseUp}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
         >
           <Layer
             name="world"
@@ -35,7 +59,10 @@ export const CanvasStage = () => {
             scaleY={viewport.scale}
           >
             <GridLayer widthPx={width} heightPx={height} />
-            <LayersRoot />
+            <LayersRoot
+              construction={<ConstructionEntities />}
+              helpers={select.overlays}
+            />
           </Layer>
         </Stage>
       ) : null}

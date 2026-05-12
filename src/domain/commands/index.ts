@@ -6,3 +6,13 @@ export { addDrawingEntityCommand } from './builtin/addDrawingEntityCommand';
 export { deleteDrawingEntityCommand } from './builtin/deleteDrawingEntityCommand';
 export { updateDrawingEntityCommand } from './builtin/updateDrawingEntityCommand';
 export { changeProjectSettingsCommand } from './builtin/changeProjectSettingsCommand';
+export {
+  addDimensionCommand,
+  updateDimensionCommand,
+  deleteDimensionCommand,
+} from './builtin/dimensionCommands';
+export {
+  addLabelCommand,
+  updateLabelCommand,
+  deleteLabelCommand,
+} from './builtin/labelCommands';
