@@ -2,7 +2,7 @@
 
 - **Milestone**: M1
 - **Depends on**: T03
-- **Status**: todo
+- **Status**: review
 
 ## Goal
 
@@ -205,4 +205,9 @@ npm run dev   # manual: click tools, drag dividers, toggle grid
 
 ## Progress Log
 
-_(append entries here)_
+### 2026-05-12 19:30 — cascade
+- status: review
+- summary: built editor shell with toolbar, tool rail, properties + bottom panels, resizable dividers, layout prefs persisted to localStorage
+- commits: uncommitted
+- next: T06 canvas stage
+- blockers: none

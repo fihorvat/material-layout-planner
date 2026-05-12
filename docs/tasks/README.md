@@ -30,10 +30,10 @@ This is the master index for all implementation tasks. Each task is a self-conta
 | T02 | Type system & domain models | M1 | T01 | review |
 | T03 | State management (Zustand stores) | M1 | T02 | review |
 | T04 | Local persistence (IndexedDB + JSON) | M1 | T02, T03 | review |
-| T05 | Editor shell layout | M1 | T03 | todo |
-| T06 | Canvas stage (Konva, grid, pan/zoom) | M1 | T05 | todo |
+| T05 | Editor shell layout | M1 | T03 | review |
+| T06 | Canvas stage (Konva, grid, pan/zoom) | M1 | T05 | review |
 | T07 | Geometry utilities & unit parser | M2 | T02 | review |
-| T08 | Command pattern & undo/redo | M2 | T03 | todo |
+| T08 | Command pattern & undo/redo | M2 | T03 | review |
 | T09 | Select tool | M2 | T06, T08 | todo |
 | T10 | Line tool | M2 | T07, T08, T09 | todo |
 | T11 | Rectangle tool | M2 | T07, T08, T09 | todo |

@@ -2,7 +2,7 @@
 
 - **Milestone**: M2
 - **Depends on**: T03
-- **Status**: todo
+- **Status**: review
 
 ## Goal
 
@@ -187,4 +187,9 @@ npm run dev   # manual: trigger an addDrawingEntity command, ctrl+z, ctrl+shift+
 
 ## Progress Log
 
-_(append entries here)_
+### 2026-05-12 19:34 — cascade
+- status: review
+- summary: implemented dispatcher, undo/redo, command registry, 5 builtin commands, keyboard shortcuts, tests covering inverse semantics & maxDepth
+- commits: uncommitted
+- next: T09 select tool
+- blockers: none

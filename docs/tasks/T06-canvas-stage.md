@@ -2,7 +2,7 @@
 
 - **Milestone**: M1
 - **Depends on**: T05
-- **Status**: todo
+- **Status**: review
 
 ## Goal
 
@@ -154,4 +154,9 @@ npm run dev   # manual zoom, pan, grid toggle
 
 ## Progress Log
 
-_(append entries here)_
+### 2026-05-12 19:31 — cascade
+- status: review
+- summary: konva stage with viewport interactions, grid, layers root, snap module, react-konva mock for tests
+- commits: uncommitted
+- next: T08 command pattern
+- blockers: none

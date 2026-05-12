@@ -1,0 +1,113 @@
+.iconButton {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: var(--mlp-radius-md);
+  background: transparent;
+  cursor: pointer;
+  color: var(--mlp-text);
+  transition: background-color 80ms ease, border-color 80ms ease;
+}
+.iconButton:hover:not(:disabled) {
+  background: var(--mlp-surface-2);
+}
+.iconButton:focus-visible {
+  outline: 2px solid var(--mlp-accent);
+  outline-offset: 1px;
+}
+.iconButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.iconButtonActive {
+  background: var(--mlp-accent-soft);
+  border-color: var(--mlp-accent);
+  color: var(--mlp-accent);
+}
+
+.tooltipWrapper {
+  position: relative;
+  display: inline-flex;
+}
+.tooltip {
+  position: absolute;
+  z-index: 1000;
+  top: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: #111827;
+  color: #f9fafb;
+  padding: 4px 8px;
+  border-radius: var(--mlp-radius-sm);
+  font-size: 12px;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.tooltipShortcut {
+  margin-left: 6px;
+  opacity: 0.7;
+  font-family: var(--mlp-font-mono);
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--mlp-border);
+  align-items: stretch;
+}
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--mlp-muted);
+  font-size: 13px;
+}
+.tab:hover {
+  color: var(--mlp-text);
+}
+.tab:focus-visible {
+  outline: 2px solid var(--mlp-accent);
+  outline-offset: -2px;
+}
+.tabActive {
+  color: var(--mlp-text);
+  border-bottom-color: var(--mlp-accent);
+}
+.badge {
+  background: var(--mlp-accent);
+  color: white;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 11px;
+  min-width: 16px;
+  text-align: center;
+}
+
+.dividerV {
+  width: 4px;
+  cursor: col-resize;
+  background: transparent;
+  flex: 0 0 4px;
+}
+.dividerV:hover, .dividerV:focus-visible {
+  background: var(--mlp-border-strong);
+  outline: none;
+}
+.dividerH {
+  height: 4px;
+  cursor: row-resize;
+  background: transparent;
+}
+.dividerH:hover, .dividerH:focus-visible {
+  background: var(--mlp-border-strong);
+  outline: none;
+}
