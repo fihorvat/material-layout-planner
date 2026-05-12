@@ -200,4 +200,9 @@ npm test -- src/domain/units src/domain/geometry
 
 ## Progress Log
 
-_(append entries here)_
+### 2026-05-12 19:22 — Cascade
+- status: review
+- summary: implemented parseLength/formatLength and full geometry suite (point/line/polygon/rectangle/boundingBox/transform/intersect/validation/clipping/polygonBoolean via polygon-clipping/offsetPolygon); 72 tests pass
+- commits: uncommitted
+- next: tools T09-T14 will consume these
+- blockers: none

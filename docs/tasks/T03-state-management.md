@@ -172,4 +172,9 @@ npm run typecheck
 
 ## Progress Log
 
-_(append entries here)_
+### 2026-05-12 19:15 — Cascade
+- status: review
+- summary: implemented project/editor/selection/history stores with immer + subscribeWithSelector; all listed tests pass; zoomAt invariant verified
+- commits: uncommitted
+- next: T08 will fill out command apply/invert logic
+- blockers: none

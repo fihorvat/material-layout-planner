@@ -183,4 +183,9 @@ npm run typecheck
 
 ## Progress Log
 
-_(append entries here)_
+### 2026-05-12 19:18 — Cascade
+- status: review
+- summary: IndexedDB schema, repository, migrations pipeline, JSON import/export, autosave (debounced), and localStorage preferences in place; fake-indexeddb wired in test setup; jsdom Blob swapped for node:buffer Blob to expose text(); all 21 storage tests pass
+- commits: uncommitted
+- next: T35 dashboard will consume listProjects/duplicate/delete
+- blockers: none

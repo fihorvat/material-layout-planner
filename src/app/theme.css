@@ -1,0 +1,48 @@
+:root {
+  --mlp-bg: #ffffff;
+  --mlp-surface: #f8fafc;
+  --mlp-surface-2: #f1f5f9;
+  --mlp-border: #e5e7eb;
+  --mlp-border-strong: #cbd5e1;
+  --mlp-text: #111827;
+  --mlp-muted: #6b7280;
+  --mlp-accent: #2563eb;
+  --mlp-accent-soft: #dbeafe;
+  --mlp-danger: #dc2626;
+
+  --mlp-toolbar-h: 48px;
+  --mlp-rail-w: 56px;
+
+  --mlp-radius-sm: 4px;
+  --mlp-radius-md: 6px;
+
+  --mlp-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mlp-font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--mlp-bg);
+  color: var(--mlp-text);
+  font-family: var(--mlp-font);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
