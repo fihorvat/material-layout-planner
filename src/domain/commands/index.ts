@@ -52,3 +52,9 @@ export {
   setMaterialLayoutsCommand,
   clearMaterialLayoutsCommand,
 } from './builtin/materialLayoutCommands';
+export {
+  addBackgroundImageCommand,
+  removeBackgroundImageCommand,
+  updateBackgroundImageCommand,
+  calibrateBackgroundImageCommand,
+} from './builtin/backgroundImageCommands';

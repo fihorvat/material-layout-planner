@@ -56,11 +56,11 @@ This is the master index for all implementation tasks. Each task is a self-conta
 | T28 | Cut list & grouping | M7 | T25 | review |
 | T29 | Cutting diagrams | M7 | T28 | review |
 | T30 | Waste calculation & layout stats | M7 | T25 | review |
-| T31 | PDF infrastructure & summary/instructions pages | M8 | T28, T30 | todo |
-| T32 | PDF technical drawing & material layout pages | M8 | T31, T25 | todo |
-| T33 | PDF cut list & cutting diagram pages | M8 | T31, T28, T29 | todo |
-| T34 | Background image import & calibration | M9 | T06 | todo |
-| T35 | Project dashboard & JSON import/export | M10 | T04 | todo |
+| T31 | PDF infrastructure & summary/instructions pages | M8 | T28, T30 | review |
+| T32 | PDF technical drawing & material layout pages | M8 | T31, T25 | review |
+| T33 | PDF cut list & cutting diagram pages | M8 | T31, T28, T29 | review |
+| T34 | Background image import & calibration | M9 | T06 | review |
+| T35 | Project dashboard & JSON import/export | M10 | T04 | review |
 | T36 | Keyboard shortcuts & polish | M10 | T09, T35 | todo |
 | T37 | Acceptance testing & bug-fix pass | M10 | all above | todo |
 

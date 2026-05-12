@@ -1,11 +1,11 @@
 import { AppProviders } from './AppProviders';
-import { EditorPage } from '@/features/editor/EditorPage';
+import { AppRouter } from './AppRouter';
 import './theme.css';
 
 export const App = () => {
   return (
     <AppProviders>
-      <EditorPage />
+      <AppRouter />
     </AppProviders>
   );
 };
