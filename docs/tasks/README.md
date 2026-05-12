@@ -44,14 +44,14 @@ This is the master index for all implementation tasks. Each task is a self-conta
 | T16 | Openings | M3 | T15 | review |
 | T17 | Surface splitting | M3 | T15 | review |
 | T18 | Surface connections | M3 | T15 | review |
-| T19 | Materials (model, editor, list) | M4 | T15 | todo |
-| T20 | Placement patterns (model & panel) | M4 | T19 | todo |
-| T21 | Manual offset (numeric + mouse) | M4 | T20 | todo |
-| T22 | Material grid generation | M5 | T20 | todo |
-| T23 | Piece clipping (physical + visible) | M5 | T07, T22 | todo |
-| T24 | Edge rules & physical overlap | M5 | T23, T18 | todo |
-| T25 | Material layout rendering | M5 | T23, T24 | todo |
-| T26 | Validation & warnings system | M5 | T25 | todo |
+| T19 | Materials (model, editor, list) | M4 | T15 | review |
+| T20 | Placement patterns (model & panel) | M4 | T19 | review |
+| T21 | Manual offset (numeric + mouse) | M4 | T20 | review |
+| T22 | Material grid generation | M5 | T20 | review |
+| T23 | Piece clipping (physical + visible) | M5 | T07, T22 | review |
+| T24 | Edge rules & physical overlap | M5 | T23, T18 | review |
+| T25 | Material layout rendering | M5 | T23, T24 | review |
+| T26 | Validation & warnings system | M5 | T25 | review |
 | T27 | Optimization engine (worker) | M6 | T25, T26 | todo |
 | T28 | Cut list & grouping | M7 | T25 | todo |
 | T29 | Cutting diagrams | M7 | T28 | todo |

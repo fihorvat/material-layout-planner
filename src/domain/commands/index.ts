@@ -31,3 +31,24 @@ export {
   updateConnectionCommand,
   deleteConnectionCommand,
 } from './builtin/connectionCommands';
+export {
+  addMaterialCommand,
+  updateMaterialCommand,
+  deleteMaterialCommand,
+  assignMaterialCommand,
+} from './builtin/materialCommands';
+export {
+  addPlacementPatternCommand,
+  updatePlacementPatternCommand,
+  deletePlacementPatternCommand,
+  assignPlacementPatternCommand,
+} from './builtin/placementPatternCommands';
+export {
+  addEdgeRuleCommand,
+  updateEdgeRuleCommand,
+  removeEdgeRuleCommand,
+} from './builtin/edgeRuleCommands';
+export {
+  setMaterialLayoutsCommand,
+  clearMaterialLayoutsCommand,
+} from './builtin/materialLayoutCommands';

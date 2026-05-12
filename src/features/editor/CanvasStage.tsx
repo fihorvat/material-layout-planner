@@ -11,6 +11,7 @@ import { ConstructionEntities } from '@/features/drawingTools/ConstructionEntiti
 import { SurfaceLayer } from '@/features/surfaces/SurfaceLayer';
 import { LabelRenderer } from '@/features/drawingTools/label/LabelRenderer';
 import { DimensionRenderer } from '@/features/drawingTools/dimension/DimensionRenderer';
+import { MaterialLayoutLayer } from '@/features/materialLayout/MaterialLayoutLayer';
 import { useProjectStore } from '@/state';
 import styles from './editor.module.css';
 
@@ -67,6 +68,7 @@ export const CanvasStage = () => {
             <LayersRoot
               construction={<ConstructionEntities />}
               surfaces={<SurfaceLayer />}
+              materialLayout={<MaterialLayoutLayer />}
               dimensions={<DimensionRenderer dimensions={project.dimensions} project={project} />}
               labels={<LabelRenderer labels={project.labels} project={project} />}
               helpers={select.overlays}
