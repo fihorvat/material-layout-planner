@@ -9,8 +9,8 @@ import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
 type MeterPreviewProps = {
   first: Point2D;
   cursor: Point2D;
-  /** True when the cursor was projected onto an existing shape edge (Shift). */
-  snappedToEdge?: boolean;
+  /** True when the cursor is locked to a 90° ray from `first` (Shift). */
+  ortho?: boolean;
 };
 
 const LABEL_FONT_PX = 13;
@@ -18,17 +18,17 @@ const LABEL_OFFSET_PX = 16;
 const ENDPOINT_RADIUS_PX = 4;
 
 const STROKE = '#0ea5e9';
-const STROKE_SNAPPED = '#f59e0b';
+const STROKE_ORTHO = '#f59e0b';
 
-export const MeterPreview = ({ first, cursor, snappedToEdge = false }: MeterPreviewProps) => {
+export const MeterPreview = ({ first, cursor, ortho = false }: MeterPreviewProps) => {
   const seg = { a: first, b: cursor };
   const length = lineLength(seg);
   const angle = lineAngleDeg(seg);
   const scale = useEditorStore((s) => s.viewport.scale);
   const theme = useThemeStore((s) => s.theme);
-  const stroke = snappedToEdge ? STROKE_SNAPPED : STROKE;
-  const label = snappedToEdge
-    ? `${formatLength(length)} @ ${angle.toFixed(1)}\u00B0  \u2022 EDGE`
+  const stroke = ortho ? STROKE_ORTHO : STROKE;
+  const label = ortho
+    ? `${formatLength(length)} @ ${angle.toFixed(1)}\u00B0  \u2022 ORTHO`
     : `${formatLength(length)} @ ${angle.toFixed(1)}\u00B0`;
   const t = 0.85;
   const anchor: Point2D = {
@@ -56,7 +56,7 @@ export const MeterPreview = ({ first, cursor, snappedToEdge = false }: MeterPrev
         y={anchor.y}
         text={label}
         fontSize={fontSizeMm}
-        fill={snappedToEdge ? '#b45309' : themedShapeColor('#1f2937', theme)}
+        fill={ortho ? '#b45309' : themedShapeColor('#1f2937', theme)}
         offsetY={offsetYMm}
       />
     </Group>

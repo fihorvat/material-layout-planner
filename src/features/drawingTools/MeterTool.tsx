@@ -17,7 +17,7 @@ export const useMeterTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
       <MeterPreview
         first={draw.state.first}
         cursor={draw.state.cursor}
-        snappedToEdge={draw.state.snappedToEdge}
+        ortho={draw.state.ortho}
       />
     ) : null;
 
