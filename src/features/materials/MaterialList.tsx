@@ -4,6 +4,7 @@ import { useProjectStore } from '@/state';
 import { dispatchCommand, deleteMaterialCommand } from '@/domain/commands';
 import { MaterialInUseError } from '@/domain/commands/builtin/materialCommands';
 import { MaterialEditor } from './MaterialEditor';
+import editorStyles from '@/features/editor/editor.module.css';
 
 export const MaterialList = () => {
   const materials = useProjectStore((s) => s.project.materials);
@@ -59,26 +60,26 @@ export const MaterialList = () => {
       </div>
 
       {materials.length === 0 ? (
-        <p style={{ margin: 0, color: '#6b7280', fontSize: 13 }}>
+        <p style={{ margin: 0, color: 'var(--mlp-muted)', fontSize: 13 }}>
           No materials yet. Click <em>Add material</em> to create one.
         </p>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+        <table className={editorStyles.dataTable}>
           <thead>
-            <tr style={{ textAlign: 'left', borderBottom: '1px solid #cbd5e1' }}>
-              <th style={{ padding: '4px 6px' }}>Name</th>
-              <th style={{ padding: '4px 6px' }}>Unit size (mm)</th>
-              <th style={{ padding: '4px 6px' }}>Joint</th>
-              <th style={{ padding: '4px 6px' }}>Used by</th>
-              <th style={{ padding: '4px 6px' }} aria-label="Actions" />
+            <tr>
+              <th>Name</th>
+              <th>Unit size (mm)</th>
+              <th>Joint</th>
+              <th>Used by</th>
+              <th aria-label="Actions" />
             </tr>
           </thead>
           <tbody>
             {materials.map((m) => {
               const count = usedCount(m.id);
               return (
-                <tr key={m.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '4px 6px' }}>
+                <tr key={m.id}>
+                  <td>
                     <span
                       aria-hidden
                       style={{
@@ -87,19 +88,19 @@ export const MaterialList = () => {
                         height: 12,
                         borderRadius: 2,
                         background: m.style.fillColor,
-                        border: '1px solid #cbd5e1',
+                        border: '1px solid var(--mlp-border-strong)',
                         marginRight: 6,
                         verticalAlign: 'middle',
                       }}
                     />
                     {m.name}
                   </td>
-                  <td style={{ padding: '4px 6px' }}>
+                  <td>
                     {m.unitWidthMm} × {m.unitHeightMm} × {m.thicknessMm}
                   </td>
-                  <td style={{ padding: '4px 6px' }}>{m.defaultJointMm} mm</td>
-                  <td style={{ padding: '4px 6px' }}>{count}</td>
-                  <td style={{ padding: '4px 6px', textAlign: 'right' }}>
+                  <td>{m.defaultJointMm} mm</td>
+                  <td>{count}</td>
+                  <td style={{ textAlign: 'right' }}>
                     <button type="button" onClick={() => openEdit(m)} style={{ marginRight: 4 }}>
                       Edit
                     </button>

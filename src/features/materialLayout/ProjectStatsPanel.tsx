@@ -1,6 +1,7 @@
 import { useProjectStore } from '@/state';
 import { computeProjectStats } from '@/domain/materialLayout/layoutStats';
 import { formatArea } from '@/domain/units';
+import editorStyles from '@/features/editor/editor.module.css';
 
 export const ProjectStatsPanel = () => {
   const project = useProjectStore((s) => s.project);
@@ -18,9 +19,9 @@ export const ProjectStatsPanel = () => {
       {stats.perMaterial.length > 0 ? (
         <section>
           <h4 style={{ margin: '4px 0' }}>Per material</h4>
-          <table style={{ width: '100%', fontSize: 12 }}>
+          <table className={editorStyles.dataTable}>
             <thead>
-              <tr style={{ textAlign: 'left' }}>
+              <tr>
                 <th>Material</th>
                 <th>Full</th>
                 <th>Cut</th>

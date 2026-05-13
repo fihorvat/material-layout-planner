@@ -9,6 +9,7 @@ import {
   updateMaterialCommand,
 } from '@/domain/commands';
 import { createMaterial } from '@/domain/materials/material';
+import { ModalCloseButton } from '@/components';
 
 export type MaterialEditorProps = {
   open: boolean;
@@ -161,11 +162,13 @@ export const MaterialEditor = ({ open, material, onClose }: MaterialEditorProps)
     flexDirection: 'column',
     gap: 4,
     fontSize: 12,
-    color: '#374151',
+    color: 'var(--mlp-muted)',
   };
   const inputStyle: React.CSSProperties = {
     padding: '4px 6px',
-    border: '1px solid #cbd5e1',
+    background: 'var(--mlp-bg)',
+    color: 'var(--mlp-text)',
+    border: '1px solid var(--mlp-border-strong)',
     borderRadius: 4,
     fontSize: 13,
   };
@@ -187,10 +190,14 @@ export const MaterialEditor = ({ open, material, onClose }: MaterialEditorProps)
     >
       <div
         style={{
-          background: 'white',
+          background: 'var(--mlp-card)',
+          color: 'var(--mlp-text)',
+          border: '1px solid var(--mlp-border)',
+          boxShadow: 'var(--mlp-shadow-lg)',
           borderRadius: 8,
           padding: 20,
-          width: 480,
+          width: 960,
+          maxWidth: 'calc(100vw - 32px)',
           maxHeight: '85vh',
           overflow: 'auto',
         }}
@@ -200,7 +207,7 @@ export const MaterialEditor = ({ open, material, onClose }: MaterialEditorProps)
           <h2 style={{ margin: 0, fontSize: 16 }}>
             {material ? 'Edit material' : 'Create material'}
           </h2>
-          <button type="button" onClick={onClose}>Close</button>
+          <ModalCloseButton onClose={onClose} />
         </div>
 
         <div
@@ -220,6 +227,24 @@ export const MaterialEditor = ({ open, material, onClose }: MaterialEditorProps)
               style={inputStyle}
             />
           </label>
+
+          <p
+            style={{
+              gridColumn: '1 / span 2',
+              margin: 0,
+              padding: '6px 8px',
+              background: 'var(--mlp-surface-2)',
+              border: '1px solid var(--mlp-border)',
+              borderRadius: 4,
+              fontSize: 12,
+              color: 'var(--mlp-muted)',
+            }}
+          >
+            Dimensions are in <strong>millimeters</strong> by default. You can also type
+            <code style={{ margin: '0 4px' }}>600 mm</code>,
+            <code style={{ margin: '0 4px' }}>60 cm</code> or
+            <code style={{ margin: '0 4px' }}>0.6 m</code>.
+          </p>
 
           <label style={labelStyle}>
             Unit width
@@ -276,29 +301,25 @@ export const MaterialEditor = ({ open, material, onClose }: MaterialEditorProps)
             />
           </label>
 
-          <label style={{ ...labelStyle, gridColumn: '1 / span 2' }}>
-            Default orientation
-            <div style={{ display: 'flex', gap: 12, fontSize: 13, color: '#111827' }}>
-              <label style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                <input
-                  type="radio"
-                  name="orientation"
-                  checked={form.defaultOrientation === 'horizontal'}
-                  onChange={() => setField('defaultOrientation', 'horizontal')}
-                />
-                Horizontal
-              </label>
-              <label style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                <input
-                  type="radio"
-                  name="orientation"
-                  checked={form.defaultOrientation === 'vertical'}
-                  onChange={() => setField('defaultOrientation', 'vertical')}
-                />
-                Vertical
-              </label>
+          <div style={{ ...labelStyle, gridColumn: '1 / span 2' }}>
+            <span>Default orientation</span>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <OrientationOption
+                value="horizontal"
+                selected={form.defaultOrientation === 'horizontal'}
+                fillColor={form.fillColor}
+                jointColor={form.jointColor}
+                onSelect={() => setField('defaultOrientation', 'horizontal')}
+              />
+              <OrientationOption
+                value="vertical"
+                selected={form.defaultOrientation === 'vertical'}
+                fillColor={form.fillColor}
+                jointColor={form.jointColor}
+                onSelect={() => setField('defaultOrientation', 'vertical')}
+              />
             </div>
-          </label>
+          </div>
 
           <label style={labelStyle}>
             Fill color
@@ -335,9 +356,9 @@ export const MaterialEditor = ({ open, material, onClose }: MaterialEditorProps)
             style={{
               marginTop: 12,
               padding: '6px 10px',
-              background: '#fef2f2',
-              color: '#991b1b',
-              border: '1px solid #fecaca',
+              background: 'transparent',
+              color: 'var(--mlp-danger)',
+              border: '1px solid var(--mlp-danger)',
               borderRadius: 4,
               fontSize: 12,
             }}
@@ -356,5 +377,107 @@ export const MaterialEditor = ({ open, material, onClose }: MaterialEditorProps)
         </div>
       </div>
     </div>
+  );
+};
+
+type OrientationOptionProps = {
+  value: 'horizontal' | 'vertical';
+  selected: boolean;
+  fillColor: string;
+  jointColor: string;
+  onSelect: () => void;
+};
+
+const OrientationOption = ({
+  value,
+  selected,
+  fillColor,
+  jointColor,
+  onSelect,
+}: OrientationOptionProps) => {
+  const label = value === 'horizontal' ? 'Horizontal' : 'Vertical';
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      aria-label={`${label} orientation`}
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 6,
+        padding: 8,
+        border: `2px solid ${selected ? 'var(--mlp-accent)' : 'var(--mlp-border-strong)'}`,
+        background: selected ? 'var(--mlp-accent-soft)' : 'var(--mlp-surface)',
+        borderRadius: 6,
+        cursor: 'pointer',
+      }}
+    >
+      <OrientationPreview
+        orientation={value}
+        fillColor={fillColor}
+        jointColor={jointColor}
+      />
+      <span style={{ fontSize: 12, fontWeight: selected ? 600 : 400, color: 'var(--mlp-text)' }}>
+        {label}
+      </span>
+    </button>
+  );
+};
+
+type OrientationPreviewProps = {
+  orientation: 'horizontal' | 'vertical';
+  fillColor: string;
+  jointColor: string;
+};
+
+// Renders a small running-bond preview to make the orientation choice visual.
+const OrientationPreview = ({ orientation, fillColor, jointColor }: OrientationPreviewProps) => {
+  const W = 100;
+  const H = 60;
+  const isHorizontal = orientation === 'horizontal';
+  // Brick dimensions in preview-units; horizontal = wider than tall.
+  const brickW = isHorizontal ? 28 : 14;
+  const brickH = isHorizontal ? 12 : 24;
+  const gap = 2;
+  const stepX = brickW + gap;
+  const stepY = brickH + gap;
+  const rows = Math.ceil(H / stepY) + 1;
+  const cols = Math.ceil(W / stepX) + 2;
+  const rects: { x: number; y: number }[] = [];
+  for (let r = 0; r < rows; r++) {
+    const offset = r % 2 === 1 ? stepX / 2 : 0;
+    for (let c = -1; c < cols; c++) {
+      rects.push({ x: c * stepX + offset, y: r * stepY });
+    }
+  }
+  return (
+    <svg
+      width={W}
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ display: 'block', borderRadius: 3, background: jointColor }}
+      aria-hidden
+    >
+      <clipPath id={`clip-${orientation}`}>
+        <rect x={0} y={0} width={W} height={H} />
+      </clipPath>
+      <g clipPath={`url(#clip-${orientation})`}>
+        {rects.map((r, i) => (
+          <rect
+            key={i}
+            x={r.x}
+            y={r.y}
+            width={brickW}
+            height={brickH}
+            fill={fillColor}
+            stroke={jointColor}
+            strokeWidth={0.5}
+          />
+        ))}
+      </g>
+    </svg>
   );
 };

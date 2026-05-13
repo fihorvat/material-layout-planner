@@ -41,6 +41,9 @@ describe('useOpeningDraw — rectangle mode', () => {
     useSelectionStore.getState().resetForTests();
     useOpeningToolStore.getState().resetForTests();
     useToastStore.getState().clearToasts();
+    // Pin viewport scale so screen->world mapping is 1:1 in tests regardless
+    // of the production default zoom.
+    useEditorStore.getState().setViewport({ offsetXPx: 0, offsetYPx: 0, scale: 1 });
   });
 
   it('two clicks inside a surface commit an opening', () => {
@@ -98,6 +101,7 @@ describe('useOpeningDraw — polygon mode', () => {
     useProjectStore.getState().resetForTests();
     useEditorStore.getState().resetForTests();
     useHistoryStore.getState().resetForTests();
+    useEditorStore.getState().setViewport({ offsetXPx: 0, offsetYPx: 0, scale: 1 });
     useSelectionStore.getState().resetForTests();
     useOpeningToolStore.getState().resetForTests();
     useToastStore.getState().clearToasts();

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type Konva from 'konva';
-import { useEditorStore, clampZoom } from '@/state';
+import { useEditorStore, clampZoom, DEFAULT_ZOOM } from '@/state';
 
 type StageEventTarget = Konva.Stage | null;
 
@@ -34,7 +34,7 @@ export const useViewportInteractions = (stageRef: React.RefObject<StageEventTarg
         }
       } else if (e.key === '0') {
         const v = useEditorStore.getState().viewport;
-        setViewport({ ...v, scale: clampZoom(1) });
+        setViewport({ ...v, scale: clampZoom(DEFAULT_ZOOM) });
       } else if (e.key === 'Home') {
         resetViewport();
       }

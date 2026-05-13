@@ -1,5 +1,6 @@
 import { useProjectStore } from '@/state';
 import { buildCutList } from '@/domain/materialLayout/materialCutList';
+import editorStyles from '@/features/editor/editor.module.css';
 
 const summarizeCodes = (codes: string[]): string => {
   if (codes.length <= 2) return codes.join(', ');
@@ -13,9 +14,9 @@ export const MaterialCutListTable = () => {
     return <p>No cut list yet. Generate a material layout first.</p>;
   }
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+    <table className={editorStyles.dataTable}>
       <thead>
-        <tr style={{ textAlign: 'left', borderBottom: '1px solid #cbd5e1' }}>
+        <tr>
           <th>Piece</th>
           <th>Surface</th>
           <th>Material</th>

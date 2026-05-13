@@ -48,6 +48,14 @@ describe('useRectangleDraw', () => {
     expect(ents[0]?.type).toBe('rectangle');
   });
 
+  it('openNumericPrompt forwards initial length string when provided', () => {
+    const stageRef = makeStageRef({ x: 0, y: 0 });
+    const { result } = renderHook(() => useRectangleDraw(stageRef));
+    act(() => result.current.onPointerDown({ shift: false, alt: false, ctrl: false }));
+    act(() => result.current.openNumericPrompt('5'));
+    expect(result.current.numericPrompt?.initialLength).toBe('5');
+  });
+
   it('numeric submit creates exact dimensions', () => {
     const stageRef = makeStageRef({ x: 0, y: 0 });
     const { result } = renderHook(() => useRectangleDraw(stageRef));

@@ -10,6 +10,7 @@ export {
   clampZoom,
   ZOOM_MIN,
   ZOOM_MAX,
+  DEFAULT_ZOOM,
   LAYER_IDS,
   type EditorState,
   type ToolId,
@@ -63,3 +64,18 @@ export {
   getDrawingTool,
   type DrawingToolState,
 } from './drawingToolStore';
+
+export {
+  useSplitToolStore,
+  getSplitTool,
+  type SplitToolState,
+  type SplitMode,
+  type SplitInnerMode,
+} from './splitToolStore';
+
+export {
+  useConnectionToolStore,
+  getConnectionTool,
+  type ConnectionToolState,
+  type ConnectionToolPhase,
+} from './connectionToolStore';

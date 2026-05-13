@@ -16,7 +16,8 @@ const TOOLS: ToolDef[] = [
   { id: 'connection', label: 'Connection', shortcut: 'C', icon: '\u2310' },
   { id: 'splitSurface', label: 'Split surface', shortcut: 'X', icon: '\u2702' },
   { id: 'cut', label: 'Cut (add points on edges)', shortcut: 'K', icon: '\u2700' },
-  { id: 'patternOrigin', label: 'Pattern origin', shortcut: 'M', icon: '\u2316' },
+  { id: 'meter', label: 'Meter (measure distances)', shortcut: 'M', icon: '\u21A4\u21A6' },
+  { id: 'patternOrigin', label: 'Pattern origin', shortcut: '', icon: '\u2316' },
 ];
 
 export const ToolRail = () => {

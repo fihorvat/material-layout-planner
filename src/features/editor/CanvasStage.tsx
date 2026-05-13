@@ -1,22 +1,30 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Stage, Layer } from 'react-konva';
 import type Konva from 'konva';
+import type { Point2D } from '@/types';
 import { useEditorStore } from '@/state';
 import { GridLayer } from './canvas/GridLayer';
 import { LayersRoot } from './canvas/LayersRoot';
 import { useResizeObserver } from './canvas/useResizeObserver';
 import { useViewportInteractions } from './canvas/useViewportInteractions';
+import { screenToWorld } from './canvas/coords';
+import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
 import { useSelectTool } from '@/features/drawingTools/SelectTool';
 import { useLineTool } from '@/features/drawingTools/LineTool';
 import { useRectangleTool } from '@/features/drawingTools/RectangleTool';
 import { usePolygonTool } from '@/features/drawingTools/PolygonTool';
 import { useOpeningTool } from '@/features/drawingTools/OpeningTool';
 import { useCutTool } from '@/features/drawingTools/CutTool';
+import { useMeterTool } from '@/features/drawingTools/MeterTool';
 import { ConstructionEntities } from '@/features/drawingTools/ConstructionEntities';
 import { DrawingModeOverlay } from '@/features/drawingTools/DrawingModeOverlay';
 import { useDrawingModeActive } from '@/features/drawingTools/drawingMode';
 import { SurfaceLayer } from '@/features/surfaces/SurfaceLayer';
 import { useSurfaceTool } from '@/features/surfaces/SurfaceTool';
+import { useSplitSurfaceTool } from '@/features/surfaces/SplitSurfaceTool';
+import { useConnectionTool } from '@/features/drawingTools/ConnectionTool';
+import { ConnectionVisualizer } from '@/features/surfaces/ConnectionVisualizer';
+import { SurfaceConnectionDialog } from '@/features/surfaces/SurfaceConnectionDialog';
 import { LabelRenderer } from '@/features/drawingTools/label/LabelRenderer';
 import { useLabelTool } from '@/features/drawingTools/label/LabelTool';
 import { LabelEditor } from '@/features/drawingTools/label/LabelEditor';
@@ -52,8 +60,12 @@ export const CanvasStage = () => {
   const label = useLabelTool(stageRef);
   const opening = useOpeningTool(stageRef);
   const cut = useCutTool(stageRef);
+  const meter = useMeterTool(stageRef);
+  const splitSurface = useSplitSurfaceTool(stageRef);
+  const connection = useConnectionTool(stageRef);
   const project = useProjectStore((s) => s.project);
   const drawingModeActive = useDrawingModeActive();
+  const [hoverWorld, setHoverWorld] = useState<Point2D | null>(null);
 
   const onMouseDown = (e: { evt: MouseEvent }) => {
     handlers.onMouseDown(e);
@@ -75,10 +87,24 @@ export const CanvasStage = () => {
       opening.onStagePointerDown(e);
     } else if (activeTool === 'cut') {
       cut.onStagePointerDown(e as unknown as { evt: PointerEvent });
+    } else if (activeTool === 'splitSurface') {
+      splitSurface.onStagePointerDown(e);
+    } else if (activeTool === 'connection') {
+      connection.onStagePointerDown(e);
+    } else if (activeTool === 'meter') {
+      meter.onStagePointerDown(e as unknown as { evt: PointerEvent });
     }
   };
   const onMouseMove = (e: { evt: MouseEvent }) => {
     handlers.onMouseMove(e);
+    const stage = stageRef.current;
+    if (stage) {
+      const pos = stage.getPointerPosition();
+      if (pos) {
+        const v = useEditorStore.getState().viewport;
+        setHoverWorld(screenToWorld(pos.x, pos.y, v));
+      }
+    }
     if (activeTool === 'select') {
       select.onStagePointerMove();
     } else if (activeTool === 'line') {
@@ -93,6 +119,12 @@ export const CanvasStage = () => {
       opening.onStagePointerMove(e);
     } else if (activeTool === 'cut') {
       cut.onStagePointerMove(e as unknown as { evt: PointerEvent });
+    } else if (activeTool === 'splitSurface') {
+      splitSurface.onStagePointerMove(e);
+    } else if (activeTool === 'connection') {
+      connection.onStagePointerMove(e);
+    } else if (activeTool === 'meter') {
+      meter.onStagePointerMove(e as unknown as { evt: PointerEvent });
     }
   };
   const onMouseUp = (e: { evt: MouseEvent }) => {
@@ -105,6 +137,9 @@ export const CanvasStage = () => {
     if (activeTool === 'select') {
       select.onStageDblClick(e);
     }
+  };
+  const onMouseLeave = () => {
+    setHoverWorld(null);
   };
 
   const toolOverlay =
@@ -122,7 +157,13 @@ export const CanvasStage = () => {
                 ? opening.overlays
                 : activeTool === 'cut'
                   ? cut.overlays
-                  : null;
+                  : activeTool === 'splitSurface'
+                    ? splitSurface.overlays
+                    : activeTool === 'connection'
+                      ? connection.overlays
+                      : activeTool === 'meter'
+                        ? meter.overlays
+                        : null;
 
   const domOverlay =
     activeTool === 'line'
@@ -131,11 +172,36 @@ export const CanvasStage = () => {
         ? rect.domOverlay
         : activeTool === 'polygon'
           ? poly.domOverlay
-          : null;
+          : activeTool === 'surface'
+            ? surface.domOverlay
+            : activeTool === 'opening'
+              ? opening.domOverlay
+              : activeTool === 'splitSurface'
+                ? splitSurface.domOverlay
+                : null;
 
   const labelEditor = label.pending ? (
     <LabelEditor onSubmit={label.commit} onCancel={label.cancel} />
   ) : null;
+
+  // Drawing tools that benefit from the orthogonal distance-to-surface
+  // preview at the hover position before any vertex has been placed.
+  // The dimension tool toggles labels per-click and has no preview, so it
+  // also benefits from seeing distances while hovering.
+  const DRAWING_TOOLS_FOR_HOVER_GUIDES: ReadonlyArray<string> = [
+    'line',
+    'rectangle',
+    'polygon',
+    'surface',
+    'opening',
+    'splitSurface',
+    'dimension',
+    'meter',
+  ];
+  const showIdleHoverGuides =
+    hoverWorld !== null &&
+    toolOverlay === null &&
+    DRAWING_TOOLS_FOR_HOVER_GUIDES.includes(activeTool);
 
   return (
     <div ref={containerRef} className={styles.canvasArea} role="region" aria-label="Drawing canvas">
@@ -148,6 +214,7 @@ export const CanvasStage = () => {
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
+          onMouseLeave={onMouseLeave}
           onDblClick={onDblClick}
         >
           <Layer
@@ -160,13 +227,21 @@ export const CanvasStage = () => {
             <GridLayer widthPx={width} heightPx={height} />
             <LayersRoot
               construction={<ConstructionEntities />}
-              surfaces={<SurfaceLayer />}
+              surfaces={
+                <>
+                  <SurfaceLayer />
+                  <ConnectionVisualizer />
+                </>
+              }
               materialLayout={<MaterialLayoutLayer />}
               dimensions={<DimensionRenderer dimensions={project.dimensions} project={project} />}
               labels={<LabelRenderer labels={project.labels} project={project} />}
               helpers={
                 <>
                   {drawingModeActive ? <DrawingModeOverlay /> : null}
+                  {showIdleHoverGuides && hoverWorld ? (
+                    <OrthoMeasureGuides cursor={hoverWorld} />
+                  ) : null}
                   {toolOverlay}
                   <PatternOriginLayer />
                 </>
@@ -178,6 +253,7 @@ export const CanvasStage = () => {
       {domOverlay}
       {labelEditor}
       <DimensionLengthPrompt />
+      <SurfaceConnectionDialog />
     </div>
   );
 };

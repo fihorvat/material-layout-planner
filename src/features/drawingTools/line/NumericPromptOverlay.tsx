@@ -1,10 +1,42 @@
 import { useEffect, useRef, useState } from 'react';
 import { parseLength, ParseLengthError } from '@/domain/units';
 
+/**
+ * If the user is still holding Shift (e.g. from ortho-locking a line) while
+ * typing into the numeric prompt, browsers report the shifted glyph as
+ * `e.key` (e.g. `%` for Shift+5). Intercept those keystrokes and insert the
+ * bare digit instead so the user doesn't have to release Shift just to type
+ * a length.
+ */
+const handleShiftedDigit = (
+  e: React.KeyboardEvent<HTMLInputElement>,
+  setValue: (v: string) => void,
+): void => {
+  if (!e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
+  const m = /^Digit([0-9])$/.exec(e.code);
+  if (!m) return;
+  e.preventDefault();
+  const digit = m[1]!;
+  const input = e.currentTarget;
+  const start = input.selectionStart ?? input.value.length;
+  const end = input.selectionEnd ?? input.value.length;
+  const next = input.value.slice(0, start) + digit + input.value.slice(end);
+  setValue(next);
+  // Restore caret position after React updates the value.
+  requestAnimationFrame(() => {
+    try {
+      input.setSelectionRange(start + 1, start + 1);
+    } catch {
+      // ignore
+    }
+  });
+};
+
 export type NumericPromptOverlayProps = {
   onSubmit: (lengthMm: number, angleDeg: number) => void;
   onCancel: () => void;
   initialAngleDeg?: number;
+  initialLength?: string;
 };
 
 const formatAngle = (deg: number): string => {
@@ -13,13 +45,27 @@ const formatAngle = (deg: number): string => {
   return Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1);
 };
 
-export const NumericPromptOverlay = ({ onSubmit, onCancel, initialAngleDeg = 0 }: NumericPromptOverlayProps) => {
-  const [length, setLength] = useState('');
+export const NumericPromptOverlay = ({
+  onSubmit,
+  onCancel,
+  initialAngleDeg = 0,
+  initialLength = '',
+}: NumericPromptOverlayProps) => {
+  const [length, setLength] = useState(initialLength);
   const [angle, setAngle] = useState(formatAngle(initialAngleDeg));
   const [err, setErr] = useState<string | null>(null);
   const ref = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
-    ref.current?.focus();
+    const el = ref.current;
+    if (!el) return;
+    el.focus();
+    // Place caret at the end so the user can continue typing after the prefilled digit.
+    const len = el.value.length;
+    try {
+      el.setSelectionRange(len, len);
+    } catch {
+      // Some input types don't support selection ranges; ignore.
+    }
   }, []);
   const submit = () => {
     try {
@@ -67,6 +113,8 @@ export const NumericPromptOverlay = ({ onSubmit, onCancel, initialAngleDeg = 0 }
           value={length}
           onChange={(e) => setLength(e.target.value)}
           onKeyDown={(e) => {
+            handleShiftedDigit(e, setLength);
+            if (e.defaultPrevented) return;
             if (e.key === 'Enter') submit();
             if (e.key === 'Escape') onCancel();
           }}
@@ -86,6 +134,8 @@ export const NumericPromptOverlay = ({ onSubmit, onCancel, initialAngleDeg = 0 }
           value={angle}
           onChange={(e) => setAngle(e.target.value)}
           onKeyDown={(e) => {
+            handleShiftedDigit(e, setAngle);
+            if (e.defaultPrevented) return;
             if (e.key === 'Enter') submit();
             if (e.key === 'Escape') onCancel();
           }}

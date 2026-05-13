@@ -49,7 +49,9 @@ export const computeRect = (first: Point2D, cursor: Point2D, mods: { shift: bool
 
 export const useRectangleDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const [state, setState] = useState<RectangleDrawState>({ phase: 'pickFirst' });
-  const [numericPrompt, setNumericPrompt] = useState<{ first: Point2D; alt: boolean } | null>(null);
+  const [numericPrompt, setNumericPrompt] = useState<
+    { first: Point2D; alt: boolean; initialLength?: string } | null
+  >(null);
 
   const commit = useCallback((inputs: RectInputs) => {
     if (inputs.widthMm <= 0 || inputs.heightMm <= 0) return;
@@ -96,14 +98,25 @@ export const useRectangleDraw = (stageRef: React.RefObject<Konva.Stage | null>) 
     setNumericPrompt(null);
   }, []);
 
-  const openNumericPrompt = useCallback(() => {
+  // Backspace handler: drop the first point and return to "pick first"
+  // so the user can restart placement without canceling the active tool.
+  const removeLast = useCallback(() => {
+    setState({ phase: 'pickFirst' });
+    setNumericPrompt(null);
+  }, []);
+
+  const openNumericPrompt = useCallback((initialLength?: string) => {
     if (state.phase !== 'pickSecond') return;
-    setNumericPrompt({ first: state.first, alt: state.alt });
+    setNumericPrompt({ first: state.first, alt: state.alt, initialLength });
   }, [state]);
 
   const submitNumeric = useCallback(
     (widthMm: number, heightMm: number) => {
       if (!numericPrompt) return;
+      // Guard against zero-sized commits so the in-progress preview doesn't
+      // silently disappear. The prompt itself already validates, but this
+      // protects against any caller that bypasses it.
+      if (widthMm <= 0 || heightMm <= 0) return;
       const f = numericPrompt.first;
       const origin = numericPrompt.alt
         ? { x: f.x - widthMm / 2, y: f.y - heightMm / 2 }
@@ -119,5 +132,5 @@ export const useRectangleDraw = (stageRef: React.RefObject<Konva.Stage | null>) 
     ? computeRect(state.first, state.cursor, { shift: state.shift, alt: state.alt })
     : null;
 
-  return { state, preview, numericPrompt, onPointerDown, onPointerMove, openNumericPrompt, submitNumeric, cancel };
+  return { state, preview, numericPrompt, onPointerDown, onPointerMove, openNumericPrompt, submitNumeric, removeLast, cancel };
 };

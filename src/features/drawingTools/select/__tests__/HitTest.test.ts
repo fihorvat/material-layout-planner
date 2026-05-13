@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { hitTest } from '../HitTest';
-import { createEmptyProject, defaultDrawingStyle, defaultSurfaceStyle } from '@/types';
+import { createEmptyProject, defaultDrawingStyle, defaultSurfaceStyle, defaultTextStyle } from '@/types';
 import type { LayerVisibility, LayerId } from '@/state';
 import { LAYER_IDS } from '@/state';
 import type { Project } from '@/types';
@@ -124,5 +124,49 @@ describe('hitTest', () => {
       layers: layers(),
     });
     expect(r.topHit?.kind).toBe('surface');
+  });
+
+  it('hits a free label by clicking on the rendered text body', () => {
+    const p = project((proj) => {
+      proj.labels.push({
+        id: 'LBL1',
+        text: 'Hello',
+        anchorType: 'free',
+        position: { x: 0, y: 0 },
+        rotationDeg: 0,
+        style: defaultTextStyle(),
+      });
+    });
+    // Approx text size: width = 5 chars * 12 * 0.6 = 36mm, height = 12 * 1.2 = 14.4mm
+    // Click in the middle of the text body, far from the anchor point.
+    const r = hitTest({
+      worldPoint: { x: 20, y: 7 },
+      tolerancePxAsMm: 1,
+      project: p,
+      layers: layers(),
+    });
+    expect(r.topHit?.kind).toBe('label');
+    expect(r.topHit?.id).toBe('LBL1');
+  });
+
+  it('hits a rotated label by clicking on its rotated body', () => {
+    const p = project((proj) => {
+      proj.labels.push({
+        id: 'LBL2',
+        text: 'Rotated',
+        anchorType: 'free',
+        position: { x: 0, y: 0 },
+        rotationDeg: 90,
+        style: defaultTextStyle(),
+      });
+    });
+    // Width along +Y axis after 90deg rotation; click inside that band.
+    const r = hitTest({
+      worldPoint: { x: -7, y: 20 },
+      tolerancePxAsMm: 1,
+      project: p,
+      layers: layers(),
+    });
+    expect(r.topHit?.id).toBe('LBL2');
   });
 });

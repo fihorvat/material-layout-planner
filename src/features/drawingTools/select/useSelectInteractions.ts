@@ -318,6 +318,44 @@ export const deleteSelected = (): void => {
   useSelectionStore.getState().clear();
 };
 
+export const selectAll = (): void => {
+  const project = useProjectStore.getState().project;
+  const layers = useEditorStore.getState().layers;
+  const entries: { kind: 'line' | 'rectangle' | 'polygon' | 'surface' | 'opening' | 'dimension' | 'label'; id: string }[] = [];
+
+  if (layers.construction.visible && !layers.construction.locked) {
+    for (const e of project.drawingEntities) {
+      entries.push({ kind: e.type, id: e.id });
+    }
+  }
+  if (layers.surfaces.visible && !layers.surfaces.locked) {
+    for (const s of project.surfaces) {
+      entries.push({ kind: 'surface', id: s.id });
+    }
+  }
+  if (layers.openings.visible && !layers.openings.locked) {
+    for (const s of project.surfaces) {
+      for (let i = 0; i < s.holes.length; i++) {
+        const meta = s.holeMeta[i];
+        const id = meta?.id ?? `${s.id}:hole:${i}`;
+        entries.push({ kind: 'opening', id });
+      }
+    }
+  }
+  if (layers.dimensions.visible && !layers.dimensions.locked) {
+    for (const d of project.dimensions) {
+      entries.push({ kind: 'dimension', id: d.id });
+    }
+  }
+  if (layers.labels.visible && !layers.labels.locked) {
+    for (const l of project.labels) {
+      entries.push({ kind: 'label', id: l.id });
+    }
+  }
+
+  useSelectionStore.getState().selectMany(entries);
+};
+
 export const duplicateSelected = (offsetMm = 10): void => {
   const sel = useSelectionStore.getState().selected;
   const project = useProjectStore.getState().project;

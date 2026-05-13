@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { useEditorStore, ZOOM_MIN, ZOOM_MAX } from '../editorStore';
+import { useEditorStore, ZOOM_MIN, ZOOM_MAX, DEFAULT_ZOOM } from '../editorStore';
 
 describe('editorStore', () => {
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe('editorStore', () => {
     expect(s.gridVisible).toBe(true);
     expect(s.snapEnabled).toBe(true);
     expect(s.snapTolerancePx).toBe(8);
-    expect(s.viewport).toEqual({ offsetXPx: 0, offsetYPx: 0, scale: 1 });
+    expect(s.viewport).toEqual({ offsetXPx: 0, offsetYPx: 0, scale: DEFAULT_ZOOM });
   });
 
   it('setActiveTool changes tool and clears pendingDraw', () => {
@@ -42,7 +42,7 @@ describe('editorStore', () => {
       x: (screen.x - v1.offsetXPx) / v1.scale,
       y: (screen.y - v1.offsetYPx) / v1.scale,
     };
-    expect(v1.scale).toBeCloseTo(2, 10);
+    expect(v1.scale).toBeCloseTo(v0.scale * 2, 10);
     expect(worldAfter.x).toBeCloseTo(worldBefore.x, 6);
     expect(worldAfter.y).toBeCloseTo(worldBefore.y, 6);
   });

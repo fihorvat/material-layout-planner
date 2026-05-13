@@ -2,7 +2,7 @@
 
 - **Milestone**: M4
 - **Depends on**: T19
-- **Status**: todo
+- **Status**: done
 
 ## Goal
 
@@ -133,4 +133,10 @@ npm test -- src/domain/placementPatterns src/features/placementPatterns
 
 ## Progress Log
 
-_(append entries here)_
+- 2026-05-13: Implemented placement-pattern UI. Added `OptimizationPanel`, `LengthField`,
+  `PlacementPatternPanel` (inline right-panel editor), `PlacementPatternEditorDialog`
+  (create + edit modal), `PatternList` (bottom-tab), and `AssignPatternControl`
+  (surface select w/ "Create new…"). Wired the new "Patterns" tab into `BottomPanel`
+  and replaced the inline `<select>` in `SurfaceProperties` with `AssignPatternControl`
+  plus a collapsible `Pattern settings` section. Added 9 component tests
+  (`PatternList`, `AssignPatternControl`, `PlacementPatternPanel`). All 294 tests pass.

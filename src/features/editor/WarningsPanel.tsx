@@ -2,11 +2,12 @@ import { useMemo } from 'react';
 import { useProjectStore, useSelectionStore } from '@/state';
 import { validateProject } from '@/domain/validation/projectValidator';
 import type { Warning } from '@/domain/validation/warnings';
+import styles from './editor.module.css';
 
 const severityColor: Record<Warning['severity'], string> = {
-  error: '#dc2626',
-  warning: '#d97706',
-  info: '#2563eb',
+  error: 'var(--mlp-danger)',
+  warning: 'var(--mlp-warning)',
+  info: 'var(--mlp-info)',
 };
 
 const labelForTarget = (t: Warning['target']): string => {
@@ -37,9 +38,9 @@ export const WarningsPanel = () => {
     return <p>No warnings.</p>;
   }
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+    <table className={styles.dataTable}>
       <thead>
-        <tr style={{ textAlign: 'left' }}>
+        <tr>
           <th>Sev</th>
           <th>Code</th>
           <th>Message</th>

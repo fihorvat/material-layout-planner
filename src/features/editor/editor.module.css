@@ -148,6 +148,36 @@
 .bottomBodyCollapsed {
   display: none;
 }
+
+.dataTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  color: var(--mlp-text);
+}
+.dataTable thead th {
+  text-align: left;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--mlp-muted);
+  background: var(--mlp-surface-2);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--mlp-border-strong);
+  position: sticky;
+  top: 0;
+}
+.dataTable tbody td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--mlp-border);
+  vertical-align: middle;
+}
+.dataTable tbody tr:hover td {
+  background: var(--mlp-surface-2);
+}
+.dataTable tbody tr:last-child td {
+  border-bottom: none;
+}
 .collapseBtn {
   background: transparent;
   border: 1px solid transparent;

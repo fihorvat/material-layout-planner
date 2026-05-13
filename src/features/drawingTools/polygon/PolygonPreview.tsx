@@ -2,10 +2,15 @@ import { Group, Line as KLine, Circle, Text } from 'react-konva';
 import type { Point2D } from '@/types';
 import { formatLength } from '@/domain/units';
 import { distance } from '@/domain/geometry';
-import { useThemeStore } from '@/state';
+import { useEditorStore, useThemeStore } from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
 import type { AlignmentGuides } from './usePolygonDraw';
+
+// Screen-pixel size of the rubber-band label. Converted to world mm using the
+// current viewport scale so the label stays readable at any zoom level.
+const LABEL_FONT_PX = 12;
+const LABEL_OFFSET_PX = 14;
 
 export type PolygonPreviewProps = {
   points: Point2D[];
@@ -27,6 +32,7 @@ export const PolygonPreview = ({
   alignments,
 }: PolygonPreviewProps) => {
   const theme = useThemeStore((s) => s.theme);
+  const scale = useEditorStore((s) => s.viewport.scale);
   if (points.length === 0) return null;
   const last = points[points.length - 1]!;
   const rubberStroke = ortho ? '#f59e0b' : '#2563eb';
@@ -36,6 +42,14 @@ export const PolygonPreview = ({
   const label = ortho
     ? `${formatLength(len)}  \u2022 ORTHO`
     : formatLength(len);
+  const fontSizeMm = LABEL_FONT_PX / Math.max(scale, 1e-9);
+  const offsetYMm = LABEL_OFFSET_PX / Math.max(scale, 1e-9);
+  // Anchor near the cursor (the live endpoint) so the dimension stays
+  // visible while drawing long edges, rather than getting buried at the
+  // segment midpoint.
+  const t = 0.85;
+  const anchorX = last.x + (cursor.x - last.x) * t;
+  const anchorY = last.y + (cursor.y - last.y) * t;
   const horizontalRef = alignments?.horizontal;
   const verticalRef = alignments?.vertical;
   return (
@@ -91,12 +105,12 @@ export const PolygonPreview = ({
         <Circle x={verticalRef.x} y={verticalRef.y} radius={4} stroke="#a855f7" strokeWidth={1.25} strokeScaleEnabled={false} />
       ) : null}
       <Text
-        x={(last.x + cursor.x) / 2}
-        y={(last.y + cursor.y) / 2}
+        x={anchorX}
+        y={anchorY}
         text={label}
-        fontSize={11}
+        fontSize={fontSizeMm}
         fill={ortho ? '#b45309' : themedShapeColor('#1f2937', theme)}
-        offsetY={14}
+        offsetY={offsetYMm}
       />
     </Group>
   );

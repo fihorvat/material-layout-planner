@@ -7,8 +7,12 @@ import {
   pointsToAabb,
   aabbContainsPoint,
   pointToLineDistance,
-  distance,
+  degToRad,
 } from '@/domain/geometry';
+import { computeAnchorPosition } from '@/features/drawingTools/label/computeAnchorPosition';
+
+const APPROX_CHAR_WIDTH = 0.6;
+const LABEL_LINE_HEIGHT = 1.2;
 
 export type HitCandidate = {
   kind: SelectableKind;
@@ -113,14 +117,34 @@ export const hitTest = (input: HitTestInput): HitTestResult => {
 
   if (layers.labels.visible && !layers.labels.locked) {
     for (const label of project.labels) {
-      if (distance(worldPoint, label.position) <= tolerancePxAsMm) {
-        const r = tolerancePxAsMm;
-        const bbox: Aabb = {
-          minX: label.position.x - r,
-          minY: label.position.y - r,
-          maxX: label.position.x + r,
-          maxY: label.position.y + r,
-        };
+      const pos = computeAnchorPosition(label, project);
+      if (!pos) continue;
+      const fontSize = label.style.fontSizePx;
+      const width = Math.max(label.text.length, 1) * fontSize * APPROX_CHAR_WIDTH;
+      const height = fontSize * LABEL_LINE_HEIGHT;
+      const rad = degToRad(label.rotationDeg);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      // Inverse-rotate the world point into the label's local coordinate frame
+      // (Konva Text rotates around (x,y) which is the top-left of the text).
+      const dx = worldPoint.x - pos.x;
+      const dy = worldPoint.y - pos.y;
+      const localX = dx * cos + dy * sin;
+      const localY = -dx * sin + dy * cos;
+      const tol = tolerancePxAsMm;
+      if (
+        localX >= -tol &&
+        localX <= width + tol &&
+        localY >= -tol &&
+        localY <= height + tol
+      ) {
+        const corners: Point2D[] = [
+          { x: pos.x, y: pos.y },
+          { x: pos.x + width * cos, y: pos.y + width * sin },
+          { x: pos.x + width * cos - height * sin, y: pos.y + width * sin + height * cos },
+          { x: pos.x - height * sin, y: pos.y + height * cos },
+        ];
+        const bbox = pointsToAabb(corners);
         candidates.push({ kind: 'label', id: label.id, zIndex: 70, bbox });
       }
     }

@@ -2,7 +2,9 @@ import { useEffect } from 'react';
 import type Konva from 'konva';
 import { useRectangleDraw } from './rectangle/useRectangleDraw';
 import { RectanglePreview } from './rectangle/RectanglePreview';
-import { NumericPromptOverlay } from './line/NumericPromptOverlay';
+import { RectangleNumericPromptOverlay } from './rectangle/RectangleNumericPromptOverlay';
+import { TypeLengthHint } from './TypeLengthHint';
+import { numericTriggerChar } from './numericKeyTrigger';
 import { registerDrawingCancel } from './drawingCancelRegistry';
 
 export const useRectangleTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
@@ -13,9 +15,19 @@ export const useRectangleTool = (stageRef: React.RefObject<Konva.Stage | null>) 
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
-      if (e.key === 'Escape') draw.cancel();
-      else if (/^[0-9.]$/.test(e.key) && draw.state.phase === 'pickSecond') {
-        draw.openNumericPrompt();
+      if (e.key === 'Escape') {
+        draw.cancel();
+        return;
+      }
+      if (e.key === 'Backspace' && draw.state.phase === 'pickSecond') {
+        e.preventDefault();
+        draw.removeLast();
+        return;
+      }
+      const digit = numericTriggerChar(e);
+      if (digit !== null && draw.state.phase === 'pickSecond' && !draw.numericPrompt) {
+        e.preventDefault();
+        draw.openNumericPrompt(digit);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -40,10 +52,13 @@ export const useRectangleTool = (stageRef: React.RefObject<Konva.Stage | null>) 
   ) : null;
 
   const domOverlay = draw.numericPrompt ? (
-    <NumericPromptOverlay
+    <RectangleNumericPromptOverlay
       onSubmit={(w, h) => draw.submitNumeric(w, h)}
       onCancel={draw.cancel}
+      initialLength={draw.numericPrompt.initialLength}
     />
+  ) : draw.state.phase === 'pickSecond' ? (
+    <TypeLengthHint />
   ) : null;
 
   return { onStagePointerDown, onStagePointerMove, overlays, domOverlay };

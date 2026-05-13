@@ -14,7 +14,8 @@ export type SelectableKind =
   | 'materialPiece'
   | 'patternHandle'
   | 'overlap'
-  | 'backgroundImage';
+  | 'backgroundImage'
+  | 'connection';
 
 export type SelectionEntry = { kind: SelectableKind; id: string };
 

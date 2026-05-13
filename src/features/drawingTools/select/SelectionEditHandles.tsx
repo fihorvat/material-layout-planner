@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Circle, Group } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import {
@@ -19,10 +19,14 @@ import {
   updateDrawingEntityCommand,
   updateDrawingEntitiesCommand,
   updateSurfaceCommand,
+  updateOpeningCommand,
+  findOpeningSurface,
 } from '@/domain/commands';
 import type { Command } from '@/domain/commands';
 import { constrainAngle } from '@/domain/geometry';
+import { snap } from '@/features/editor/canvas/snap';
 import { snapDroppedLineEndpoint } from './endpointSnap';
+import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
 
 type DragMods = { shift: boolean; alt: boolean; ctrl: boolean };
 
@@ -42,12 +46,85 @@ type DragKey =
   | { kind: 'lineJoint'; endpoints: LineEndRef[] }
   | { kind: 'rectCorner'; entityId: string; corner: 0 | 1 | 2 | 3 }
   | { kind: 'polygonVertex'; entityId: string; index: number }
-  | { kind: 'surfaceVertex'; surfaceId: string; index: number };
+  | { kind: 'surfaceVertex'; surfaceId: string; index: number }
+  | { kind: 'openingVertex'; surfaceId: string; openingId: string; index: number };
 
 type HandleSpec = {
   key: string;
   position: Point2D;
   drag: DragKey;
+};
+
+// Collect every vertex point in the project that the user might want to
+// snap onto when dragging a handle, while excluding the entity / vertex
+// currently being dragged so it can't snap to itself.
+const collectVertexSnapCandidates = (project: Project, exclude: DragKey): Point2D[] => {
+  const pts: Point2D[] = [];
+  for (const e of project.drawingEntities) {
+    if (e.type === 'line') {
+      const excludeStart =
+        exclude.kind === 'lineEnd' && exclude.entityId === e.id && exclude.which === 'start';
+      const excludeEnd =
+        exclude.kind === 'lineEnd' && exclude.entityId === e.id && exclude.which === 'end';
+      const inJoint =
+        exclude.kind === 'lineJoint' &&
+        exclude.endpoints.some((ep) => ep.entityId === e.id);
+      if (!excludeStart && !(inJoint && exclude.kind === 'lineJoint' && exclude.endpoints.some((ep) => ep.entityId === e.id && ep.which === 'start'))) {
+        pts.push(e.start);
+      }
+      if (!excludeEnd && !(inJoint && exclude.kind === 'lineJoint' && exclude.endpoints.some((ep) => ep.entityId === e.id && ep.which === 'end'))) {
+        pts.push(e.end);
+      }
+    } else if (e.type === 'rectangle') {
+      const isSelf = exclude.kind === 'rectCorner' && exclude.entityId === e.id;
+      if (!isSelf) {
+        pts.push(
+          { x: e.origin.x, y: e.origin.y },
+          { x: e.origin.x + e.widthMm, y: e.origin.y },
+          { x: e.origin.x + e.widthMm, y: e.origin.y + e.heightMm },
+          { x: e.origin.x, y: e.origin.y + e.heightMm },
+        );
+      }
+    } else if (e.type === 'polygon') {
+      const isSelf = exclude.kind === 'polygonVertex' && exclude.entityId === e.id;
+      if (!isSelf) pts.push(...e.points);
+    }
+  }
+  for (const s of project.surfaces) {
+    const skipOuter = exclude.kind === 'surfaceVertex' && exclude.surfaceId === s.id;
+    if (!skipOuter) pts.push(...s.outerBoundary);
+    for (let i = 0; i < s.holes.length; i++) {
+      const meta = s.holeMeta[i];
+      const skipHole =
+        exclude.kind === 'openingVertex' &&
+        exclude.surfaceId === s.id &&
+        meta?.id === exclude.openingId;
+      if (!skipHole) pts.push(...(s.holes[i] ?? []));
+    }
+  }
+  return pts;
+};
+
+// Resolve a dragged handle's raw cursor position onto a snap target
+// (endpoint / vertex / grid) so resize gestures align with surrounding
+// geometry. `Alt` disables snap, `Shift` is reserved for ortho-snap which
+// the caller applies separately.
+const resolveVertexSnap = (world: Point2D, drag: DragKey, mods: DragMods): Point2D => {
+  if (mods.alt) return world;
+  const editor = useEditorStore.getState();
+  if (!editor.snapEnabled) return world;
+  const project = useProjectStore.getState().project;
+  const candidates = collectVertexSnapCandidates(project, drag);
+  const result = snap({
+    worldPoint: world,
+    tolerancePx: editor.snapTolerancePx,
+    scale: editor.viewport.scale,
+    gridSizeMm: project.settings.gridSizeMm,
+    snapEnabled: true,
+    snapModes: ['point', 'grid'],
+    candidatePoints: candidates,
+  });
+  return result.point;
 };
 
 const computeRectAfterCornerMove = (
@@ -92,6 +169,7 @@ const DraggableHandle = ({
   scale,
   onPreview,
   onCommit,
+  onDragVisualChange,
 }: {
   spec: HandleSpec;
   scale: number;
@@ -102,6 +180,9 @@ const DraggableHandle = ({
     mods: DragMods,
     startProject: Project | null,
   ) => Point2D | null;
+  /** Notify the parent of the in-flight handle position so it can render
+   *  live distance guides. Pass null on drag-end to clear them. */
+  onDragVisualChange: (pos: Point2D | null) => void;
 }) => {
   const startProjectRef = useRef<Project | null>(null);
   const isJoint = spec.drag.kind === 'lineJoint';
@@ -122,6 +203,7 @@ const DraggableHandle = ({
       onDragStart={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
         startProjectRef.current = useProjectStore.getState().project;
+        onDragVisualChange({ x: e.target.x(), y: e.target.y() });
       }}
       onDragMove={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
@@ -136,6 +218,7 @@ const DraggableHandle = ({
         if (visual && (visual.x !== e.target.x() || visual.y !== e.target.y())) {
           e.target.position(visual);
         }
+        onDragVisualChange(visual ?? { x: e.target.x(), y: e.target.y() });
       }}
       onDragEnd={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
@@ -149,6 +232,7 @@ const DraggableHandle = ({
           e.target.position(visual);
         }
         startProjectRef.current = null;
+        onDragVisualChange(null);
       }}
       onMouseEnter={(e: KonvaEventObject<MouseEvent>) => {
         const stage = e.target.getStage();
@@ -167,6 +251,10 @@ export const SelectionEditHandles = () => {
   const project = useProjectStore((s) => s.project);
   const activeTool = useEditorStore((s) => s.activeTool);
   const scale = useEditorStore((s) => s.viewport.scale);
+  // Position of the currently-dragging handle, used to render live
+  // distance guides (OrthoMeasureGuides) while the user resizes a shape.
+  // `null` when no handle is being dragged.
+  const [dragPos, setDragPos] = useState<Point2D | null>(null);
 
   if (activeTool !== 'select' || selected.length === 0) return null;
 
@@ -180,6 +268,23 @@ export const SelectionEditHandles = () => {
           key: `sv:${s.id}:${i}`,
           position: p,
           drag: { kind: 'surfaceVertex', surfaceId: s.id, index: i },
+        }),
+      );
+    } else if (entry.kind === 'opening') {
+      const found = findOpeningSurface(project, entry.id);
+      if (!found) continue;
+      const hole = found.surface.holes[found.index];
+      if (!hole) continue;
+      hole.forEach((p, i) =>
+        specs.push({
+          key: `ov:${found.surface.id}:${entry.id}:${i}`,
+          position: p,
+          drag: {
+            kind: 'openingVertex',
+            surfaceId: found.surface.id,
+            openingId: entry.id,
+            index: i,
+          },
         }),
       );
     } else if (entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon') {
@@ -358,7 +463,13 @@ export const SelectionEditHandles = () => {
     } else if (drag.kind === 'rectCorner') {
       const e = proj.drawingEntities.find((x) => x.id === drag.entityId);
       if (!e || e.type !== 'rectangle') return null;
-      const next = computeRectAfterCornerMove(e, drag.corner, world);
+      // Shift = ortho-snap relative to the opposite corner, otherwise let
+      // the corner snap onto a nearby vertex / grid intersection so the
+      // resized rectangle can be aligned with surrounding geometry.
+      const resolved = mods.shift
+        ? world
+        : resolveVertexSnap(world, drag, mods);
+      const next = computeRectAfterCornerMove(e, drag.corner, resolved);
       if (!next) return null;
       const patch: Partial<RectangleEntity> = {
         origin: next.origin,
@@ -370,19 +481,23 @@ export const SelectionEditHandles = () => {
           { id: e.id, patch },
           'Resize rectangle',
         ),
-        visualPosition: world,
+        visualPosition: resolved,
       };
     } else if (drag.kind === 'polygonVertex') {
       const e = proj.drawingEntities.find((x) => x.id === drag.entityId);
       if (!e || e.type !== 'polygon') return null;
       // Anchor ortho-snap to the previous vertex in the polygon ring so the
       // edge entering this corner becomes axis-aligned, matching the
-      // dashed-line preview behavior used while drawing.
-      let resolved = world;
+      // dashed-line preview behavior used while drawing. Without Shift,
+      // fall through to point / grid snap so the vertex can align with
+      // surrounding geometry.
+      let resolved: Point2D;
       if (mods.shift && e.points.length >= 2) {
         const n = e.points.length;
         const prev = e.points[(drag.index - 1 + n) % n]!;
         resolved = constrainAngle(prev, world);
+      } else {
+        resolved = resolveVertexSnap(world, drag, mods);
       }
       const nextPts = e.points.map((p, i) => (i === drag.index ? resolved : p));
       const patch: Partial<PolygonEntity> = { points: nextPts };
@@ -396,11 +511,13 @@ export const SelectionEditHandles = () => {
     } else if (drag.kind === 'surfaceVertex') {
       const s = proj.surfaces.find((x) => x.id === drag.surfaceId);
       if (!s) return null;
-      let resolved = world;
+      let resolved: Point2D;
       if (mods.shift && s.outerBoundary.length >= 2) {
         const n = s.outerBoundary.length;
         const prev = s.outerBoundary[(drag.index - 1 + n) % n]!;
         resolved = constrainAngle(prev, world);
+      } else {
+        resolved = resolveVertexSnap(world, drag, mods);
       }
       const nextPts = s.outerBoundary.map((p, i) =>
         i === drag.index ? resolved : p,
@@ -410,6 +527,36 @@ export const SelectionEditHandles = () => {
         command: updateSurfaceCommand(
           { id: s.id, patch },
           'Move surface vertex',
+        ),
+        visualPosition: resolved,
+      };
+    } else if (drag.kind === 'openingVertex') {
+      const found = findOpeningSurface(proj, drag.openingId);
+      if (!found || found.surface.id !== drag.surfaceId) return null;
+      const hole = found.surface.holes[found.index];
+      if (!hole) return null;
+      // Ortho-snap to the previous vertex in the hole ring so the edge
+      // entering this corner becomes axis-aligned, mirroring the polygon
+      // / surface vertex behavior. Without Shift, fall through to point /
+      // grid snap so the opening corner can align with surrounding
+      // geometry (e.g. another opening, a surface vertex, or the grid).
+      let resolved: Point2D;
+      if (mods.shift && hole.length >= 2) {
+        const n = hole.length;
+        const prev = hole[(drag.index - 1 + n) % n]!;
+        resolved = constrainAngle(prev, world);
+      } else {
+        resolved = resolveVertexSnap(world, drag, mods);
+      }
+      const nextHole = hole.map((p, i) => (i === drag.index ? resolved : p));
+      return {
+        command: updateOpeningCommand(
+          {
+            surfaceId: drag.surfaceId,
+            openingId: drag.openingId,
+            patch: { hole: nextHole },
+          },
+          'Move opening vertex',
         ),
         visualPosition: resolved,
       };
@@ -458,6 +605,10 @@ export const SelectionEditHandles = () => {
 
   return (
     <Group listening>
+      {/* Live ortho distance + alignment guides anchored at the current
+          drag position. Rendered only while a handle is being dragged so
+          static selection state stays uncluttered. */}
+      {dragPos ? <OrthoMeasureGuides cursor={dragPos} /> : null}
       {allSpecs.map((spec) => (
         <DraggableHandle
           key={spec.key}
@@ -465,6 +616,7 @@ export const SelectionEditHandles = () => {
           scale={scale}
           onPreview={onPreview}
           onCommit={onCommit}
+          onDragVisualChange={setDragPos}
         />
       ))}
     </Group>

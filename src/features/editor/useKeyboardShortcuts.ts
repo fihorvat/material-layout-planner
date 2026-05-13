@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { undo, redo } from '@/domain/commands';
 import { useSelectionStore, useEditorStore, useDimensionEditStore } from '@/state';
-import { deleteSelected, duplicateSelected } from '@/features/drawingTools/select/useSelectInteractions';
+import { deleteSelected, duplicateSelected, selectAll } from '@/features/drawingTools/select/useSelectInteractions';
 import { cancelAllDrawings } from '@/features/drawingTools/drawingCancelRegistry';
 import { useSaveProject } from './useSaveProject';
 
@@ -17,6 +17,7 @@ const TOOL_KEYS: Record<string, ReturnType<typeof useEditorStore.getState>['acti
   c: 'connection',
   x: 'splitSurface',
   k: 'cut',
+  m: 'meter',
 };
 
 export const useKeyboardShortcuts = (): void => {
@@ -45,6 +46,11 @@ export const useKeyboardShortcuts = (): void => {
       if (mod && key === 'd') {
         e.preventDefault();
         duplicateSelected(10);
+        return;
+      }
+      if (mod && key === 'a' && !e.shiftKey) {
+        e.preventDefault();
+        selectAll();
         return;
       }
       if (mod && key === 's' && !e.shiftKey) {
@@ -76,8 +82,6 @@ export const useKeyboardShortcuts = (): void => {
         } else if (key === 's') {
           const es = useEditorStore.getState();
           es.setSnap(!es.snapEnabled);
-        } else if (key === 'm') {
-          useEditorStore.getState().setActiveTool('patternOrigin');
         } else if (e.key === '?' || e.key === 'F1') {
           window.dispatchEvent(new CustomEvent('mlp:toggleShortcutsHelp'));
         }

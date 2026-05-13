@@ -1,3 +1,5 @@
+import { ModalCloseButton } from '@/components';
+
 type Row = { keys: string; action: string; group: string };
 
 const ROWS: Row[] = [
@@ -15,6 +17,7 @@ const ROWS: Row[] = [
   { group: 'Editing', keys: 'Ctrl/Cmd + Z', action: 'Undo' },
   { group: 'Editing', keys: 'Ctrl/Cmd + Shift + Z / Ctrl + Y', action: 'Redo' },
   { group: 'Editing', keys: 'Ctrl/Cmd + D', action: 'Duplicate selection' },
+  { group: 'Editing', keys: 'Ctrl/Cmd + A', action: 'Select all' },
   { group: 'Editing', keys: 'Esc', action: 'Cancel / clear selection' },
   { group: 'Editing', keys: 'Enter', action: 'Confirm numeric / close polygon' },
   { group: 'View', keys: 'Space + drag / Middle mouse drag', action: 'Pan' },
@@ -54,10 +57,14 @@ export const ShortcutsHelpDialog = ({ open, onClose }: ShortcutsHelpDialogProps)
     >
       <div
         style={{
-          background: 'white',
+          background: 'var(--mlp-card)',
+          color: 'var(--mlp-text)',
+          border: '1px solid var(--mlp-border)',
+          boxShadow: 'var(--mlp-shadow-lg)',
           borderRadius: 8,
           padding: 20,
           minWidth: 480,
+          maxWidth: 'calc(100vw - 32px)',
           maxHeight: '80vh',
           overflow: 'auto',
         }}
@@ -65,17 +72,28 @@ export const ShortcutsHelpDialog = ({ open, onClose }: ShortcutsHelpDialogProps)
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0 }}>Keyboard shortcuts</h2>
-          <button type="button" onClick={onClose}>Close</button>
+          <ModalCloseButton onClose={onClose} />
         </div>
         {groups.map((g) => (
           <section key={g} style={{ marginTop: 12 }}>
-            <h3 style={{ fontSize: 13, color: '#6b7280', margin: '8px 0' }}>{g}</h3>
+            <h3 style={{ fontSize: 13, color: 'var(--mlp-muted)', margin: '8px 0' }}>{g}</h3>
             <table style={{ width: '100%', fontSize: 13 }}>
               <tbody>
                 {ROWS.filter((r) => r.group === g).map((r) => (
                   <tr key={r.keys}>
                     <td style={{ width: '50%', padding: 4 }}>
-                      <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 3 }}>{r.keys}</code>
+                      <code
+                        style={{
+                          background: 'var(--mlp-surface-2)',
+                          color: 'var(--mlp-text)',
+                          border: '1px solid var(--mlp-border)',
+                          padding: '2px 6px',
+                          borderRadius: 3,
+                          fontFamily: 'var(--mlp-font-mono)',
+                        }}
+                      >
+                        {r.keys}
+                      </code>
                     </td>
                     <td>{r.action}</td>
                   </tr>

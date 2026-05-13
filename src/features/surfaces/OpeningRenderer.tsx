@@ -1,6 +1,6 @@
 import { Group, Line as KLine, Text } from 'react-konva';
 import type { Surface, Point2D } from '@/types';
-import { useSelectionStore, useThemeStore } from '@/state';
+import { useEditorStore, useSelectionStore, useThemeStore } from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { polygonCentroid, radToDeg, distance } from '@/domain/geometry';
 import { EditableEdgeLabel } from '@/features/drawingTools/dimension/EditableEdgeLabel';
@@ -33,10 +33,14 @@ type OpeningRendererProps = {
   surface: Surface;
 };
 
+const NAME_FONT_PX = 16;
+
 export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
   const theme = useThemeStore((s) => s.theme);
+  const scale = useEditorStore((s) => s.viewport.scale);
   const selected = useSelectionStore((s) => s.selected);
   const selectedIds = new Set(selected.filter((e) => e.kind === 'opening').map((e) => e.id));
+  const nameFontMm = NAME_FONT_PX / scale;
 
   if (surface.holes.length === 0) return null;
   const items: React.ReactNode[] = [];
@@ -67,7 +71,8 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
           x={c.x}
           y={c.y}
           text={meta.name}
-          fontSize={11}
+          fontSize={nameFontMm}
+          fontStyle="bold"
           fill={textColor}
           listening={false}
         />,

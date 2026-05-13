@@ -93,6 +93,14 @@ describe('usePolygonDraw', () => {
     expect(result.current.numericPrompt).toBeNull();
   });
 
+  it('openNumericPrompt forwards initial length string when provided', () => {
+    const stageRef = makeStageRef({ x: 0, y: 0 });
+    const { result } = renderHook(() => usePolygonDraw(stageRef));
+    act(() => result.current.onPointerDown({ shift: false, alt: false, ctrl: false }));
+    act(() => result.current.openNumericPrompt('7'));
+    expect(result.current.numericPrompt?.initialLength).toBe('7');
+  });
+
   it('appendSegment adds a point from last at length+angle', () => {
     const stageRef = makeStageRef({ x: 0, y: 0 });
     const { result } = renderHook(() => usePolygonDraw(stageRef));

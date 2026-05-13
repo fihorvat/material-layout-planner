@@ -13,6 +13,7 @@ import {
 import {
   dispatchCommand,
   addDrawingEntityCommand,
+  deleteDrawingEntityCommand,
   replaceProjectCommand,
 } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
@@ -89,7 +90,9 @@ const resolveWorldFromStage = (stageRef: React.RefObject<Konva.Stage | null>): P
 
 export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const [state, setState] = useState<LineDrawState>({ phase: 'pickFirst' });
-  const [numericPrompt, setNumericPrompt] = useState<{ first: Point2D; initialAngleDeg: number } | null>(null);
+  const [numericPrompt, setNumericPrompt] = useState<
+    { first: Point2D; initialAngleDeg: number; initialLength?: string } | null
+  >(null);
 
   const resolvePoint = useCallback(
     (mods: ModifierKeys): { point: Point2D; bboxSnapped: boolean } | null => {
@@ -253,12 +256,40 @@ export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
     setNumericPrompt(null);
   }, []);
 
-  const openNumericPrompt = useCallback(() => {
+  // Backspace handler: while a polyline chain is in progress, drop the most
+  // recently committed segment (and its endpoint) so the user can re-click
+  // to place a different next vertex. When no segment has been committed
+  // (only the first anchor exists) this returns the tool to "pick first".
+  const removeLast = useCallback(() => {
+    if (state.phase !== 'pickSecond') return;
+    if (state.chainLineIds.length === 0) {
+      // Only the initial anchor has been placed; clear it.
+      setState({ phase: 'pickFirst' });
+      setNumericPrompt(null);
+      return;
+    }
+    const lastLineId = state.chainLineIds[state.chainLineIds.length - 1]!;
+    dispatchCommand(deleteDrawingEntityCommand({ id: lastLineId }));
+    const newChainPoints = state.chainPoints.slice(0, -1);
+    const newChainIds = state.chainLineIds.slice(0, -1);
+    const newFirst = newChainPoints[newChainPoints.length - 1] ?? state.first;
+    setState({
+      phase: 'pickSecond',
+      first: newFirst,
+      cursor: newFirst,
+      ortho: false,
+      chainPoints: newChainPoints,
+      chainLineIds: newChainIds,
+    });
+    setNumericPrompt(null);
+  }, [state]);
+
+  const openNumericPrompt = useCallback((initialLength?: string) => {
     if (state.phase !== 'pickSecond') return;
     const dx = state.cursor.x - state.first.x;
     const dy = state.cursor.y - state.first.y;
     const initialAngleDeg = Math.hypot(dx, dy) < 1e-9 ? 0 : (Math.atan2(dy, dx) * 180) / Math.PI;
-    setNumericPrompt({ first: state.first, initialAngleDeg });
+    setNumericPrompt({ first: state.first, initialAngleDeg, initialLength });
   }, [state]);
 
   const submitNumeric = useCallback(
@@ -308,6 +339,7 @@ export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
     onPointerDown,
     openNumericPrompt,
     submitNumeric,
+    removeLast,
     cancel,
   };
 };

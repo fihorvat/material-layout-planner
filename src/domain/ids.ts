@@ -1,4 +1,21 @@
-import { ulid } from 'ulid';
+import { factory, type PRNG } from 'ulid';
+
+// ulid's built-in detectPrng() only checks `window`, so in a Web Worker
+// (where `window` is undefined) it falls back to `require('crypto')` which
+// Vite resolves to an empty browser stub, producing `nodeCrypto.randomBytes
+// is not a function`. Provide a PRNG backed by Web Crypto via `globalThis`,
+// which is available on the main thread, workers, and Node 20+.
+const prng: PRNG = () => {
+  const cryptoObj = (globalThis as { crypto?: Crypto }).crypto;
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    const buffer = new Uint8Array(1);
+    cryptoObj.getRandomValues(buffer);
+    return (buffer[0] ?? 0) / 0xff;
+  }
+  throw new Error('secure crypto unavailable for ulid');
+};
+
+const ulid = factory(prng);
 
 export const newId = (): string => ulid();
 

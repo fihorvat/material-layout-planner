@@ -1,5 +1,6 @@
 import { useProjectStore, useSelectionStore } from '@/state';
 import { surfaceArea } from '@/domain/surfaces/surfaceGeometry';
+import editorStyles from '@/features/editor/editor.module.css';
 
 export const SurfaceList = () => {
   const surfaces = useProjectStore((s) => s.project.surfaces);
@@ -10,9 +11,9 @@ export const SurfaceList = () => {
     return <p>No surfaces yet.</p>;
   }
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+    <table className={editorStyles.dataTable}>
       <thead>
-        <tr style={{ textAlign: 'left' }}>
+        <tr>
           <th>Name</th>
           <th>Material</th>
           <th>Pattern</th>

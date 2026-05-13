@@ -102,7 +102,9 @@ export const usePolygonDraw = (
   const { onCommit } = options;
   const [state, setState] = useState<PolygonDrawState>({ phase: 'idle' });
   const [error, setError] = useState<string | null>(null);
-  const [numericPrompt, setNumericPrompt] = useState<{ initialAngleDeg: number } | null>(null);
+  const [numericPrompt, setNumericPrompt] = useState<
+    { initialAngleDeg: number; initialLength?: string } | null
+  >(null);
 
   const tryCommit = useCallback((points: Point2D[]) => {
     if (points.length < 3) {
@@ -254,14 +256,14 @@ export const usePolygonDraw = (
     setNumericPrompt(null);
   }, []);
 
-  const openNumericPrompt = useCallback(() => {
+  const openNumericPrompt = useCallback((initialLength?: string) => {
     if (state.phase !== 'drawing') return;
     const last = state.points[state.points.length - 1];
     if (!last) return;
     const dx = state.cursor.x - last.x;
     const dy = state.cursor.y - last.y;
     const initialAngleDeg = Math.hypot(dx, dy) < 1e-9 ? 0 : (Math.atan2(dy, dx) * 180) / Math.PI;
-    setNumericPrompt({ initialAngleDeg });
+    setNumericPrompt({ initialAngleDeg, initialLength });
   }, [state]);
 
   const submitNumeric = useCallback(

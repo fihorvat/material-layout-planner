@@ -16,6 +16,7 @@ export type ToolId =
   | 'patternOrigin'
   | 'splitSurface'
   | 'cut'
+  | 'meter'
   | 'calibrateImage';
 
 export type LayerId =
@@ -57,6 +58,14 @@ export type PendingDrawState =
 export const ZOOM_MIN = 0.05;
 export const ZOOM_MAX = 50;
 
+/**
+ * Default viewport scale used on first load and on viewport reset.
+ * World coordinates are in millimetres, so `scale = 1` means 1 mm = 1 px —
+ * a 2.79 m line would then be 2790 px tall, which doesn't fit on screen.
+ * At 0.2, 1 m = 200 px so a typical 5 m x 4 m room fits comfortably.
+ */
+export const DEFAULT_ZOOM = 0.2;
+
 export const clampZoom = (scale: number): number =>
   Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, scale));
 
@@ -97,7 +106,7 @@ const buildLayers = (): LayerVisibility => {
   return layers;
 };
 
-const initialViewport = (): Viewport => ({ offsetXPx: 0, offsetYPx: 0, scale: 1 });
+const initialViewport = (): Viewport => ({ offsetXPx: 0, offsetYPx: 0, scale: DEFAULT_ZOOM });
 
 const buildInitialState = () => ({
   activeTool: 'select' as ToolId,

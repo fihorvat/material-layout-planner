@@ -18,6 +18,9 @@ describe('useLineDraw', () => {
     useProjectStore.getState().resetForTests();
     useEditorStore.getState().resetForTests();
     useHistoryStore.getState().resetForTests();
+    // Pin viewport scale so screen->world mapping is 1:1 in tests regardless
+    // of the production default zoom.
+    useEditorStore.getState().setViewport({ offsetXPx: 0, offsetYPx: 0, scale: 1 });
   });
 
   it('first click sets phase to pickSecond', () => {
@@ -89,6 +92,14 @@ describe('useLineDraw', () => {
     act(() => result.current.onPointerMove({ shift: false, alt: true, ctrl: false }));
     act(() => result.current.openNumericPrompt());
     expect(result.current.numericPrompt?.initialAngleDeg).toBeCloseTo(90);
+  });
+
+  it('openNumericPrompt forwards initial length string when provided', () => {
+    const stageRef = makeStageRef({ x: 0, y: 0 });
+    const { result } = renderHook(() => useLineDraw(stageRef));
+    act(() => result.current.onPointerDown({ shift: false, alt: true, ctrl: false }));
+    act(() => result.current.openNumericPrompt('2'));
+    expect(result.current.numericPrompt?.initialLength).toBe('2');
   });
 
   it('Esc cancel resets to pickFirst', () => {

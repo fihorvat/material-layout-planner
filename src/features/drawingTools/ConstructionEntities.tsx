@@ -10,7 +10,6 @@ import type {
 import {
   lineLength,
   lineAngleDeg,
-  segmentMidpoint,
   distance,
   radToDeg,
 } from '@/domain/geometry';
@@ -27,12 +26,18 @@ const flat = (points: Point2D[]): number[] => {
 
 const LineDimensions = ({ entity, theme }: { entity: LineEntity; theme: Theme }) => {
   if (!entity.showDimension) return null;
-  const mid = segmentMidpoint({ a: entity.start, b: entity.end });
   const len = lineLength({ a: entity.start, b: entity.end });
   const angle = lineAngleDeg({ a: entity.start, b: entity.end });
+  // Anchor the dimension label near the end of the line so it stays visible
+  // when many lines overlap near a common midpoint area. Pull back slightly
+  // from the exact endpoint so the label sits over the line, not past it.
+  const anchor: Point2D = {
+    x: entity.start.x + (entity.end.x - entity.start.x) * 0.85,
+    y: entity.start.y + (entity.end.y - entity.start.y) * 0.85,
+  };
   return (
     <EditableEdgeLabel
-      midpoint={mid}
+      midpoint={anchor}
       lengthMm={len}
       angleDeg={angle}
       color={themedShapeColor(entity.style.textColor, theme)}

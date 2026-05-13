@@ -1,5 +1,6 @@
 import { useProjectStore, useSelectionStore } from '@/state';
 import { dispatchCommand, updateSurfaceCommand, deleteSurfaceCommand, renameSurfaceCommand } from '@/domain/commands';
+import { AssignPatternControl, PlacementPatternPanel } from '@/features/placementPatterns';
 
 export const SurfaceProperties = () => {
   const selection = useSelectionStore((s) => s.selected);
@@ -37,18 +38,18 @@ export const SurfaceProperties = () => {
           ))}
         </select>
       </label>
-      <label>
-        Pattern{' '}
-        <select
-          value={surface.placementPatternId ?? ''}
-          onChange={(e) => onPatch('placementPatternId', e.target.value || null)}
-        >
-          <option value="">— None —</option>
-          {project.placementPatterns.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-      </label>
+      <AssignPatternControl surfaceId={surface.id} value={surface.placementPatternId} />
+      {surface.placementPatternId && (
+        <details open style={{ borderTop: '1px solid #e5e7eb', paddingTop: 8 }}>
+          <summary style={{ cursor: 'pointer', fontSize: 12, color: '#374151', marginBottom: 6 }}>
+            Pattern settings
+          </summary>
+          <PlacementPatternPanel
+            patternId={surface.placementPatternId}
+            contextMaterialId={surface.materialId ?? null}
+          />
+        </details>
+      )}
       <label>
         <input type="checkbox" checked={surface.showName} onChange={(e) => onPatch('showName', e.target.checked)} />
         Show name
