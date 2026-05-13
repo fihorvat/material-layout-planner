@@ -5,6 +5,8 @@ export { replaceProjectCommand } from './builtin/replaceProjectCommand';
 export { addDrawingEntityCommand } from './builtin/addDrawingEntityCommand';
 export { deleteDrawingEntityCommand } from './builtin/deleteDrawingEntityCommand';
 export { updateDrawingEntityCommand } from './builtin/updateDrawingEntityCommand';
+export { updateDrawingEntitiesCommand } from './builtin/updateDrawingEntitiesCommand';
+export { splitLineCommand } from './builtin/splitLineCommand';
 export { changeProjectSettingsCommand } from './builtin/changeProjectSettingsCommand';
 export {
   addDimensionCommand,
@@ -25,6 +27,18 @@ export {
   removeSurfaceHoleCommand,
   updateSurfaceHoleCommand,
 } from './builtin/surfaceCommands';
+export {
+  addOpeningCommand,
+  removeOpeningCommand,
+  updateOpeningCommand,
+  findOpeningSurface,
+} from './builtin/openingCommands';
+export type {
+  AddOpeningPayload,
+  RemoveOpeningPayload,
+  UpdateOpeningPayload,
+  OpeningMetaInput,
+} from './builtin/openingCommands';
 export { splitSurfaceCommand } from './builtin/splitSurfaceCommand';
 export {
   addConnectionCommand,

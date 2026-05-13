@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { IconButton } from '@/components';
+import { IconButton, ThemeToggle } from '@/components';
 import {
   useEditorStore,
   useProjectStore,
@@ -7,6 +7,9 @@ import {
   clampZoom,
 } from '@/state';
 import { undo, redo } from '@/domain/commands';
+import { useGenerateLayout } from '@/features/materialLayout/useGenerateLayout';
+import { useSaveProject } from './useSaveProject';
+import { FileMenu } from './FileMenu';
 import styles from './editor.module.css';
 
 export const EditorToolbar = () => {
@@ -18,6 +21,8 @@ export const EditorToolbar = () => {
   const setGridVisible = useEditorStore((s) => s.setGridVisible);
   const snapEnabled = useEditorStore((s) => s.snapEnabled);
   const setSnap = useEditorStore((s) => s.setSnap);
+  const drawingModeEnabled = useEditorStore((s) => s.drawingModeEnabled);
+  const toggleDrawingMode = useEditorStore((s) => s.toggleDrawingMode);
 
   const project = useProjectStore((s) => s.project);
   const isDirty = useProjectStore((s) => s.isDirty);
@@ -26,6 +31,9 @@ export const EditorToolbar = () => {
 
   const past = useHistoryStore((s) => s.past);
   const future = useHistoryStore((s) => s.future);
+
+  const { generateAndPersist, running: generating } = useGenerateLayout();
+  const { saveProject, saving } = useSaveProject();
 
   const [name, setName] = useState(project.name);
   useEffect(() => {
@@ -48,15 +56,21 @@ export const EditorToolbar = () => {
 
   return (
     <div className={styles.toolbar} role="toolbar" aria-label="Editor toolbar">
-      <IconButton label="File" shortcut="" onClick={() => {}}>
-        <span aria-hidden>{'\u2630'}</span>
-      </IconButton>
+      <FileMenu />
       <span className={styles.toolbarSep} aria-hidden />
       <IconButton label="Undo" shortcut="Ctrl+Z" disabled={past.length === 0} onClick={() => undo()}>
         <span aria-hidden>{'\u21B6'}</span>
       </IconButton>
       <IconButton label="Redo" shortcut="Ctrl+Shift+Z" disabled={future.length === 0} onClick={() => redo()}>
         <span aria-hidden>{'\u21B7'}</span>
+      </IconButton>
+      <IconButton
+        label={saving ? 'Saving\u2026' : 'Save project'}
+        shortcut="Ctrl+S"
+        disabled={saving}
+        onClick={() => void saveProject()}
+      >
+        <span aria-hidden>{'\u{1F4BE}'}</span>
       </IconButton>
       <span className={styles.toolbarSep} aria-hidden />
       <IconButton label="Zoom out" shortcut="-" onClick={() => zoomAt(center, 1 / 1.2)}>
@@ -79,11 +93,29 @@ export const EditorToolbar = () => {
       <IconButton label={snapEnabled ? 'Disable snap' : 'Enable snap'} shortcut="S" active={snapEnabled} onClick={() => setSnap(!snapEnabled)}>
         <span aria-hidden>{'\u25C7'}</span>
       </IconButton>
+      <IconButton
+        label={drawingModeEnabled ? 'Disable drawing aids' : 'Enable drawing aids'}
+        shortcut=""
+        active={drawingModeEnabled}
+        onClick={() => toggleDrawingMode()}
+      >
+        <span aria-hidden>{'\u25A3'}</span>
+      </IconButton>
       <span className={styles.toolbarSep} aria-hidden />
+      <IconButton
+        label={generating ? 'Generating layout\u2026' : 'Generate material layout'}
+        shortcut=""
+        disabled={generating}
+        onClick={() => void generateAndPersist()}
+      >
+        <span aria-hidden>{generating ? '\u29D7' : '\u25A6'}</span>
+      </IconButton>
       <IconButton label="Export PDF" shortcut="" onClick={() => {}}>
         <span aria-hidden>PDF</span>
       </IconButton>
       <span className={styles.toolbarSpacer} />
+      <ThemeToggle />
+      <span className={styles.toolbarSep} aria-hidden />
       <div className={styles.toolbarRight}>
         <input
           aria-label="Project name"

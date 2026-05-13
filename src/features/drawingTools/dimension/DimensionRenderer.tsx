@@ -1,14 +1,18 @@
 import { Group, Line as KLine, Text, Arrow } from 'react-konva';
 import type { DimensionEntity, Project } from '@/types';
 import { computeDimension } from './computeDimension';
+import { useThemeStore, type Theme } from '@/state';
+import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 
 export type DimensionRendererProps = {
   dimensions: DimensionEntity[];
   project: Project;
 };
 
-const renderOne = (dim: DimensionEntity, project: Project) => {
+const renderOne = (dim: DimensionEntity, project: Project, theme: Theme) => {
   const computed = computeDimension(dim, project);
+  const stroke = themedShapeColor(dim.style.strokeColor, theme);
+  const text = themedShapeColor(dim.style.textColor, theme);
   if (!computed) {
     return (
       <Text
@@ -16,7 +20,7 @@ const renderOne = (dim: DimensionEntity, project: Project) => {
         text="?"
         x={0}
         y={0}
-        fill="#dc2626"
+        fill={theme === 'dark' ? '#f87171' : '#dc2626'}
         fontSize={dim.style.fontSizePx}
       />
     );
@@ -28,7 +32,7 @@ const renderOne = (dim: DimensionEntity, project: Project) => {
         text={computed.valueText}
         x={computed.center.x}
         y={computed.center.y}
-        fill={dim.style.textColor}
+        fill={text}
         fontSize={dim.style.fontSizePx}
       />
     );
@@ -38,7 +42,7 @@ const renderOne = (dim: DimensionEntity, project: Project) => {
       <Group key={dim.id}>
         <KLine
           points={[computed.armA.x, computed.armA.y, computed.vertex.x, computed.vertex.y, computed.armB.x, computed.armB.y]}
-          stroke={dim.style.strokeColor}
+          stroke={stroke}
           strokeWidth={dim.style.strokeWidthPx}
           strokeScaleEnabled={false}
         />
@@ -46,7 +50,7 @@ const renderOne = (dim: DimensionEntity, project: Project) => {
           x={computed.vertex.x}
           y={computed.vertex.y}
           text={computed.valueText}
-          fill={dim.style.textColor}
+          fill={text}
           fontSize={dim.style.fontSizePx}
         />
       </Group>
@@ -56,10 +60,10 @@ const renderOne = (dim: DimensionEntity, project: Project) => {
     <Group key={dim.id}>
       <Arrow
         points={[computed.a.x, computed.a.y, computed.b.x, computed.b.y]}
-        stroke={dim.style.strokeColor}
+        stroke={stroke}
         strokeWidth={dim.style.strokeWidthPx}
         strokeScaleEnabled={false}
-        fill={dim.style.strokeColor}
+        fill={stroke}
         pointerLength={dim.style.arrowSizePx}
         pointerWidth={dim.style.arrowSizePx}
         pointerAtBeginning
@@ -68,7 +72,7 @@ const renderOne = (dim: DimensionEntity, project: Project) => {
         x={computed.midpoint.x}
         y={computed.midpoint.y}
         text={computed.valueText}
-        fill={dim.style.textColor}
+        fill={text}
         fontSize={dim.style.fontSizePx}
         offsetY={dim.style.fontSizePx + 2}
       />
@@ -77,5 +81,6 @@ const renderOne = (dim: DimensionEntity, project: Project) => {
 };
 
 export const DimensionRenderer = ({ dimensions, project }: DimensionRendererProps) => {
-  return <Group>{dimensions.map((d) => renderOne(d, project))}</Group>;
+  const theme = useThemeStore((s) => s.theme);
+  return <Group>{dimensions.map((d) => renderOne(d, project, theme))}</Group>;
 };

@@ -77,4 +77,14 @@ describe('editorStore', () => {
     expect(s.gridVisible).toBe(false);
     expect(s.snapEnabled).toBe(false);
   });
+
+  it('drawingModeEnabled defaults to false and toggle/set flip the flag', () => {
+    expect(useEditorStore.getState().drawingModeEnabled).toBe(false);
+    useEditorStore.getState().toggleDrawingMode();
+    expect(useEditorStore.getState().drawingModeEnabled).toBe(true);
+    useEditorStore.getState().toggleDrawingMode();
+    expect(useEditorStore.getState().drawingModeEnabled).toBe(false);
+    useEditorStore.getState().setDrawingModeEnabled(true);
+    expect(useEditorStore.getState().drawingModeEnabled).toBe(true);
+  });
 });

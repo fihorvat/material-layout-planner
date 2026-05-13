@@ -1,5 +1,5 @@
 import { Line, Group } from 'react-konva';
-import { useEditorStore, useProjectStore } from '@/state';
+import { useEditorStore, useProjectStore, useThemeStore } from '@/state';
 import { visibleWorldBounds } from './coords';
 
 type GridLayerProps = {
@@ -9,10 +9,17 @@ type GridLayerProps = {
 
 const MAX_LINES_PER_AXIS = 400;
 
+const GRID_COLORS = {
+  light: { minor: '#e5e7eb', major: '#cbd5e1', axis: '#9ca3af' },
+  dark: { minor: '#1f2a3d', major: '#334155', axis: '#64748b' },
+} as const;
+
 export const GridLayer = ({ widthPx, heightPx }: GridLayerProps) => {
   const viewport = useEditorStore((s) => s.viewport);
   const gridVisible = useEditorStore((s) => s.gridVisible);
   const gridSizeMm = useProjectStore((s) => s.project.settings.gridSizeMm);
+  const theme = useThemeStore((s) => s.theme);
+  const colors = GRID_COLORS[theme];
   if (!gridVisible || gridSizeMm <= 0) return null;
 
   const scale = viewport.scale;
@@ -43,7 +50,7 @@ export const GridLayer = ({ widthPx, heightPx }: GridLayerProps) => {
       <Line
         key={`vx${i}`}
         points={[x, minY, x, maxY]}
-        stroke={isMajor ? '#cbd5e1' : '#e5e7eb'}
+        stroke={isMajor ? colors.major : colors.minor}
         strokeWidth={1}
         strokeScaleEnabled={false}
         listening={false}
@@ -59,7 +66,7 @@ export const GridLayer = ({ widthPx, heightPx }: GridLayerProps) => {
       <Line
         key={`hy${j}`}
         points={[minX, y, maxX, y]}
-        stroke={isMajor ? '#cbd5e1' : '#e5e7eb'}
+        stroke={isMajor ? colors.major : colors.minor}
         strokeWidth={1}
         strokeScaleEnabled={false}
         listening={false}
@@ -72,14 +79,14 @@ export const GridLayer = ({ widthPx, heightPx }: GridLayerProps) => {
       {lines}
       <Line
         points={[minX, 0, maxX, 0]}
-        stroke="#9ca3af"
+        stroke={colors.axis}
         strokeWidth={1.5}
         strokeScaleEnabled={false}
         listening={false}
       />
       <Line
         points={[0, minY, 0, maxY]}
-        stroke="#9ca3af"
+        stroke={colors.axis}
         strokeWidth={1.5}
         strokeScaleEnabled={false}
         listening={false}

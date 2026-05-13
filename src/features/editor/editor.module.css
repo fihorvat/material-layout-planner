@@ -160,3 +160,44 @@
   background: var(--mlp-surface-2);
   color: var(--mlp-text);
 }
+
+.fileMenu {
+  position: fixed;
+  z-index: 1100;
+  min-width: 220px;
+  background: var(--mlp-surface);
+  border: 1px solid var(--mlp-border);
+  border-radius: var(--mlp-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+.fileMenuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: var(--mlp-radius-sm);
+  font-size: 13px;
+  color: var(--mlp-text);
+  cursor: pointer;
+}
+.fileMenuItem:hover:not(:disabled),
+.fileMenuItem:focus-visible {
+  background: var(--mlp-surface-2);
+  outline: none;
+}
+.fileMenuItem:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.fileMenuShortcut {
+  font-family: var(--mlp-font-mono);
+  font-size: 12px;
+  color: var(--mlp-muted);
+}

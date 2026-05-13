@@ -35,3 +35,25 @@ export {
   type HistoryState,
   type Command,
 } from './historyStore';
+
+export {
+  useThemeStore,
+  getTheme,
+  initializeTheme,
+  type Theme,
+  type ThemeState,
+} from './themeStore';
+
+export {
+  useDimensionEditStore,
+  getDimensionEdit,
+  type DimensionEditState,
+  type DimensionEditTarget,
+} from './dimensionEditStore';
+
+export {
+  useOpeningToolStore,
+  getOpeningTool,
+  type OpeningToolState,
+  type OpeningToolMode,
+} from './openingToolStore';

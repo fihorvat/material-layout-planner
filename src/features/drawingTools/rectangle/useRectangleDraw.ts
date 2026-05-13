@@ -61,7 +61,7 @@ export const useRectangleDraw = (stageRef: React.RefObject<Konva.Stage | null>) 
       widthMm: inputs.widthMm,
       heightMm: inputs.heightMm,
       rotationDeg: 0,
-      showDimensions: false,
+      showDimensions: true,
       style: defaultDrawingStyle(),
     };
     dispatchCommand(addDrawingEntityCommand({ entity }));

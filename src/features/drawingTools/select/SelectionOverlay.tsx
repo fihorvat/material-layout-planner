@@ -14,6 +14,14 @@ export const SelectionOverlay = () => {
         if (entry.kind === 'surface') {
           const s = project.surfaces.find((x) => x.id === entry.id);
           if (s) pts = s.outerBoundary;
+        } else if (entry.kind === 'opening') {
+          for (const s of project.surfaces) {
+            const idx = s.holeMeta.findIndex((m) => m.id === entry.id);
+            if (idx >= 0) {
+              pts = s.holes[idx] ?? null;
+              break;
+            }
+          }
         } else {
           const e = project.drawingEntities.find((x) => x.id === entry.id);
           if (e) {

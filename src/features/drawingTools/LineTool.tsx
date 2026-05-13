@@ -3,10 +3,12 @@ import type Konva from 'konva';
 import { useLineDraw } from './line/useLineDraw';
 import { LinePreview } from './line/LinePreview';
 import { NumericPromptOverlay } from './line/NumericPromptOverlay';
+import { registerDrawingCancel } from './drawingCancelRegistry';
 
 export const useLineTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const draw = useLineDraw(stageRef);
 
+  useEffect(() => registerDrawingCancel(draw.cancel), [draw.cancel]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -36,11 +38,15 @@ export const useLineTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
 
   const overlays =
     draw.state.phase === 'pickSecond' ? (
-      <LinePreview first={draw.state.first} cursor={draw.state.cursor} />
+      <LinePreview first={draw.state.first} cursor={draw.state.cursor} ortho={draw.state.ortho} />
     ) : null;
 
   const domOverlay = draw.numericPrompt ? (
-    <NumericPromptOverlay onSubmit={draw.submitNumeric} onCancel={draw.cancel} />
+    <NumericPromptOverlay
+      onSubmit={draw.submitNumeric}
+      onCancel={draw.cancel}
+      initialAngleDeg={draw.numericPrompt.initialAngleDeg}
+    />
   ) : null;
 
   return { onStagePointerDown, onStagePointerMove, overlays, domOverlay };

@@ -44,3 +44,23 @@ export const normalize = (p: Point2D): Point2D => {
   if (len < GEOMETRY_EPS) return { x: 0, y: 0 };
   return { x: p.x / len, y: p.y / len };
 };
+
+/**
+ * Returns `to` projected onto the nearest ray emitted from `from` whose
+ * direction is a multiple of `stepDeg` (default 90°). Preserves the distance
+ * between `from` and `to`. Used to implement the "ortho / Shift" snap during
+ * both drawing and corner-editing.
+ */
+export const constrainAngle = (from: Point2D, to: Point2D, stepDeg = 90): Point2D => {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.hypot(dx, dy);
+  if (len < GEOMETRY_EPS) return to;
+  const angle = Math.atan2(dy, dx);
+  const step = degToRad(stepDeg);
+  const snapped = Math.round(angle / step) * step;
+  return {
+    x: from.x + Math.cos(snapped) * len,
+    y: from.y + Math.sin(snapped) * len,
+  };
+};

@@ -64,10 +64,13 @@ export const hitTest = (input: HitTestInput): HitTestResult => {
 
   if (layers.openings.visible && !layers.openings.locked) {
     for (const surface of project.surfaces) {
-      for (const hole of surface.holes) {
+      for (let i = 0; i < surface.holes.length; i++) {
+        const hole = surface.holes[i]!;
+        const meta = surface.holeMeta[i];
         const bbox = pointsToAabb(hole);
         if (aabbContainsPoint(bbox, worldPoint) && pointInPolygon(worldPoint, hole)) {
-          candidates.push({ kind: 'opening', id: surface.id + ':hole', zIndex: 50, bbox });
+          const id = meta?.id ?? `${surface.id}:hole:${i}`;
+          candidates.push({ kind: 'opening', id, zIndex: 50, bbox });
         }
       }
     }

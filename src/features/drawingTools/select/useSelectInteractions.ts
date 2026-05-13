@@ -1,11 +1,22 @@
 import { useCallback, useRef, useState } from 'react';
 import type Konva from 'konva';
-import type { Point2D, DrawingEntity } from '@/types';
+import type { Point2D, DrawingEntity, LineEntity } from '@/types';
 import { useEditorStore, useProjectStore, useSelectionStore } from '@/state';
 import { screenToWorld } from '@/features/editor/canvas/coords';
 import { hitTest, entitiesIntersectingAabb } from './HitTest';
-import { dispatchCommand, deleteDrawingEntityCommand, addDrawingEntityCommand } from '@/domain/commands';
+import {
+  dispatchCommand,
+  deleteDrawingEntityCommand,
+  addDrawingEntityCommand,
+  splitLineCommand,
+  deleteSurfaceCommand,
+  deleteDimensionCommand,
+  deleteLabelCommand,
+  removeOpeningCommand,
+  findOpeningSurface,
+} from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
+import { closestPointOnSegment, distance } from '@/domain/geometry';
 
 const HIT_TOLERANCE_PX = 8;
 const CLICK_DRAG_THRESHOLD_PX = 2;
@@ -115,11 +126,66 @@ export const useSelectInteractions = (stageRef: React.RefObject<Konva.Stage | nu
     [marquee, stageRef],
   );
 
+  const onStageDblClick = useCallback(
+    (e: { evt: MouseEvent }) => {
+      if (e.evt.button !== 0) return;
+      const stage = stageRef.current;
+      if (!stage) return;
+      const pos = stage.getPointerPosition();
+      if (!pos) return;
+      const v = useEditorStore.getState().viewport;
+      const world = screenToWorld(pos.x, pos.y, v);
+      const layers = useEditorStore.getState().layers;
+      const project = useProjectStore.getState().project;
+      const tolMm = HIT_TOLERANCE_PX / v.scale;
+      const result = hitTest({
+        worldPoint: world,
+        tolerancePxAsMm: tolMm,
+        project,
+        layers,
+      });
+      if (!result.topHit || result.topHit.kind !== 'line') return;
+      const line = project.drawingEntities.find(
+        (x) => x.id === result.topHit!.id && x.type === 'line',
+      ) as LineEntity | undefined;
+      if (!line) return;
+      const onSeg = closestPointOnSegment(world, { a: line.start, b: line.end });
+      const minGapMm = (HIT_TOLERANCE_PX / 2) / v.scale;
+      if (
+        distance(onSeg, line.start) < minGapMm ||
+        distance(onSeg, line.end) < minGapMm
+      ) {
+        return;
+      }
+      const partA: LineEntity = {
+        ...line,
+        id: newDrawingEntityId(),
+        start: line.start,
+        end: onSeg,
+      };
+      const partB: LineEntity = {
+        ...line,
+        id: newDrawingEntityId(),
+        start: onSeg,
+        end: line.end,
+      };
+      dispatchCommand(
+        splitLineCommand({ sourceId: line.id, parts: [partA, partB] }, 'Add point on line'),
+      );
+      useSelectionStore.getState().selectMany([
+        { kind: 'line', id: partA.id },
+        { kind: 'line', id: partB.id },
+      ]);
+    },
+    [stageRef],
+  );
+
   return {
     marquee,
     onStagePointerDown,
     onStagePointerMove,
     onStagePointerUp,
+    onStageDblClick,
   };
 };
 
@@ -130,6 +196,20 @@ export const deleteSelected = (): void => {
     if (entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon') {
       const exists = project.drawingEntities.some((e) => e.id === entry.id);
       if (exists) dispatchCommand(deleteDrawingEntityCommand({ id: entry.id }));
+    } else if (entry.kind === 'surface') {
+      const exists = project.surfaces.some((s) => s.id === entry.id);
+      if (exists) dispatchCommand(deleteSurfaceCommand({ id: entry.id }));
+    } else if (entry.kind === 'dimension') {
+      const exists = project.dimensions.some((d) => d.id === entry.id);
+      if (exists) dispatchCommand(deleteDimensionCommand({ id: entry.id }));
+    } else if (entry.kind === 'label') {
+      const exists = project.labels.some((l) => l.id === entry.id);
+      if (exists) dispatchCommand(deleteLabelCommand({ id: entry.id }));
+    } else if (entry.kind === 'opening') {
+      const found = findOpeningSurface(project, entry.id);
+      if (found) {
+        dispatchCommand(removeOpeningCommand({ surfaceId: found.surface.id, openingId: entry.id }));
+      }
     }
   }
   useSelectionStore.getState().clear();

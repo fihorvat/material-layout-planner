@@ -3,10 +3,12 @@ import type Konva from 'konva';
 import { useRectangleDraw } from './rectangle/useRectangleDraw';
 import { RectanglePreview } from './rectangle/RectanglePreview';
 import { NumericPromptOverlay } from './line/NumericPromptOverlay';
+import { registerDrawingCancel } from './drawingCancelRegistry';
 
 export const useRectangleTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const draw = useRectangleDraw(stageRef);
 
+  useEffect(() => registerDrawingCancel(draw.cancel), [draw.cancel]);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -33,6 +35,7 @@ export const useRectangleTool = (stageRef: React.RefObject<Konva.Stage | null>) 
       origin={draw.preview.origin}
       widthMm={draw.preview.widthMm}
       heightMm={draw.preview.heightMm}
+      cursor={draw.state.phase === 'pickSecond' ? draw.state.cursor : undefined}
     />
   ) : null;
 

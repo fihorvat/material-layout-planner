@@ -2,13 +2,14 @@
 
 - **Date**: 2026-05-12
 - **Base commit**: fd6459e (before T36/T37 polish + tests)
+- **Updated**: 2026-05-12 (post-release follow-ups: worker wiring, pattern origin drag, dashboard thumbnails, toast adoption)
 
 ## Test suite
 
-- `npm test`: **224 passed / 0 failed** across 54 test files.
+- `npm test`: **226 passed / 0 failed** across 55 test files.
 - `npm run lint`: 0 errors, 2 minor warnings (unused eslint-disable directives in `clipMaterialPieceToSurface.ts:46` and `ErrorBoundary.tsx:17`).
 - `npm run typecheck`: clean.
-- `npm run build`: succeeds (1 chunk-size warning).
+- `npm run build`: succeeds. `materialLayoutOptimizer.worker` now emits as its own chunk (~98 KB); main bundle chunk-size warning remains.
 
 ## Acceptance checklist (plan.md §51)
 
@@ -29,7 +30,7 @@
 | Physical overlap on edges | done | Edge rule resolution + `computeWorkingPolygon` (T24). |
 | Overlap drawn semi-transparently | done | `MaterialLayoutLayer` renders overlap polygons at 0.25 opacity (T25). |
 | Placement pattern + orientation | done | `PlacementPattern` model + grid generator (T20/T22). |
-| Manual offset by mouse | partial | Snap helpers in `manualOffset.ts`; drag UI minimal in MVP (T21). |
+| Manual offset by mouse | done | `PatternOriginLayer` renders draggable handles when the Pattern Origin tool (`M`) is active; drag commits via `updatePlacementPatternCommand` with snap. |
 | Manual offset by numeric input | done | Offset fields on pattern; pattern editor follows. |
 | Optimization priorities | done | `optimizeMaterialLayout` + score weights (T27). |
 | Piece IDs and sizes | done | `pieceCodes.ts`, `MaterialPieceLabel` (T23/T25). |
@@ -55,15 +56,15 @@
 
 ## Known gaps / follow-ups
 
-- **Web Worker**: T27 ships with a synchronous fallback in `runOptimizer`. The Vite `?worker` plumbing is sketched in `materialLayoutOptimizer.worker.ts` but not wired in. Optimization runs on the main thread for now.
-- **Pattern origin drag UI** is left as an MVP stub (numeric editing covers it).
-- **PDF SVG renderer** is a minimal line-based pipeline; richer styling (dashed overlap outlines, dimension arrows in the technical page) can be expanded in `svg.ts`.
-- **Thumbnails**: dashboard layout does not render captured Konva thumbnails yet.
-- **Toasts** are wired (`toastStore`, `ToastContainer`) but most commands still surface errors via `throw`; replace as part of polish.
+- **Web Worker**: `runOptimizer` (`src/workers/materialLayoutOptimizerClient.ts`) now dynamically imports `materialLayoutOptimizer.worker.ts` via Vite's `?worker` query and falls back to a synchronous run when `Worker` is unavailable (Vitest/jsdom). The worker is verified by the build emitting a dedicated chunk and is exercised through the `Generate material layout` toolbar action which calls `runOptimizer`.
+- **Pattern origin drag UI**: implemented via `PatternOriginLayer` (`src/features/materialLayout/PatternOriginLayer.tsx`). When the Pattern Origin tool is active (`M` shortcut), each surface with a placement pattern gets a draggable Konva handle. Drag delta is snapped (5 mm steps when canvas snap is on) and committed through `updatePlacementPatternCommand` so it remains undoable.
+- **Dashboard thumbnails**: `useSaveProject` (`src/features/editor/useSaveProject.ts`) captures a JPEG of the Konva stage via `captureStageThumbnail` (`src/features/editor/canvas/activeStage.ts`) and persists it through `ProjectRepository.putThumbnail`. The dashboard's `ProjectThumbnail` (`src/features/dashboard/DashboardPage.tsx`) hydrates the Blob into an object URL.
+- **Toast adoption**: `dispatchCommand` now toasts any command error (re-thrown for callers/tests). Autosave failures push a warning toast instead of a `console.error`. `Save project` is now a first-class toolbar button (`Ctrl+S` + 💾 icon) that pushes success/error toasts.
+- **PDF SVG renderer**: still a minimal line-based pipeline; richer styling (dashed overlap outlines, dimension arrows in the technical page) can be expanded in `svg.ts`.
 
 ## Performance
 
-Not formally profiled. Layout generation for the 1200 \u00D7 900 mm fixture with 600 \u00D7 300 mm material completes in <5 ms in vitest. Worker offload remains the recommended next step for surfaces with thousands of pieces.
+Not formally profiled. Layout generation for the 1200 × 900 mm fixture with 600 × 300 mm material completes in <5 ms in vitest. With the worker wired, optimization for many surfaces now runs off the main thread when launched from the editor.
 
 ## Files of interest
 

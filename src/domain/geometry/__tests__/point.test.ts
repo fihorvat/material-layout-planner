@@ -38,4 +38,35 @@ describe('point', () => {
     const n = P.normalize({ x: 3, y: 4 });
     expect(P.length(n)).toBeCloseTo(1, 9);
   });
+
+  describe('constrainAngle', () => {
+    it('snaps a point ~30° above the x-axis onto the +x axis (90° step)', () => {
+      const from = { x: 0, y: 0 };
+      const to = { x: Math.cos(Math.PI / 6) * 10, y: Math.sin(Math.PI / 6) * 10 };
+      const r = P.constrainAngle(from, to);
+      expect(r.x).toBeCloseTo(10, 6);
+      expect(r.y).toBeCloseTo(0, 6);
+    });
+
+    it('preserves the input distance after snapping', () => {
+      const from = { x: 5, y: 7 };
+      const to = { x: 5 + 4, y: 7 + 3 };
+      const r = P.constrainAngle(from, to);
+      const d = Math.hypot(r.x - from.x, r.y - from.y);
+      expect(d).toBeCloseTo(5, 6);
+    });
+
+    it('snaps near-vertical input onto the +y axis', () => {
+      const from = { x: 1, y: 1 };
+      const to = { x: 1.2, y: 6 };
+      const r = P.constrainAngle(from, to);
+      expect(r.x).toBeCloseTo(1, 6);
+      expect(r.y).toBeGreaterThan(1);
+    });
+
+    it('returns `to` unchanged when `from` and `to` coincide', () => {
+      const p = { x: 2, y: 3 };
+      expect(P.constrainAngle(p, p)).toEqual(p);
+    });
+  });
 });

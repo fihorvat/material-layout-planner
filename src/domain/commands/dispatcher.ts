@@ -1,5 +1,6 @@
 import { useProjectStore, useHistoryStore } from '@/state';
 import type { Command as HistoryCommand } from '@/state';
+import { useToastStore } from '@/state/toastStore';
 import type { Command } from './types';
 
 const applyAndStamp = (cmd: HistoryCommand): { prev: ReturnType<typeof useProjectStore.getState>['project']; next: ReturnType<typeof useProjectStore.getState>['project'] } => {
@@ -16,10 +17,16 @@ const applyAndStamp = (cmd: HistoryCommand): { prev: ReturnType<typeof useProjec
 
 export const dispatchCommand = (cmd: Command): void => {
   const prev = useProjectStore.getState().project;
-  const inverse = cmd.invert(prev);
-  applyAndStamp(cmd);
-  // Past holds the inverse command that undoes the most recent change.
-  useHistoryStore.getState().pushApplied(inverse);
+  try {
+    const inverse = cmd.invert(prev);
+    applyAndStamp(cmd);
+    // Past holds the inverse command that undoes the most recent change.
+    useHistoryStore.getState().pushApplied(inverse);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    useToastStore.getState().pushToast(message, 'error');
+    throw err;
+  }
 };
 
 export const undo = (): boolean => {

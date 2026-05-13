@@ -2,10 +2,16 @@ import { Group, Line as KLine, Circle, Text } from 'react-konva';
 import type { Point2D } from '@/types';
 import { formatLength } from '@/domain/units';
 import { distance } from '@/domain/geometry';
+import { useThemeStore } from '@/state';
+import { themedShapeColor } from '@/features/editor/canvas/themeColors';
+import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
+import type { AlignmentGuides } from './usePolygonDraw';
 
 export type PolygonPreviewProps = {
   points: Point2D[];
   cursor: Point2D;
+  ortho?: boolean;
+  alignments?: AlignmentGuides;
 };
 
 const flatten = (pts: Point2D[]): number[] => {
@@ -14,11 +20,47 @@ const flatten = (pts: Point2D[]): number[] => {
   return out;
 };
 
-export const PolygonPreview = ({ points, cursor }: PolygonPreviewProps) => {
+export const PolygonPreview = ({
+  points,
+  cursor,
+  ortho = false,
+  alignments,
+}: PolygonPreviewProps) => {
+  const theme = useThemeStore((s) => s.theme);
   if (points.length === 0) return null;
   const last = points[points.length - 1]!;
+  const rubberStroke = ortho ? '#f59e0b' : '#2563eb';
+  const rubberDash = ortho ? [3, 3] : [6, 4];
+  const rubberWidth = ortho ? 1.5 : 1.25;
+  const len = distance(last, cursor);
+  const label = ortho
+    ? `${formatLength(len)}  \u2022 ORTHO`
+    : formatLength(len);
+  const horizontalRef = alignments?.horizontal;
+  const verticalRef = alignments?.vertical;
   return (
     <Group listening={false}>
+      <OrthoMeasureGuides cursor={cursor} />
+      {horizontalRef ? (
+        <KLine
+          points={[horizontalRef.x, horizontalRef.y, cursor.x, cursor.y]}
+          stroke="#a855f7"
+          strokeWidth={1}
+          strokeScaleEnabled={false}
+          dash={[2, 4]}
+          dashEnabled
+        />
+      ) : null}
+      {verticalRef ? (
+        <KLine
+          points={[verticalRef.x, verticalRef.y, cursor.x, cursor.y]}
+          stroke="#a855f7"
+          strokeWidth={1}
+          strokeScaleEnabled={false}
+          dash={[2, 4]}
+          dashEnabled
+        />
+      ) : null}
       <KLine
         points={flatten(points)}
         stroke="#2563eb"
@@ -27,10 +69,10 @@ export const PolygonPreview = ({ points, cursor }: PolygonPreviewProps) => {
       />
       <KLine
         points={[last.x, last.y, cursor.x, cursor.y]}
-        stroke="#2563eb"
-        strokeWidth={1.25}
+        stroke={rubberStroke}
+        strokeWidth={rubberWidth}
         strokeScaleEnabled={false}
-        dash={[6, 4]}
+        dash={rubberDash}
         dashEnabled
       />
       {points.map((p, i) => (
@@ -42,12 +84,18 @@ export const PolygonPreview = ({ points, cursor }: PolygonPreviewProps) => {
           fill="#2563eb"
         />
       ))}
+      {horizontalRef ? (
+        <Circle x={horizontalRef.x} y={horizontalRef.y} radius={4} stroke="#a855f7" strokeWidth={1.25} strokeScaleEnabled={false} />
+      ) : null}
+      {verticalRef && verticalRef !== horizontalRef ? (
+        <Circle x={verticalRef.x} y={verticalRef.y} radius={4} stroke="#a855f7" strokeWidth={1.25} strokeScaleEnabled={false} />
+      ) : null}
       <Text
         x={(last.x + cursor.x) / 2}
         y={(last.y + cursor.y) / 2}
-        text={formatLength(distance(last, cursor))}
+        text={label}
         fontSize={11}
-        fill="#1f2937"
+        fill={ortho ? '#b45309' : themedShapeColor('#1f2937', theme)}
         offsetY={14}
       />
     </Group>

@@ -1,10 +1,21 @@
 import { z } from 'zod';
 import { Point2DSchema } from './geometry';
-import { SurfaceStyleSchema } from './style';
+import { SurfaceStyleSchema, DrawingStyleSchema } from './style';
 import { EdgeRuleSchema } from './edgeRule';
 import { SurfaceConnectionRefSchema } from './surfaceConnection';
 
 const idString = z.string().min(1);
+
+export const SurfaceHoleMetaSchema = z
+  .object({
+    id: idString,
+    name: z.string().optional(),
+    showDimensions: z.boolean(),
+    style: DrawingStyleSchema,
+  })
+  .strict();
+
+export type SurfaceHoleMeta = z.infer<typeof SurfaceHoleMetaSchema>;
 
 export const SurfaceSchema = z
   .object({
@@ -13,6 +24,7 @@ export const SurfaceSchema = z
 
     outerBoundary: z.array(Point2DSchema).min(3),
     holes: z.array(z.array(Point2DSchema).min(3)),
+    holeMeta: z.array(SurfaceHoleMetaSchema).default([]),
 
     materialId: idString.nullable(),
     placementPatternId: idString.nullable(),

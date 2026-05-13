@@ -1,10 +1,10 @@
 import { useToastStore } from '@/state/toastStore';
 
-const COLORS: Record<string, string> = {
-  info: '#2563eb',
-  success: '#059669',
-  warning: '#d97706',
-  error: '#dc2626',
+const COLOR_VARS: Record<string, string> = {
+  info: 'var(--mlp-info)',
+  success: 'var(--mlp-success)',
+  warning: 'var(--mlp-warning)',
+  error: 'var(--mlp-danger)',
 };
 
 export const ToastContainer = () => {
@@ -29,12 +29,13 @@ export const ToastContainer = () => {
           key={t.id}
           role="status"
           style={{
-            background: '#ffffff',
-            border: `1px solid ${COLORS[t.severity] ?? '#cbd5e1'}`,
+            background: 'var(--mlp-card)',
+            color: 'var(--mlp-text)',
+            border: `1px solid ${COLOR_VARS[t.severity] ?? 'var(--mlp-border-strong)'}`,
             borderLeftWidth: 4,
             borderRadius: 6,
             padding: '8px 12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+            boxShadow: 'var(--mlp-shadow-md)',
             minWidth: 220,
             pointerEvents: 'auto',
             display: 'flex',
@@ -42,14 +43,14 @@ export const ToastContainer = () => {
             gap: 12,
           }}
         >
-          <span style={{ color: COLORS[t.severity] ?? '#111', fontWeight: 600, fontSize: 12 }}>
+          <span style={{ color: COLOR_VARS[t.severity] ?? 'var(--mlp-text)', fontWeight: 600, fontSize: 12 }}>
             {t.severity.toUpperCase()}
           </span>
           <span style={{ flex: 1, fontSize: 13 }}>{t.message}</span>
           <button
             type="button"
             onClick={() => dismiss(t.id)}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#6b7280' }}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--mlp-muted)' }}
             aria-label="Dismiss toast"
           >
             \u00D7

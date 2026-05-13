@@ -74,7 +74,9 @@ export const EditorPage = () => {
     <div
       className={styles.shell}
       style={{
-        gridTemplateRows: `var(--mlp-toolbar-h) 1fr ${prefs.bottomCollapsed ? '32px' : `${prefs.bottomHeight}px`}`,
+        gridTemplateRows: prefs.bottomCollapsed
+          ? `var(--mlp-toolbar-h) 1fr 32px`
+          : `var(--mlp-toolbar-h) 1fr auto ${prefs.bottomHeight}px`,
       }}
     >
       <EditorToolbar />

@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { undo, redo } from '@/domain/commands';
-import { useSelectionStore, useEditorStore } from '@/state';
+import { useSelectionStore, useEditorStore, useDimensionEditStore } from '@/state';
 import { deleteSelected, duplicateSelected } from '@/features/drawingTools/select/useSelectInteractions';
+import { cancelAllDrawings } from '@/features/drawingTools/drawingCancelRegistry';
+import { useSaveProject } from './useSaveProject';
 
 const TOOL_KEYS: Record<string, ReturnType<typeof useEditorStore.getState>['activeTool']> = {
   v: 'select',
@@ -17,6 +19,7 @@ const TOOL_KEYS: Record<string, ReturnType<typeof useEditorStore.getState>['acti
 };
 
 export const useKeyboardShortcuts = (): void => {
+  const { saveProject } = useSaveProject();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -43,9 +46,16 @@ export const useKeyboardShortcuts = (): void => {
         duplicateSelected(10);
         return;
       }
+      if (mod && key === 's' && !e.shiftKey) {
+        e.preventDefault();
+        void saveProject();
+        return;
+      }
       if (e.key === 'Escape') {
+        useDimensionEditStore.getState().cancelEdit();
         useSelectionStore.getState().clear();
         useEditorStore.getState().clearPendingDraw();
+        cancelAllDrawings();
         return;
       }
       if (!mod && (e.key === 'Delete' || e.key === 'Backspace')) {
@@ -74,5 +84,5 @@ export const useKeyboardShortcuts = (): void => {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  }, [saveProject]);
 };

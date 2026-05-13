@@ -1,8 +1,11 @@
 import { Group, Line as KLine, Text } from 'react-konva';
-import { useProjectStore } from '@/state';
+import { useProjectStore, useThemeStore, type Theme } from '@/state';
 import { surfaceCentroid, surfaceArea, surfaceEdges } from '@/domain/surfaces/surfaceGeometry';
 import type { Surface, Point2D } from '@/types';
-import { formatLength } from '@/domain/units';
+import { EditableEdgeLabel } from '@/features/drawingTools/dimension/EditableEdgeLabel';
+import { radToDeg } from '@/domain/geometry';
+import { themedShapeColor } from '@/features/editor/canvas/themeColors';
+import { OpeningRenderer } from './OpeningRenderer';
 
 const flat = (pts: Point2D[]): number[] => {
   const out: number[] = [];
@@ -10,18 +13,22 @@ const flat = (pts: Point2D[]): number[] => {
   return out;
 };
 
-const renderSurface = (s: Surface) => {
+const renderSurface = (s: Surface, theme: Theme) => {
   const centroid = surfaceCentroid(s);
+  const stroke = themedShapeColor(s.style.strokeColor, theme);
+  const fill = themedShapeColor(s.style.fillColor, theme);
+  const text = themedShapeColor(s.style.textColor, theme);
+  const holeFill = themedShapeColor('#ffffff', theme);
   const lines: React.ReactNode[] = [];
   lines.push(
     <KLine
       key={`o:${s.id}`}
       points={flat(s.outerBoundary)}
       closed
-      stroke={s.style.strokeColor}
+      stroke={stroke}
       strokeWidth={s.style.strokeWidthPx}
       strokeScaleEnabled={false}
-      fill={s.style.fillColor}
+      fill={fill}
       opacity={s.style.fillOpacity}
     />,
   );
@@ -31,25 +38,26 @@ const renderSurface = (s: Surface) => {
         key={`h:${s.id}:${i}`}
         points={flat(s.holes[i]!)}
         closed
-        stroke={s.style.strokeColor}
+        stroke={stroke}
         strokeWidth={s.style.strokeWidthPx}
         strokeScaleEnabled={false}
-        fill="#ffffff"
+        fill={holeFill}
         opacity={1}
       />,
     );
   }
   if (s.showDimensions) {
     for (const e of surfaceEdges(s)) {
+      const angle = radToDeg(Math.atan2(e.b.y - e.a.y, e.b.x - e.a.x));
       lines.push(
-        <Text
+        <EditableEdgeLabel
           key={`d:${s.id}:${e.index}`}
-          x={e.midpoint.x}
-          y={e.midpoint.y}
-          text={formatLength(e.lengthMm)}
-          fontSize={11}
-          fill={s.style.textColor}
-          listening={false}
+          midpoint={e.midpoint}
+          lengthMm={e.lengthMm}
+          angleDeg={angle}
+          color={text}
+          fontSizePx={11}
+          target={{ kind: 'surfaceEdge', surfaceId: s.id, edgeIndex: e.index }}
         />,
       );
     }
@@ -62,7 +70,7 @@ const renderSurface = (s: Surface) => {
         y={centroid.y}
         text={s.name}
         fontSize={14}
-        fill={s.style.textColor}
+        fill={text}
         listening={false}
       />,
     );
@@ -75,15 +83,21 @@ const renderSurface = (s: Surface) => {
         y={centroid.y + 16}
         text={`${(surfaceArea(s) / 1_000_000).toFixed(3)} m\u00B2`}
         fontSize={12}
-        fill={s.style.textColor}
+        fill={text}
         listening={false}
       />,
     );
   }
-  return <Group key={s.id}>{lines}</Group>;
+  return (
+    <Group key={s.id}>
+      {lines}
+      <OpeningRenderer surface={s} />
+    </Group>
+  );
 };
 
 export const SurfaceLayer = () => {
   const surfaces = useProjectStore((s) => s.project.surfaces);
-  return <Group>{surfaces.map(renderSurface)}</Group>;
+  const theme = useThemeStore((s) => s.theme);
+  return <Group>{surfaces.map((s) => renderSurface(s, theme))}</Group>;
 };

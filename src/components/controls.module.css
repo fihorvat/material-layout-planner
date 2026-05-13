@@ -39,13 +39,26 @@
   left: 50%;
   transform: translateX(-50%);
   white-space: nowrap;
-  background: #111827;
-  color: #f9fafb;
+  background: var(--mlp-tooltip-bg);
+  color: var(--mlp-tooltip-fg);
   padding: 4px 8px;
   border-radius: var(--mlp-radius-sm);
   font-size: 12px;
   pointer-events: none;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+.tooltipFloat {
+  position: fixed;
+  z-index: 1000;
+  white-space: nowrap;
+  background: var(--mlp-tooltip-bg);
+  color: var(--mlp-tooltip-fg);
+  padding: 4px 8px;
+  border-radius: var(--mlp-radius-sm);
+  font-size: 12px;
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  max-width: calc(100vw - 16px);
 }
 .tooltipShortcut {
   margin-left: 6px;

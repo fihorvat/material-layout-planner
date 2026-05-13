@@ -65,6 +65,7 @@ export type EditorState = {
   snapEnabled: boolean;
   snapTolerancePx: number;
   gridVisible: boolean;
+  drawingModeEnabled: boolean;
   layers: LayerVisibility;
   pendingDraw: PendingDrawState | null;
   hoverEntityId: string | null;
@@ -79,6 +80,8 @@ export type EditorState = {
   setLayerOpacity: (id: LayerId, opacity01: number) => void;
   setGridVisible: (visible: boolean) => void;
   setSnap: (enabled: boolean) => void;
+  setDrawingModeEnabled: (enabled: boolean) => void;
+  toggleDrawingMode: () => void;
   setHover: (id: string | null) => void;
   setPendingDraw: (state: PendingDrawState | null) => void;
   clearPendingDraw: () => void;
@@ -101,6 +104,7 @@ const buildInitialState = () => ({
   snapEnabled: true,
   snapTolerancePx: 8,
   gridVisible: true,
+  drawingModeEnabled: false,
   layers: buildLayers(),
   pendingDraw: null as PendingDrawState | null,
   hoverEntityId: null as string | null,
@@ -168,6 +172,16 @@ export const useEditorStore = create<EditorState>()(
       setSnap: (enabled) =>
         set((s) => {
           s.snapEnabled = enabled;
+        }),
+
+      setDrawingModeEnabled: (enabled) =>
+        set((s) => {
+          s.drawingModeEnabled = enabled;
+        }),
+
+      toggleDrawingMode: () =>
+        set((s) => {
+          s.drawingModeEnabled = !s.drawingModeEnabled;
         }),
 
       setHover: (id) =>

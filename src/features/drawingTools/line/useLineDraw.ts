@@ -1,12 +1,21 @@
 import { useCallback, useState } from 'react';
 import type Konva from 'konva';
-import type { Point2D, LineEntity } from '@/types';
+import type { Point2D, LineEntity, PolygonEntity } from '@/types';
 import { defaultDrawingStyle } from '@/types';
 import { useEditorStore, useProjectStore } from '@/state';
 import { screenToWorld } from '@/features/editor/canvas/coords';
 import { snap } from '@/features/editor/canvas/snap';
-import { degToRad } from '@/domain/geometry';
-import { dispatchCommand, addDrawingEntityCommand } from '@/domain/commands';
+import { degToRad, ensureCCW, validatePolygon } from '@/domain/geometry';
+import {
+  collectShapeBoundingBoxes,
+  isDrawingModeActiveSnapshot,
+  snapToBoundingBoxEdge,
+} from '@/features/drawingTools/drawingMode';
+import {
+  dispatchCommand,
+  addDrawingEntityCommand,
+  replaceProjectCommand,
+} from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
 
 export type ModifierKeys = {
@@ -17,9 +26,26 @@ export type ModifierKeys = {
 
 export type LineDrawState =
   | { phase: 'pickFirst' }
-  | { phase: 'pickSecond'; first: Point2D; cursor: Point2D };
+  | {
+      phase: 'pickSecond';
+      first: Point2D;
+      cursor: Point2D;
+      ortho: boolean;
+      // Points of the active polyline chain, in click order.
+      // The last entry equals `first` (the active starting point).
+      chainPoints: Point2D[];
+      // IDs of line entities that have been committed as part of the chain.
+      // Length is always `chainPoints.length - 1`.
+      chainLineIds: string[];
+    };
 
-const constrainAngle = (from: Point2D, to: Point2D, stepDeg = 15): Point2D => {
+// Distance under which two points are considered coincident (mm).
+const CLOSE_EPSILON_MM = 1e-3;
+
+const pointsCoincide = (a: Point2D, b: Point2D): boolean =>
+  Math.hypot(a.x - b.x, a.y - b.y) <= CLOSE_EPSILON_MM;
+
+const constrainAngle = (from: Point2D, to: Point2D, stepDeg = 90): Point2D => {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const len = Math.hypot(dx, dy);
@@ -64,64 +90,163 @@ const resolveWorldFromStage = (stageRef: React.RefObject<Konva.Stage | null>): P
 
 export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const [state, setState] = useState<LineDrawState>({ phase: 'pickFirst' });
-  const [numericPrompt, setNumericPrompt] = useState<{ first: Point2D } | null>(null);
+  const [numericPrompt, setNumericPrompt] = useState<{ first: Point2D; initialAngleDeg: number } | null>(null);
 
-  const resolvePoint = useCallback((mods: ModifierKeys): Point2D | null => {
-    const raw = resolveWorldFromStage(stageRef);
-    if (!raw) return null;
-    const v = useEditorStore.getState().viewport;
-    const settings = useProjectStore.getState().project.settings;
-    const snapEnabled = useEditorStore.getState().snapEnabled && !mods.alt;
-    const result = snap({
-      worldPoint: raw,
-      tolerancePx: useEditorStore.getState().snapTolerancePx,
-      scale: v.scale,
-      gridSizeMm: settings.gridSizeMm,
-      snapEnabled,
-      snapModes: ['endpoint', 'point', 'grid'],
-      candidatePoints: candidatePoints(),
-    });
-    return result.point;
-  }, [stageRef]);
+  const resolvePoint = useCallback(
+    (mods: ModifierKeys): { point: Point2D; bboxSnapped: boolean } | null => {
+      const raw = resolveWorldFromStage(stageRef);
+      if (!raw) return null;
+      const editor = useEditorStore.getState();
+      const v = editor.viewport;
+      const settings = useProjectStore.getState().project.settings;
+      const snapEnabled = editor.snapEnabled && !mods.alt;
+
+      // When Shift is held with snap enabled AND drawing mode is active,
+      // first try to project the cursor onto a nearby bounding-rectangle
+      // edge so a line endpoint can be made exactly colinear with an
+      // existing shape's bbox. Falls back to the normal grid/endpoint snap
+      // when no bbox edge is in tolerance or drawing mode is off.
+      if (snapEnabled && mods.shift && isDrawingModeActiveSnapshot()) {
+        const project = useProjectStore.getState().project;
+        const bboxes = collectShapeBoundingBoxes(project);
+        const tolMm = editor.snapTolerancePx / Math.max(v.scale, 1e-9);
+        const onBbox = snapToBoundingBoxEdge(raw, tolMm, bboxes);
+        if (onBbox) return { point: onBbox, bboxSnapped: true };
+      }
+
+      const result = snap({
+        worldPoint: raw,
+        tolerancePx: editor.snapTolerancePx,
+        scale: v.scale,
+        gridSizeMm: settings.gridSizeMm,
+        snapEnabled,
+        snapModes: ['endpoint', 'point', 'grid'],
+        candidatePoints: candidatePoints(),
+      });
+      return { point: result.point, bboxSnapped: false };
+    },
+    [stageRef],
+  );
 
   const onPointerMove = useCallback(
     (mods: ModifierKeys) => {
       if (state.phase !== 'pickSecond') return;
-      let p = resolvePoint(mods);
-      if (!p) return;
-      if (mods.shift) p = constrainAngle(state.first, p);
-      setState({ phase: 'pickSecond', first: state.first, cursor: p });
+      const resolved = resolvePoint(mods);
+      if (!resolved) return;
+      let p = resolved.point;
+      // Bbox-edge snap already constrains the endpoint to a fixed axis, so
+      // applying ortho on top of it would override the snap.
+      const ortho = mods.shift && !resolved.bboxSnapped;
+      if (ortho) p = constrainAngle(state.first, p);
+      setState({
+        phase: 'pickSecond',
+        first: state.first,
+        cursor: p,
+        ortho,
+        chainPoints: state.chainPoints,
+        chainLineIds: state.chainLineIds,
+      });
     },
     [resolvePoint, state],
   );
 
-  const commitLine = useCallback((first: Point2D, end: Point2D) => {
-    if (first.x === end.x && first.y === end.y) return;
+  const commitLine = useCallback((first: Point2D, end: Point2D): string | null => {
+    if (pointsCoincide(first, end)) return null;
+    const id = newDrawingEntityId();
     const entity: LineEntity = {
-      id: newDrawingEntityId(),
+      id,
       type: 'line',
       start: first,
       end,
-      showDimension: false,
+      showDimension: true,
       style: defaultDrawingStyle(),
     };
     dispatchCommand(addDrawingEntityCommand({ entity }));
+    return id;
   }, []);
+
+  // Attempt to close the active chain into a single polygon entity.
+  // Returns true when the replacement was dispatched (chain consumed).
+  const tryCloseChainToPolygon = useCallback(
+    (chainPoints: Point2D[], chainLineIds: string[]): boolean => {
+      if (chainPoints.length < 3 || chainLineIds.length < chainPoints.length - 1) {
+        return false;
+      }
+      const candidate = ensureCCW(chainPoints);
+      const validation = validatePolygon(candidate);
+      if (!validation.valid) return false;
+      const project = useProjectStore.getState().project;
+      const idSet = new Set(chainLineIds);
+      const remaining = project.drawingEntities.filter((e) => !idSet.has(e.id));
+      // Bail out if any chain line has already been removed externally.
+      if (project.drawingEntities.length - remaining.length !== chainLineIds.length) {
+        return false;
+      }
+      const polygon: PolygonEntity = {
+        id: newDrawingEntityId(),
+        type: 'polygon',
+        points: candidate,
+        showSegmentDimensions: true,
+        showArea: false,
+        style: defaultDrawingStyle(),
+      };
+      const nextProject = {
+        ...project,
+        drawingEntities: [...remaining, polygon],
+      };
+      dispatchCommand(
+        replaceProjectCommand({ next: nextProject }, 'Close lines into polygon'),
+      );
+      return true;
+    },
+    [],
+  );
 
   const onPointerDown = useCallback(
     (mods: ModifierKeys) => {
-      const p = resolvePoint(mods);
-      if (!p) return;
+      const resolved = resolvePoint(mods);
+      if (!resolved) return;
+      const p = resolved.point;
       if (state.phase === 'pickFirst') {
-        setState({ phase: 'pickSecond', first: p, cursor: p });
-      } else {
-        let end = p;
-        if (mods.shift) end = constrainAngle(state.first, end);
-        commitLine(state.first, end);
-        setState({ phase: 'pickFirst' });
+        setState({
+          phase: 'pickSecond',
+          first: p,
+          cursor: p,
+          ortho: mods.shift && !resolved.bboxSnapped,
+          chainPoints: [p],
+          chainLineIds: [],
+        });
+        return;
       }
+      let end = p;
+      // Bbox-edge snap already fixes one axis, so skip ortho constraint
+      // when the resolved point came from a bbox snap.
+      if (mods.shift && !resolved.bboxSnapped) end = constrainAngle(state.first, end);
+      const chainStart = state.chainPoints[0];
+      // If the click closes the chain back to its starting point and the
+      // chain has at least 3 distinct vertices, collapse the chained lines
+      // into a single polygon entity.
+      if (
+        chainStart &&
+        state.chainPoints.length >= 3 &&
+        pointsCoincide(end, chainStart) &&
+        tryCloseChainToPolygon(state.chainPoints, state.chainLineIds)
+      ) {
+        setState({ phase: 'pickFirst' });
+        return;
+      }
+      const id = commitLine(state.first, end);
+      if (!id) return;
+      setState({
+        phase: 'pickSecond',
+        first: end,
+        cursor: end,
+        ortho: mods.shift && !resolved.bboxSnapped,
+        chainPoints: [...state.chainPoints, end],
+        chainLineIds: [...state.chainLineIds, id],
+      });
     },
-    [resolvePoint, state, commitLine],
+    [resolvePoint, state, commitLine, tryCloseChainToPolygon],
   );
 
   const cancel = useCallback(() => {
@@ -131,7 +256,10 @@ export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
 
   const openNumericPrompt = useCallback(() => {
     if (state.phase !== 'pickSecond') return;
-    setNumericPrompt({ first: state.first });
+    const dx = state.cursor.x - state.first.x;
+    const dy = state.cursor.y - state.first.y;
+    const initialAngleDeg = Math.hypot(dx, dy) < 1e-9 ? 0 : (Math.atan2(dy, dx) * 180) / Math.PI;
+    setNumericPrompt({ first: state.first, initialAngleDeg });
   }, [state]);
 
   const submitNumeric = useCallback(
@@ -145,11 +273,33 @@ export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
         x: state.first.x + Math.cos(a) * lengthMm,
         y: state.first.y + Math.sin(a) * lengthMm,
       };
-      commitLine(state.first, end);
-      setState({ phase: 'pickFirst' });
+      const chainStart = state.chainPoints[0];
+      if (
+        chainStart &&
+        state.chainPoints.length >= 3 &&
+        pointsCoincide(end, chainStart) &&
+        tryCloseChainToPolygon(state.chainPoints, state.chainLineIds)
+      ) {
+        setState({ phase: 'pickFirst' });
+        setNumericPrompt(null);
+        return;
+      }
+      const id = commitLine(state.first, end);
+      if (!id) {
+        setNumericPrompt(null);
+        return;
+      }
+      setState({
+        phase: 'pickSecond',
+        first: end,
+        cursor: end,
+        ortho: false,
+        chainPoints: [...state.chainPoints, end],
+        chainLineIds: [...state.chainLineIds, id],
+      });
       setNumericPrompt(null);
     },
-    [state, commitLine],
+    [state, commitLine, tryCloseChainToPolygon],
   );
 
   return {

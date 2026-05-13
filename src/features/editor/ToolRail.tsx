@@ -15,6 +15,7 @@ const TOOLS: ToolDef[] = [
   { id: 'label', label: 'Label', shortcut: 'T', icon: 'T' },
   { id: 'connection', label: 'Connection', shortcut: 'C', icon: '\u2310' },
   { id: 'splitSurface', label: 'Split surface', shortcut: 'X', icon: '\u2702' },
+  { id: 'patternOrigin', label: 'Pattern origin', shortcut: 'M', icon: '\u2316' },
 ];
 
 export const ToolRail = () => {

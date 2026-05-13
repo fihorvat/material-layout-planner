@@ -1,15 +1,22 @@
-import type { Surface, Project, Point2D } from '@/types';
+import type { Surface, SurfaceHoleMeta, Project, Point2D } from '@/types';
+import { defaultDrawingStyle } from '@/types';
 import type { Command, CommandFactory } from '../types';
-import { newCommandId } from '@/domain/ids';
+import { newCommandId, newOpeningId } from '@/domain/ids';
 import { registerCommand } from '../registry';
 
 export type CreateSurfacePayload = { surface: Surface };
 export type DeleteSurfacePayload = { id: string };
 export type UpdateSurfacePayload = { id: string; patch: Partial<Surface> };
 export type RenameSurfacePayload = { id: string; name: string };
-export type AddSurfaceHolePayload = { surfaceId: string; hole: Point2D[] };
+export type AddSurfaceHolePayload = { surfaceId: string; hole: Point2D[]; meta?: SurfaceHoleMeta };
 export type RemoveSurfaceHolePayload = { surfaceId: string; holeIndex: number };
 export type UpdateSurfaceHolePayload = { surfaceId: string; holeIndex: number; hole: Point2D[] };
+
+const defaultHoleMeta = (): SurfaceHoleMeta => ({
+  id: newOpeningId(),
+  showDimensions: false,
+  style: defaultDrawingStyle(),
+});
 
 const reinsertSurface = (
   payload: { surface: Surface; index: number },
@@ -88,26 +95,32 @@ const renameSurfaceCmd = (
 const addSurfaceHoleCmd = (
   payload: AddSurfaceHolePayload,
   label = 'Add hole to surface',
-): Command<AddSurfaceHolePayload> => ({
-  id: newCommandId(),
-  type: 'addSurfaceHole',
-  label,
-  payload,
-  apply: (p: Project) => ({
-    ...p,
-    surfaces: p.surfaces.map((s) =>
-      s.id === payload.surfaceId ? { ...s, holes: [...s.holes, payload.hole] } : s,
-    ),
-  }),
-  invert: (prev: Project) => {
-    const s = prev.surfaces.find((x) => x.id === payload.surfaceId);
-    if (!s) throw new Error('addSurfaceHole: surface not found');
-    return removeSurfaceHoleCmd(
-      { surfaceId: payload.surfaceId, holeIndex: s.holes.length },
-      `Undo ${label}`,
-    );
-  },
-});
+): Command<AddSurfaceHolePayload> => {
+  const meta = payload.meta ?? defaultHoleMeta();
+  const stamped: AddSurfaceHolePayload = { ...payload, meta };
+  return {
+    id: newCommandId(),
+    type: 'addSurfaceHole',
+    label,
+    payload: stamped,
+    apply: (p: Project) => ({
+      ...p,
+      surfaces: p.surfaces.map((s) =>
+        s.id === payload.surfaceId
+          ? { ...s, holes: [...s.holes, payload.hole], holeMeta: [...s.holeMeta, meta] }
+          : s,
+      ),
+    }),
+    invert: (prev: Project) => {
+      const s = prev.surfaces.find((x) => x.id === payload.surfaceId);
+      if (!s) throw new Error('addSurfaceHole: surface not found');
+      return removeSurfaceHoleCmd(
+        { surfaceId: payload.surfaceId, holeIndex: s.holes.length },
+        `Undo ${label}`,
+      );
+    },
+  };
+};
 
 const removeSurfaceHoleCmd = (
   payload: RemoveSurfaceHolePayload,
@@ -121,7 +134,11 @@ const removeSurfaceHoleCmd = (
     ...p,
     surfaces: p.surfaces.map((s) =>
       s.id === payload.surfaceId
-        ? { ...s, holes: s.holes.filter((_, i) => i !== payload.holeIndex) }
+        ? {
+            ...s,
+            holes: s.holes.filter((_, i) => i !== payload.holeIndex),
+            holeMeta: s.holeMeta.filter((_, i) => i !== payload.holeIndex),
+          }
         : s,
     ),
   }),
@@ -130,7 +147,8 @@ const removeSurfaceHoleCmd = (
     if (!s) throw new Error('removeSurfaceHole: surface not found');
     const hole = s.holes[payload.holeIndex];
     if (!hole) throw new Error('removeSurfaceHole: hole index out of range');
-    return addSurfaceHoleCmd({ surfaceId: payload.surfaceId, hole }, `Undo ${label}`);
+    const meta = s.holeMeta[payload.holeIndex] ?? defaultHoleMeta();
+    return addSurfaceHoleCmd({ surfaceId: payload.surfaceId, hole, meta }, `Undo ${label}`);
   },
 });
 

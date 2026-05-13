@@ -1,4 +1,5 @@
 import { useProjectStore } from '@/state';
+import { useToastStore } from '@/state/toastStore';
 import type { ProjectRepository } from './projectRepository';
 import type { Project } from '@/types';
 
@@ -28,7 +29,8 @@ export const startAutosave = (opts: AutosaveOptions): (() => void) => {
       lastSavedKey = key;
       useProjectStore.getState().markSaved(new Date().toISOString());
     } catch (err) {
-      console.error('autosave failed', err);
+      const message = err instanceof Error ? err.message : String(err);
+      useToastStore.getState().pushToast(`Autosave failed: ${message}`, 'warning');
     }
   };
 

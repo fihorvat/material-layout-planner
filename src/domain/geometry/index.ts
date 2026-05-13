@@ -15,6 +15,7 @@ export {
   equals,
   rotate,
   normalize,
+  constrainAngle,
 } from './point';
 
 export {

@@ -4,11 +4,18 @@ import { parseLength, ParseLengthError } from '@/domain/units';
 export type NumericPromptOverlayProps = {
   onSubmit: (lengthMm: number, angleDeg: number) => void;
   onCancel: () => void;
+  initialAngleDeg?: number;
 };
 
-export const NumericPromptOverlay = ({ onSubmit, onCancel }: NumericPromptOverlayProps) => {
+const formatAngle = (deg: number): string => {
+  const normalized = ((deg % 360) + 360) % 360;
+  const rounded = Math.round(normalized * 10) / 10;
+  return Number.isInteger(rounded) ? rounded.toFixed(0) : rounded.toFixed(1);
+};
+
+export const NumericPromptOverlay = ({ onSubmit, onCancel, initialAngleDeg = 0 }: NumericPromptOverlayProps) => {
   const [length, setLength] = useState('');
-  const [angle, setAngle] = useState('0');
+  const [angle, setAngle] = useState(formatAngle(initialAngleDeg));
   const [err, setErr] = useState<string | null>(null);
   const ref = useRef<HTMLInputElement | null>(null);
   useEffect(() => {
@@ -40,11 +47,12 @@ export const NumericPromptOverlay = ({ onSubmit, onCancel }: NumericPromptOverla
         top: 12,
         left: 12,
         zIndex: 50,
-        background: 'white',
-        border: '1px solid #cbd5e1',
+        background: 'var(--mlp-card)',
+        color: 'var(--mlp-text)',
+        border: '1px solid var(--mlp-border-strong)',
         padding: 8,
         borderRadius: 6,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        boxShadow: 'var(--mlp-shadow-md)',
         display: 'flex',
         gap: 8,
         alignItems: 'center',
@@ -52,7 +60,7 @@ export const NumericPromptOverlay = ({ onSubmit, onCancel }: NumericPromptOverla
       role="dialog"
       aria-label="Enter line length and angle"
     >
-      <label>
+      <label style={{ color: 'var(--mlp-text)' }}>
         Length{' '}
         <input
           ref={ref}
@@ -62,10 +70,17 @@ export const NumericPromptOverlay = ({ onSubmit, onCancel }: NumericPromptOverla
             if (e.key === 'Enter') submit();
             if (e.key === 'Escape') onCancel();
           }}
-          style={{ width: 80 }}
+          style={{
+            width: 80,
+            background: 'var(--mlp-bg)',
+            color: 'var(--mlp-text)',
+            border: '1px solid var(--mlp-border-strong)',
+            borderRadius: 4,
+            padding: '2px 6px',
+          }}
         />
       </label>
-      <label>
+      <label style={{ color: 'var(--mlp-text)' }}>
         Angle{' '}
         <input
           value={angle}
@@ -74,12 +89,19 @@ export const NumericPromptOverlay = ({ onSubmit, onCancel }: NumericPromptOverla
             if (e.key === 'Enter') submit();
             if (e.key === 'Escape') onCancel();
           }}
-          style={{ width: 60 }}
+          style={{
+            width: 60,
+            background: 'var(--mlp-bg)',
+            color: 'var(--mlp-text)',
+            border: '1px solid var(--mlp-border-strong)',
+            borderRadius: 4,
+            padding: '2px 6px',
+          }}
         />
       </label>
       <button type="button" onClick={submit}>OK</button>
       <button type="button" onClick={onCancel}>Cancel</button>
-      {err ? <span style={{ color: '#dc2626' }}>{err}</span> : null}
+      {err ? <span style={{ color: 'var(--mlp-danger)' }}>{err}</span> : null}
     </div>
   );
 };

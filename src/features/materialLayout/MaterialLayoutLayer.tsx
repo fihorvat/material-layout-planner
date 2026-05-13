@@ -1,6 +1,7 @@
 import { Group, Line as KLine, Text } from 'react-konva';
 import type { Point2D, MaterialLayout, Material } from '@/types';
-import { useProjectStore, useEditorStore } from '@/state';
+import { useProjectStore, useEditorStore, useThemeStore, type Theme } from '@/state';
+import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 
 const flat = (pts: Point2D[]): number[] => {
   const out: number[] = [];
@@ -13,10 +14,12 @@ const renderPiece = (
   material: Material,
   pieceIdx: number,
   showLabels: boolean,
+  theme: Theme,
 ) => {
   const piece = layout.pieces[pieceIdx]!;
   const fill = material.style.fillColor;
   const stroke = material.style.jointColor;
+  const labelColor = themedShapeColor(material.style.labelColor, theme);
   return (
     <Group key={piece.id} listening>
       <KLine
@@ -47,7 +50,7 @@ const renderPiece = (
           y={piece.labelPosition.y}
           text={piece.pieceCode}
           fontSize={10}
-          fill={material.style.labelColor}
+          fill={labelColor}
           listening={false}
         />
       ) : null}
@@ -58,6 +61,7 @@ const renderPiece = (
 export const MaterialLayoutLayer = () => {
   const project = useProjectStore((s) => s.project);
   const scale = useEditorStore((s) => s.viewport.scale);
+  const theme = useThemeStore((s) => s.theme);
   const showLabels = scale > 0.4;
   return (
     <Group>
@@ -66,7 +70,7 @@ export const MaterialLayoutLayer = () => {
         if (!material) return null;
         return (
           <Group key={layout.id}>
-            {layout.pieces.map((_, i) => renderPiece(layout, material, i, showLabels))}
+            {layout.pieces.map((_, i) => renderPiece(layout, material, i, showLabels, theme))}
           </Group>
         );
       })}
