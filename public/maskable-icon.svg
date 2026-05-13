@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Material Layout Planner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b7cf5"/>
+      <stop offset="100%" stop-color="#2f6feb"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Solid background fills full canvas for maskable icons -->
+  <rect x="0" y="0" width="512" height="512" fill="url(#bg)"/>
+
+  <!-- Foreground sits inside 80% safe area (centered, 102.4px padding) -->
+  <g transform="translate(102.4 102.4) scale(0.6)">
+    <g fill="#ffffff">
+      <rect x="72"  y="100" width="150" height="80" rx="10"/>
+      <rect x="232" y="100" width="208" height="80" rx="10"/>
+      <rect x="72"  y="190" width="230" height="80" rx="10"/>
+      <rect x="312" y="190" width="128" height="80" rx="10"/>
+      <rect x="72"  y="280" width="110" height="80" rx="10"/>
+      <rect x="192" y="280" width="248" height="80" rx="10"/>
+    </g>
+    <rect x="312" y="190" width="128" height="80" rx="10" fill="#ffd166"/>
+    <rect x="72" y="392" width="368" height="6" rx="3" fill="#ffffff" opacity="0.9"/>
+  </g>
+</svg>

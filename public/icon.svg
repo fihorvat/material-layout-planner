@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Material Layout Planner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b7cf5"/>
+      <stop offset="100%" stop-color="#2f6feb"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Maskable-safe background covers full 512x512; foreground stays within the inner 80% safe zone (51px padding) -->
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+  <rect x="0" y="0" width="512" height="512" rx="112" ry="112" fill="url(#sheen)"/>
+
+  <!-- Tile pattern (running bond) inside safe zone (60 -> 452) -->
+  <g fill="#ffffff">
+    <!-- Row 1 -->
+    <rect x="72"  y="100" width="150" height="80" rx="10"/>
+    <rect x="232" y="100" width="208" height="80" rx="10"/>
+    <!-- Row 2 (offset) -->
+    <rect x="72"  y="190" width="230" height="80" rx="10"/>
+    <rect x="312" y="190" width="128" height="80" rx="10"/>
+    <!-- Row 3 -->
+    <rect x="72"  y="280" width="110" height="80" rx="10"/>
+    <rect x="192" y="280" width="248" height="80" rx="10"/>
+  </g>
+
+  <!-- Highlighted "cut" tile -->
+  <rect x="312" y="190" width="128" height="80" rx="10" fill="#ffd166"/>
+
+  <!-- Bottom ruler / cut line -->
+  <g>
+    <rect x="72" y="392" width="368" height="6" rx="3" fill="#ffffff" opacity="0.9"/>
+    <g fill="#ffffff" opacity="0.9">
+      <rect x="72"  y="398" width="2" height="14"/>
+      <rect x="118" y="398" width="2" height="10"/>
+      <rect x="164" y="398" width="2" height="10"/>
+      <rect x="210" y="398" width="2" height="14"/>
+      <rect x="256" y="398" width="2" height="10"/>
+      <rect x="302" y="398" width="2" height="10"/>
+      <rect x="348" y="398" width="2" height="14"/>
+      <rect x="394" y="398" width="2" height="10"/>
+      <rect x="438" y="398" width="2" height="14"/>
+    </g>
+  </g>
+</svg>
