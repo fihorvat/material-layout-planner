@@ -12,7 +12,7 @@ import type { AlignmentGuides } from './usePolygonDraw';
 const LABEL_FONT_PX = 12;
 const LABEL_OFFSET_PX = 14;
 
-export type PolygonPreviewProps = {
+type PolygonPreviewProps = {
   points: Point2D[];
   cursor: Point2D;
   ortho?: boolean;

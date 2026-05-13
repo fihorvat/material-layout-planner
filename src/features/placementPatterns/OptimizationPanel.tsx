@@ -1,6 +1,6 @@
 import type { OptimizationPriority } from '@/types';
 
-export type OptimizationPanelProps = {
+type OptimizationPanelProps = {
   value: OptimizationPriority;
   onPatch: (patch: Partial<OptimizationPriority>) => void;
 };

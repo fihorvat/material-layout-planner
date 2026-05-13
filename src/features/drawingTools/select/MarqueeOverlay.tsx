@@ -1,7 +1,7 @@
 import { Rect } from 'react-konva';
 import type { Point2D } from '@/types';
 
-export type MarqueeOverlayProps = {
+type MarqueeOverlayProps = {
   start: Point2D;
   end: Point2D;
 };

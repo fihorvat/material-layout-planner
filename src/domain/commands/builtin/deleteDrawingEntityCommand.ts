@@ -1,9 +1,8 @@
 import type { DrawingEntity, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type DeleteDrawingEntityPayload = { id: string };
+type DeleteDrawingEntityPayload = { id: string };
 
 type ReinsertPayload = { entity: DrawingEntity; index: number };
 
@@ -47,5 +46,3 @@ const deleteCmd = (
 });
 
 export const deleteDrawingEntityCommand: CommandFactory<DeleteDrawingEntityPayload> = deleteCmd;
-registerCommand('deleteDrawingEntity', deleteDrawingEntityCommand);
-registerCommand('reinsertDrawingEntity', makeReinsert as unknown as CommandFactory<unknown>);

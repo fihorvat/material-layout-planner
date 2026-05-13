@@ -46,7 +46,7 @@ const ProjectThumbnail = ({ project }: { project: ProjectSummary }) => {
   );
 };
 
-export type DashboardPageProps = {
+type DashboardPageProps = {
   onOpenProject: (id: string) => void;
 };
 

@@ -29,7 +29,7 @@ export const collectEndpointSnapCandidates = (
   return pts;
 };
 
-export type EndpointSnapOptions = {
+type EndpointSnapOptions = {
   worldPoint: Point2D;
   project: Project;
   excludedLineEndpoints: ReadonlySet<string>;

@@ -8,9 +8,7 @@ export {
   dot,
   cross,
   length,
-  lengthSq,
   distance,
-  distanceSq,
   lerp,
   equals,
   rotate,
@@ -50,9 +48,6 @@ export {
   aabbContainsPoint,
   aabbsIntersect,
   expandAabb,
-  aabbWidth,
-  aabbHeight,
-  aabbCenter,
   type Aabb,
 } from './boundingBox';
 

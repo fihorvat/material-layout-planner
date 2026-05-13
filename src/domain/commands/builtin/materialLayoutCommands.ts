@@ -1,9 +1,8 @@
 import type { MaterialLayout, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type SetMaterialLayoutsPayload = { layouts: MaterialLayout[] };
+type SetMaterialLayoutsPayload = { layouts: MaterialLayout[] };
 
 const setLayouts = (
   payload: SetMaterialLayoutsPayload,
@@ -33,6 +32,3 @@ const clearLayouts = (
 
 export const setMaterialLayoutsCommand: CommandFactory<SetMaterialLayoutsPayload> = setLayouts;
 export const clearMaterialLayoutsCommand: CommandFactory<Record<string, never>> = clearLayouts;
-
-registerCommand('setMaterialLayouts', setMaterialLayoutsCommand);
-registerCommand('clearMaterialLayouts', clearMaterialLayoutsCommand);

@@ -1,13 +1,12 @@
 import type { PlacementPattern, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 import { isPlacementPatternUsed } from '@/domain/placementPatterns/placementPattern';
 
-export type AddPlacementPatternPayload = { pattern: PlacementPattern };
-export type DeletePlacementPatternPayload = { id: string };
-export type UpdatePlacementPatternPayload = { id: string; patch: Partial<PlacementPattern> };
-export type AssignPlacementPatternPayload = { surfaceId: string; patternId: string | null };
+type AddPlacementPatternPayload = { pattern: PlacementPattern };
+type DeletePlacementPatternPayload = { id: string };
+type UpdatePlacementPatternPayload = { id: string; patch: Partial<PlacementPattern> };
+type AssignPlacementPatternPayload = { surfaceId: string; patternId: string | null };
 
 export class PatternInUseError extends Error {
   readonly code = 'patternInUse';
@@ -119,9 +118,3 @@ export const addPlacementPatternCommand: CommandFactory<AddPlacementPatternPaylo
 export const deletePlacementPatternCommand: CommandFactory<DeletePlacementPatternPayload> = deletePattern;
 export const updatePlacementPatternCommand: CommandFactory<UpdatePlacementPatternPayload> = updatePattern;
 export const assignPlacementPatternCommand: CommandFactory<AssignPlacementPatternPayload> = assignPattern;
-
-registerCommand('addPlacementPattern', addPlacementPatternCommand);
-registerCommand('deletePlacementPattern', deletePlacementPatternCommand);
-registerCommand('updatePlacementPattern', updatePlacementPatternCommand);
-registerCommand('assignPlacementPattern', assignPlacementPatternCommand);
-registerCommand('reinsertPlacementPattern', reinsertPattern as unknown as CommandFactory<unknown>);

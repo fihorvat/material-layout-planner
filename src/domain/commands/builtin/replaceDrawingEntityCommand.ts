@@ -1,14 +1,13 @@
 import type { DrawingEntity, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type ReplaceDrawingEntityPayload = {
+type ReplaceDrawingEntityPayload = {
   sourceId: string;
   replacement: DrawingEntity;
 };
 
-export type UnreplaceDrawingEntityPayload = {
+type UnreplaceDrawingEntityPayload = {
   source: DrawingEntity;
   sourceIndex: number;
   replacementId: string;
@@ -68,8 +67,3 @@ const replaceCmd = (
 
 export const replaceDrawingEntityCommand: CommandFactory<ReplaceDrawingEntityPayload> =
   replaceCmd;
-registerCommand('replaceDrawingEntity', replaceDrawingEntityCommand);
-registerCommand(
-  'unreplaceDrawingEntity',
-  unreplace as unknown as CommandFactory<unknown>,
-);

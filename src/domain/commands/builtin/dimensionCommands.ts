@@ -1,11 +1,10 @@
 import type { DimensionEntity, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type AddDimensionPayload = { dimension: DimensionEntity };
-export type DeleteDimensionPayload = { id: string };
-export type UpdateDimensionPayload = { id: string; patch: Partial<DimensionEntity> };
+type AddDimensionPayload = { dimension: DimensionEntity };
+type DeleteDimensionPayload = { id: string };
+type UpdateDimensionPayload = { id: string; patch: Partial<DimensionEntity> };
 
 const reinsertDimension = (
   payload: { dimension: DimensionEntity; index: number },
@@ -78,8 +77,3 @@ const updateDimension = (
 export const addDimensionCommand: CommandFactory<AddDimensionPayload> = addDimension;
 export const deleteDimensionCommand: CommandFactory<DeleteDimensionPayload> = deleteDimension;
 export const updateDimensionCommand: CommandFactory<UpdateDimensionPayload> = updateDimension;
-
-registerCommand('addDimension', addDimensionCommand);
-registerCommand('deleteDimension', deleteDimensionCommand);
-registerCommand('updateDimension', updateDimensionCommand);
-registerCommand('reinsertDimension', reinsertDimension as unknown as CommandFactory<unknown>);

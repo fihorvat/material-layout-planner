@@ -17,7 +17,7 @@ const TOOL_PANEL_TITLE: Partial<Record<string, { title: string; hint: string }>>
   meter: { title: 'Meter tool', hint: 'Click two points to drop a dimensioned measurement line. Hold Shift to snap the point onto the nearest existing line/edge.' },
 };
 
-export type PropertiesPanelProps = {
+type PropertiesPanelProps = {
   collapsed: boolean;
   onToggleCollapsed: () => void;
 };

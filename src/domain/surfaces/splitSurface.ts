@@ -2,7 +2,7 @@ import type { Surface, Point2D } from '@/types';
 import { polygonDifference, polygonIntersection, ensureCCW } from '@/domain/geometry';
 import { createSurface } from './createSurface';
 
-export type SplitIssue = { code: string; message: string };
+type SplitIssue = { code: string; message: string };
 export type SplitResult = { parts: Surface[]; issues: SplitIssue[] };
 
 const surfaceToPolygon = (s: Surface) => ({ outer: s.outerBoundary, holes: s.holes });

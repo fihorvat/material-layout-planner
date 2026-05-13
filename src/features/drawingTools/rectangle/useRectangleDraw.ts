@@ -8,7 +8,7 @@ import { newDrawingEntityId } from '@/domain/ids';
 
 export type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
 
-export type RectangleDrawState =
+type RectangleDrawState =
   | { phase: 'pickFirst' }
   | { phase: 'pickSecond'; first: Point2D; cursor: Point2D; alt: boolean; shift: boolean };
 
@@ -21,7 +21,7 @@ const resolveWorld = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | 
   return screenToWorld(pos.x, pos.y, v);
 };
 
-export type RectInputs = { origin: Point2D; widthMm: number; heightMm: number };
+type RectInputs = { origin: Point2D; widthMm: number; heightMm: number };
 
 export const computeRect = (first: Point2D, cursor: Point2D, mods: { shift: boolean; alt: boolean }): RectInputs => {
   let dx = cursor.x - first.x;

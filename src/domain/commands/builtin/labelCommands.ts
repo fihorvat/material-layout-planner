@@ -1,11 +1,10 @@
 import type { LabelEntity, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type AddLabelPayload = { label: LabelEntity };
-export type DeleteLabelPayload = { id: string };
-export type UpdateLabelPayload = { id: string; patch: Partial<LabelEntity> };
+type AddLabelPayload = { label: LabelEntity };
+type DeleteLabelPayload = { id: string };
+type UpdateLabelPayload = { id: string; patch: Partial<LabelEntity> };
 
 const reinsertLabel = (
   payload: { label: LabelEntity; index: number },
@@ -78,8 +77,3 @@ const updateLabel = (
 export const addLabelCommand: CommandFactory<AddLabelPayload> = addLabel;
 export const deleteLabelCommand: CommandFactory<DeleteLabelPayload> = deleteLabel;
 export const updateLabelCommand: CommandFactory<UpdateLabelPayload> = updateLabel;
-
-registerCommand('addLabel', addLabelCommand);
-registerCommand('deleteLabel', deleteLabelCommand);
-registerCommand('updateLabel', updateLabelCommand);
-registerCommand('reinsertLabel', reinsertLabel as unknown as CommandFactory<unknown>);

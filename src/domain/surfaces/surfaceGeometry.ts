@@ -1,11 +1,5 @@
 import type { Surface, Point2D } from '@/types';
-import {
-  polygonArea,
-  polygonCentroid,
-  distance,
-  pointsToAabb,
-  type Aabb,
-} from '@/domain/geometry';
+import { polygonArea, polygonCentroid, distance } from '@/domain/geometry';
 
 export const surfaceArea = (s: Surface): number => {
   const outer = Math.abs(polygonArea(s.outerBoundary));
@@ -46,4 +40,3 @@ export const surfaceEdges = (s: Surface): SurfaceEdge[] => {
   return out;
 };
 
-export const surfaceBoundingBox = (s: Surface): Aabb => pointsToAabb(s.outerBoundary);

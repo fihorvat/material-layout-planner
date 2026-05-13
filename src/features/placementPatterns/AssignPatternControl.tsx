@@ -6,7 +6,7 @@ import {
 } from '@/domain/commands';
 import { PlacementPatternEditorDialog } from './PlacementPatternEditorDialog';
 
-export type AssignPatternControlProps = {
+type AssignPatternControlProps = {
   surfaceId: string;
   value: string | null;
 };

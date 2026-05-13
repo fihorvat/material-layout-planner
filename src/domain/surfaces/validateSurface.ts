@@ -6,7 +6,7 @@ import {
   pointsToAabb,
 } from '@/domain/geometry';
 
-export type SurfaceIssueCode =
+type SurfaceIssueCode =
   | 'outerSelfIntersecting'
   | 'outerTooFewPoints'
   | 'outerDegenerate'
@@ -14,7 +14,7 @@ export type SurfaceIssueCode =
   | 'holeSelfIntersecting'
   | 'holesOverlap';
 
-export type SurfaceValidation = {
+type SurfaceValidation = {
   valid: boolean;
   issues: { code: SurfaceIssueCode; message: string; holeIndex?: number }[];
 };

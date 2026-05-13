@@ -6,7 +6,7 @@ export type SplitMode = 'line' | 'rectangle' | 'polygon' | 'dimension';
 /** Mode for an area-style split (rectangle/polygon): keep inner as new surface or remove it. */
 export type SplitInnerMode = 'extractInner' | 'subtractInner';
 
-export type SplitDimensionPending = {
+type SplitDimensionPending = {
   surfaceId: string;
   edgeIndex: number;
 } | null;

@@ -11,7 +11,7 @@ import {
 import { createMaterial } from '@/domain/materials/material';
 import { ModalCloseButton } from '@/components';
 
-export type MaterialEditorProps = {
+type MaterialEditorProps = {
   open: boolean;
   material?: Material;
   onClose: () => void;

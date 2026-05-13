@@ -1,9 +1,8 @@
 import type { DrawingEntity, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type UpdateDrawingEntityPayload = {
+type UpdateDrawingEntityPayload = {
   id: string;
   patch: Partial<DrawingEntity>;
 };
@@ -39,4 +38,3 @@ const make = (
 });
 
 export const updateDrawingEntityCommand: CommandFactory<UpdateDrawingEntityPayload> = make;
-registerCommand('updateDrawingEntity', updateDrawingEntityCommand);

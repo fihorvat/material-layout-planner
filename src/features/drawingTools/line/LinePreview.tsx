@@ -6,7 +6,7 @@ import { useEditorStore, useThemeStore } from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
 
-export type LinePreviewProps = {
+type LinePreviewProps = {
   first: Point2D;
   cursor: Point2D;
   ortho?: boolean;

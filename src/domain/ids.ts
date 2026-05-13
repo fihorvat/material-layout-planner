@@ -32,4 +32,3 @@ export const newOpeningId = (): string => `opn_${ulid()}`;
 export const newEdgeRuleId = (): string => `edg_${ulid()}`;
 export const newMaterialPieceId = (): string => `pcs_${ulid()}`;
 export const newCommandId = (): string => `cmd_${ulid()}`;
-export const newBackgroundImageId = (): string => `bgi_${ulid()}`;

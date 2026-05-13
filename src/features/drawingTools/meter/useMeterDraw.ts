@@ -14,7 +14,7 @@ export type ModifierKeys = {
   ctrl: boolean;
 };
 
-export type MeterDrawState =
+type MeterDrawState =
   | { phase: 'pickFirst' }
   | { phase: 'pickSecond'; first: Point2D; cursor: Point2D; snappedToEdge: boolean };
 

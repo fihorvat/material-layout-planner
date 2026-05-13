@@ -1,5 +1,5 @@
 import type { PdfExportSettings } from '@/types';
-import type { PDFDocument, PDFFont, PDFPage, RGB } from 'pdf-lib';
+import type { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import { rgb } from 'pdf-lib';
 
 export type Fonts = { regular: PDFFont; bold: PDFFont };
@@ -17,7 +17,7 @@ export type PageContext = {
 const MM_PER_INCH = 25.4;
 const PT_PER_INCH = 72;
 export const PT_PER_MM = PT_PER_INCH / MM_PER_INCH;
-export const MM_PER_PT = MM_PER_INCH / PT_PER_INCH;
+const MM_PER_PT = MM_PER_INCH / PT_PER_INCH;
 
 const PAPER_MM: Record<PdfExportSettings['paperSize'], { w: number; h: number }> = {
   A4: { w: 210, h: 297 },
@@ -102,4 +102,3 @@ export const drawFooter = (ctx: PageContext, projectName: string, pageNumber: nu
   });
 };
 
-export const colorRgb = (r: number, g: number, b: number): RGB => rgb(r, g, b);

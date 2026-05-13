@@ -2,7 +2,6 @@ import type { Project, Point2D, Surface, SurfaceHoleMeta, DrawingStyle } from '@
 import { defaultDrawingStyle } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId, newOpeningId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
 export type OpeningMetaInput = {
   name?: string;
@@ -189,11 +188,6 @@ const updateOpeningCmd = (
 export const addOpeningCommand: CommandFactory<AddOpeningPayload> = addOpeningCmd;
 export const removeOpeningCommand: CommandFactory<RemoveOpeningPayload> = removeOpeningCmd;
 export const updateOpeningCommand: CommandFactory<UpdateOpeningPayload> = updateOpeningCmd;
-
-registerCommand('addOpening', addOpeningCommand);
-registerCommand('removeOpening', removeOpeningCommand);
-registerCommand('updateOpening', updateOpeningCommand);
-registerCommand('addOpeningAt', addOpeningAt as unknown as CommandFactory<unknown>);
 
 export const findOpeningSurface = (
   project: Project,

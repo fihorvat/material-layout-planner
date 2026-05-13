@@ -6,7 +6,7 @@ import { parseLength, ParseLengthError } from '@/domain/units';
  * prompt (length + angle), a rectangle takes two lengths (width + height),
  * both of which accept unit suffixes (mm, cm, m).
  */
-export type RectangleNumericPromptOverlayProps = {
+type RectangleNumericPromptOverlayProps = {
   onSubmit: (widthMm: number, heightMm: number) => void;
   onCancel: () => void;
   initialLength?: string;

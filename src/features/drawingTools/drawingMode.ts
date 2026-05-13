@@ -60,7 +60,7 @@ export const collectShapeVertices = (project: Project): Point2D[] => {
   return pts;
 };
 
-export type IdentifiedBbox = { id: string; bbox: Aabb };
+type IdentifiedBbox = { id: string; bbox: Aabb };
 
 export type ShapeEdge = { a: Point2D; b: Point2D };
 

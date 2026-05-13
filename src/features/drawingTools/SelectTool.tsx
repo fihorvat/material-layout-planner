@@ -6,10 +6,6 @@ import { SelectionEditHandles } from './select/SelectionEditHandles';
 import { LabelEditHandles } from './label/LabelEditHandles';
 import { useSelectInteractions } from './select/useSelectInteractions';
 
-export type SelectToolProps = {
-  stageRef: React.RefObject<Konva.Stage | null>;
-};
-
 export const useSelectTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const inter = useSelectInteractions(stageRef);
   const overlays = (

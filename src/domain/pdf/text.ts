@@ -2,7 +2,7 @@ import { rgb } from 'pdf-lib';
 import type { RGB } from 'pdf-lib';
 import type { PageContext } from './layout';
 
-export type DrawTextOpts = {
+type DrawTextOpts = {
   size?: number;
   font?: 'regular' | 'bold';
   color?: RGB;
@@ -56,7 +56,7 @@ export const drawWrappedText = (
   return box.y - yCursor;
 };
 
-export type TableCell = string;
+type TableCell = string;
 
 export const drawTable = (
   ctx: PageContext,

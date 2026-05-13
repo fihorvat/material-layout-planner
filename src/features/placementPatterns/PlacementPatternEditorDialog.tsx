@@ -8,7 +8,7 @@ import { createPlacementPattern } from '@/domain/placementPatterns/placementPatt
 import { PlacementPatternPanel } from './PlacementPatternPanel';
 import { ModalCloseButton } from '@/components';
 
-export type PlacementPatternEditorDialogProps = {
+type PlacementPatternEditorDialogProps = {
   open: boolean;
   /** When provided, edits an existing pattern. When omitted, creates a new one. */
   patternId?: string;

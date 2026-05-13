@@ -11,7 +11,7 @@ const flatten = (pts: Point2D[]): number[] => {
   return out;
 };
 
-export type OpeningRectPreviewProps = {
+type OpeningRectPreviewProps = {
   origin: Point2D;
   widthMm: number;
   heightMm: number;
@@ -41,7 +41,7 @@ export const OpeningRectPreview = ({
   </Group>
 );
 
-export type OpeningPolyPreviewProps = {
+type OpeningPolyPreviewProps = {
   points: Point2D[];
   cursor: Point2D;
   ortho?: boolean;

@@ -1,7 +1,7 @@
 import { Group, Line as KLine } from 'react-konva';
 import type { Point2D } from '@/types';
 
-export type CutPreviewProps = {
+type CutPreviewProps = {
   first: Point2D;
   cursor: Point2D;
 };

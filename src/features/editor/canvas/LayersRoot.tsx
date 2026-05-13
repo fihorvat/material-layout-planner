@@ -5,7 +5,7 @@ const Placeholder = ({ name, children }: { name: string; children?: ReactNode })
   <Group name={name}>{children}</Group>
 );
 
-export type LayersRootProps = {
+type LayersRootProps = {
   backgroundImage?: ReactNode;
   construction?: ReactNode;
   surfaces?: ReactNode;

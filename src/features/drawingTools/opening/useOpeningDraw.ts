@@ -34,7 +34,7 @@ export type AlignmentGuides = {
   vertical?: Point2D;
 };
 
-export type OpeningDrawState =
+type OpeningDrawState =
   | { phase: 'idle' }
   | { phase: 'rectPickSecond'; first: Point2D; cursor: Point2D; shift: boolean; alt: boolean }
   | {

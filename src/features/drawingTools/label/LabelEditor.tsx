@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './LabelEditor.module.css';
 
-export type LabelEditorProps = {
+type LabelEditorProps = {
   initialText?: string;
   onSubmit: (text: string) => void;
   onCancel: () => void;

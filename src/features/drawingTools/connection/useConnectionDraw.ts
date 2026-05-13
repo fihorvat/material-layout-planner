@@ -9,7 +9,7 @@ import {
 import { screenToWorld } from '@/features/editor/canvas/coords';
 import { closestEdgeOfPoints } from '@/domain/geometry';
 
-export type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
+type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
 
 /** Hover state used by the preview overlay. */
 export type ConnectionHover = {

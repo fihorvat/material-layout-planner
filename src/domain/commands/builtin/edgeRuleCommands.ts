@@ -1,11 +1,10 @@
 import type { EdgeRule, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type AddEdgeRulePayload = { surfaceId: string; rule: EdgeRule };
-export type UpdateEdgeRulePayload = { surfaceId: string; edgeIndex: number; patch: Partial<EdgeRule> };
-export type RemoveEdgeRulePayload = { surfaceId: string; edgeIndex: number };
+type AddEdgeRulePayload = { surfaceId: string; rule: EdgeRule };
+type UpdateEdgeRulePayload = { surfaceId: string; edgeIndex: number; patch: Partial<EdgeRule> };
+type RemoveEdgeRulePayload = { surfaceId: string; edgeIndex: number };
 
 const addEdgeRule = (
   payload: AddEdgeRulePayload,
@@ -106,7 +105,3 @@ const updateEdgeRule = (
 export const addEdgeRuleCommand: CommandFactory<AddEdgeRulePayload> = addEdgeRule;
 export const removeEdgeRuleCommand: CommandFactory<RemoveEdgeRulePayload> = removeEdgeRule;
 export const updateEdgeRuleCommand: CommandFactory<UpdateEdgeRulePayload> = updateEdgeRule;
-
-registerCommand('addEdgeRule', addEdgeRuleCommand);
-registerCommand('removeEdgeRule', removeEdgeRuleCommand);
-registerCommand('updateEdgeRule', updateEdgeRuleCommand);

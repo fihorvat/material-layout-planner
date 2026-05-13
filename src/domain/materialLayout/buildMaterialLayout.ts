@@ -34,7 +34,7 @@ const isAxisAlignedRectangle = (
   return Math.abs(w - unitW) < 1 && Math.abs(h - unitH) < 1;
 };
 
-export type BuildMaterialLayoutInput = {
+type BuildMaterialLayoutInput = {
   surface: Surface;
   surfaceIndex: number;
   material: Material;
@@ -61,7 +61,6 @@ export const buildMaterialLayout = (input: BuildMaterialLayoutInput): MaterialLa
       unit,
       visibleSurfacePolygon: input.visibleSurfacePolygon,
       physicalWorkingPolygon: input.physicalWorkingPolygon,
-      material: input.material,
     });
     if (!result) continue;
     const labelPos = polygonCentroid(result.visiblePolygon);

@@ -1,6 +1,6 @@
 import type { Material, MaterialLayout, MaterialPiece } from '@/types';
 
-export type CuttingUnit = {
+type CuttingUnit = {
   unitIndex: number;
   materialId: string;
   pieces: { pieceCode: string; pieceId: string; widthMm: number; heightMm: number; xMm: number; yMm: number }[];
@@ -14,7 +14,7 @@ export type CuttingDiagram = {
 
 const round01 = (n: number): number => Math.round(n * 10) / 10;
 
-export type BuildCuttingDiagramOptions = {
+type BuildCuttingDiagramOptions = {
   /**
    * Saw blade thickness (kerf). Pieces packed onto the same raw material
    * unit must be separated by at least this amount, since each cut consumes

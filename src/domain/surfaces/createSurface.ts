@@ -1,9 +1,9 @@
-import type { Point2D, Surface, RectangleEntity, PolygonEntity } from '@/types';
+import type { Point2D, Surface, RectangleEntity } from '@/types';
 import { defaultSurfaceStyle } from '@/types';
 import { ensureCCW, ensureCW } from '@/domain/geometry';
 import { newSurfaceId } from '@/domain/ids';
 
-export type CreateSurfaceInput = {
+type CreateSurfaceInput = {
   name: string;
   outerBoundary: Point2D[];
   holes?: Point2D[][];
@@ -37,6 +37,3 @@ export const rectangleToSurface = (rect: RectangleEntity, name: string): Surface
   return createSurface({ name, outerBoundary: points });
 };
 
-export const polygonToSurface = (poly: PolygonEntity, name: string): Surface => {
-  return createSurface({ name, outerBoundary: poly.points });
-};

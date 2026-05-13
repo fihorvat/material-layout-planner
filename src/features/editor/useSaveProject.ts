@@ -23,7 +23,7 @@ let inFlight: Promise<void> | null = null;
 // Stable, module-level save action. Coalesces concurrent calls so that
 // pressing Ctrl+S repeatedly (or via toolbar/menu/shortcut at once) does
 // not stack overlapping IDB writes.
-export const saveProjectNow = async (): Promise<void> => {
+const saveProjectNow = async (): Promise<void> => {
   if (inFlight) return inFlight;
   const setSaving = useSavingStore.getState().setSaving;
   const pushToast = useToastStore.getState().pushToast;
@@ -64,7 +64,7 @@ export const saveProjectNow = async (): Promise<void> => {
   return run;
 };
 
-export type UseSaveProjectResult = {
+type UseSaveProjectResult = {
   saveProject: () => Promise<void>;
   saving: boolean;
 };

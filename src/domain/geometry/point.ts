@@ -11,15 +11,13 @@ export const scale = (p: Point2D, s: number): Point2D => ({ x: p.x * s, y: p.y *
 export const dot = (a: Point2D, b: Point2D): number => a.x * b.x + a.y * b.y;
 export const cross = (a: Point2D, b: Point2D): number => a.x * b.y - a.y * b.x;
 
-export const lengthSq = (p: Point2D): number => p.x * p.x + p.y * p.y;
-export const length = (p: Point2D): number => Math.sqrt(lengthSq(p));
+export const length = (p: Point2D): number => Math.sqrt(p.x * p.x + p.y * p.y);
 
-export const distanceSq = (a: Point2D, b: Point2D): number => {
+export const distance = (a: Point2D, b: Point2D): number => {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
-  return dx * dx + dy * dy;
+  return Math.sqrt(dx * dx + dy * dy);
 };
-export const distance = (a: Point2D, b: Point2D): number => Math.sqrt(distanceSq(a, b));
 
 export const lerp = (a: Point2D, b: Point2D, t: number): Point2D => ({
   x: a.x + (b.x - a.x) * t,

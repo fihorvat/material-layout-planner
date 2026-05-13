@@ -2,7 +2,7 @@ import { Group, Rect } from 'react-konva';
 import type { Point2D } from '@/types';
 import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
 
-export type RectanglePreviewProps = {
+type RectanglePreviewProps = {
   origin: Point2D;
   widthMm: number;
   heightMm: number;

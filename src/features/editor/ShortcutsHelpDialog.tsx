@@ -32,7 +32,7 @@ const ROWS: Row[] = [
   { group: 'File', keys: '? / F1', action: 'Show this help' },
 ];
 
-export type ShortcutsHelpDialogProps = {
+type ShortcutsHelpDialogProps = {
   open: boolean;
   onClose: () => void;
 };

@@ -1,9 +1,8 @@
 import type { Project, ProjectSettings } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type ChangeProjectSettingsPayload = { patch: Partial<ProjectSettings> };
+type ChangeProjectSettingsPayload = { patch: Partial<ProjectSettings> };
 
 const make = (
   payload: ChangeProjectSettingsPayload,
@@ -30,4 +29,3 @@ const make = (
 });
 
 export const changeProjectSettingsCommand: CommandFactory<ChangeProjectSettingsPayload> = make;
-registerCommand('changeProjectSettings', changeProjectSettingsCommand);

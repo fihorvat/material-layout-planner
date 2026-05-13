@@ -11,7 +11,7 @@ const flat = (pts: Point2D[]): number[] => {
   return out;
 };
 
-export type SplitPreviewProps = {
+type SplitPreviewProps = {
   state: SplitDrawState;
   surface: Surface | null;
 };

@@ -1,7 +1,7 @@
 import type { Surface, SurfaceConnection, EdgeRule } from '@/types';
 import { encodeEdgeId, decodeEdgeId } from './connectSurfaces';
 
-export type ResolvedEdgeRule = {
+type ResolvedEdgeRule = {
   edgeIndex: number;
   ruleType: EdgeRule['ruleType'];
   maxOverlapMm: number;

@@ -1,11 +1,10 @@
 import type { Project, Surface, SurfaceConnection } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type AddConnectionPayload = { connection: SurfaceConnection };
-export type DeleteConnectionPayload = { id: string };
-export type UpdateConnectionPayload = { id: string; patch: Partial<SurfaceConnection> };
+type AddConnectionPayload = { connection: SurfaceConnection };
+type DeleteConnectionPayload = { id: string };
+type UpdateConnectionPayload = { id: string; patch: Partial<SurfaceConnection> };
 
 const addRefToSurface = (s: Surface, connectionId: string): Surface =>
   s.connections.some((c) => c.connectionId === connectionId)
@@ -109,8 +108,3 @@ const updateConnection = (
 export const addConnectionCommand: CommandFactory<AddConnectionPayload> = addConnection;
 export const deleteConnectionCommand: CommandFactory<DeleteConnectionPayload> = deleteConnection;
 export const updateConnectionCommand: CommandFactory<UpdateConnectionPayload> = updateConnection;
-
-registerCommand('addConnection', addConnectionCommand);
-registerCommand('deleteConnection', deleteConnectionCommand);
-registerCommand('updateConnection', updateConnectionCommand);
-registerCommand('reinsertConnection', reinsertConnection as unknown as CommandFactory<unknown>);

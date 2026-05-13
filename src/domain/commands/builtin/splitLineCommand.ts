@@ -1,14 +1,13 @@
 import type { LineEntity, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type SplitLinePayload = {
+type SplitLinePayload = {
   sourceId: string;
   parts: [LineEntity, LineEntity];
 };
 
-export type UnsplitLinePayload = {
+type UnsplitLinePayload = {
   source: LineEntity;
   sourceIndex: number;
   partIds: [string, string];
@@ -71,5 +70,3 @@ const splitLineCmd = (
 });
 
 export const splitLineCommand: CommandFactory<SplitLinePayload> = splitLineCmd;
-registerCommand('splitLine', splitLineCommand);
-registerCommand('unsplitLine', unsplit as unknown as CommandFactory<unknown>);

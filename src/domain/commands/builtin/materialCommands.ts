@@ -1,13 +1,12 @@
 import type { Material, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 import { isMaterialUsed } from '@/domain/materials/material';
 
-export type AddMaterialPayload = { material: Material };
-export type DeleteMaterialPayload = { id: string };
-export type UpdateMaterialPayload = { id: string; patch: Partial<Material> };
-export type AssignMaterialPayload = { surfaceId: string; materialId: string | null };
+type AddMaterialPayload = { material: Material };
+type DeleteMaterialPayload = { id: string };
+type UpdateMaterialPayload = { id: string; patch: Partial<Material> };
+type AssignMaterialPayload = { surfaceId: string; materialId: string | null };
 
 export class MaterialInUseError extends Error {
   readonly code = 'materialInUse';
@@ -114,9 +113,3 @@ export const addMaterialCommand: CommandFactory<AddMaterialPayload> = addMateria
 export const deleteMaterialCommand: CommandFactory<DeleteMaterialPayload> = deleteMaterial;
 export const updateMaterialCommand: CommandFactory<UpdateMaterialPayload> = updateMaterial;
 export const assignMaterialCommand: CommandFactory<AssignMaterialPayload> = assignMaterial;
-
-registerCommand('addMaterial', addMaterialCommand);
-registerCommand('deleteMaterial', deleteMaterialCommand);
-registerCommand('updateMaterial', updateMaterialCommand);
-registerCommand('assignMaterial', assignMaterialCommand);
-registerCommand('reinsertMaterial', reinsertMaterial as unknown as CommandFactory<unknown>);

@@ -19,7 +19,7 @@ export type AlignmentGuides = {
   vertical?: Point2D;
 };
 
-export type PolygonDrawState =
+type PolygonDrawState =
   | { phase: 'idle' }
   | {
       phase: 'drawing';
@@ -83,7 +83,7 @@ const resolveWorld = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | 
   return screenToWorld(pos.x, pos.y, v);
 };
 
-export type PolygonDrawOptions = {
+type PolygonDrawOptions = {
   /**
    * Optional override for the commit step. When provided, the hook will call
    * this with the validated (CCW-normalized) points instead of creating a

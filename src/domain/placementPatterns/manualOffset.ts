@@ -2,7 +2,7 @@ import type { PlacementPattern, Material, Surface, Point2D } from '@/types';
 import { pointsToAabb } from '@/domain/geometry';
 import { surfaceCentroid } from '@/domain/surfaces/surfaceGeometry';
 
-export type SnapStep = 'none' | '1mm' | '5mm' | '10mm' | 'jointStep' | 'unitStep';
+type SnapStep = 'none' | '1mm' | '5mm' | '10mm' | 'jointStep' | 'unitStep';
 
 export const computeEffectivePatternOrigin = (
   pattern: PlacementPattern,

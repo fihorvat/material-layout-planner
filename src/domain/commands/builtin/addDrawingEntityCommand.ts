@@ -1,10 +1,9 @@
 import type { DrawingEntity, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 import { deleteDrawingEntityCommand } from './deleteDrawingEntityCommand';
 
-export type AddDrawingEntityPayload = { entity: DrawingEntity };
+type AddDrawingEntityPayload = { entity: DrawingEntity };
 
 const make = (
   payload: AddDrawingEntityPayload,
@@ -22,4 +21,3 @@ const make = (
 });
 
 export const addDrawingEntityCommand: CommandFactory<AddDrawingEntityPayload> = make;
-registerCommand('addDrawingEntity', addDrawingEntityCommand);

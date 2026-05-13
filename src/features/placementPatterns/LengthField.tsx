@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { parseLength, ParseLengthError } from '@/domain/units';
 
-export type LengthFieldProps = {
+type LengthFieldProps = {
   label: string;
   valueMm: number;
   onCommit: (mm: number) => void;

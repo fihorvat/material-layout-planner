@@ -8,7 +8,7 @@ export const setActiveStage = (stage: Konva.Stage | null): void => {
 
 export const getActiveStage = (): Konva.Stage | null => activeStage;
 
-export type StageThumbnailOptions = {
+type StageThumbnailOptions = {
   targetWidth?: number;
   mimeType?: 'image/png' | 'image/jpeg';
   quality?: number;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeOrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
+import { computeOrthoMeasureGuides } from '@/features/drawingTools/orthoMeasureMath';
 import type { ShapeEdge } from '@/features/drawingTools/drawingMode';
 
 // Convenience: build the four edges of an axis-aligned rectangle so the

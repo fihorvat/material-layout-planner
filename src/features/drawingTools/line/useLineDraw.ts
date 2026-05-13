@@ -24,7 +24,7 @@ export type ModifierKeys = {
   ctrl: boolean;
 };
 
-export type LineDrawState =
+type LineDrawState =
   | { phase: 'pickFirst' }
   | {
       phase: 'pickSecond';

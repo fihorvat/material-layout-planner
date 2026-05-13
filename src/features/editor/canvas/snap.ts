@@ -1,7 +1,7 @@
 import type { Point2D } from '@/types';
 import { distance } from '@/domain/geometry';
 
-export type SnapMode =
+type SnapMode =
   | 'grid'
   | 'point'
   | 'endpoint'
@@ -10,9 +10,9 @@ export type SnapMode =
   | 'angle'
   | 'intersection';
 
-export type SnapSegment = { a: Point2D; b: Point2D };
+type SnapSegment = { a: Point2D; b: Point2D };
 
-export type SnapInput = {
+type SnapInput = {
   worldPoint: Point2D;
   tolerancePx: number;
   scale: number;
@@ -23,7 +23,7 @@ export type SnapInput = {
   candidateSegments?: SnapSegment[];
 };
 
-export type SnapResult = {
+type SnapResult = {
   point: Point2D;
   source: SnapMode | 'none';
   marker?: { kind: SnapMode; point: Point2D };

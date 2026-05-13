@@ -1,10 +1,9 @@
 import type { Surface, Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type SplitSurfacePayload = { sourceId: string; parts: Surface[] };
-export type UnsplitSurfacePayload = { source: Surface; partIds: string[] };
+type SplitSurfacePayload = { sourceId: string; parts: Surface[] };
+type UnsplitSurfacePayload = { source: Surface; partIds: string[] };
 
 const unsplit = (
   payload: UnsplitSurfacePayload,
@@ -50,5 +49,3 @@ const splitSurfaceCmd = (
 });
 
 export const splitSurfaceCommand: CommandFactory<SplitSurfacePayload> = splitSurfaceCmd;
-registerCommand('splitSurface', splitSurfaceCommand);
-registerCommand('unsplitSurface', unsplit as unknown as CommandFactory<unknown>);

@@ -1,9 +1,8 @@
 import type { Project } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type ReplaceProjectPayload = { next: Project };
+type ReplaceProjectPayload = { next: Project };
 
 const make = (payload: ReplaceProjectPayload, label = 'Replace project'): Command<ReplaceProjectPayload> => ({
   id: newCommandId(),
@@ -15,4 +14,3 @@ const make = (payload: ReplaceProjectPayload, label = 'Replace project'): Comman
 });
 
 export const replaceProjectCommand: CommandFactory<ReplaceProjectPayload> = make;
-registerCommand('replaceProject', replaceProjectCommand);

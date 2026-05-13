@@ -4,7 +4,7 @@ import { computeDimension } from './computeDimension';
 import { useThemeStore, type Theme } from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 
-export type DimensionRendererProps = {
+type DimensionRendererProps = {
   dimensions: DimensionEntity[];
   project: Project;
 };

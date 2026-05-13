@@ -6,7 +6,7 @@ import { useEditorStore, useThemeStore } from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
 
-export type MeterPreviewProps = {
+type MeterPreviewProps = {
   first: Point2D;
   cursor: Point2D;
   /** True when the cursor was projected onto an existing shape edge (Shift). */

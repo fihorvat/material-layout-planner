@@ -32,7 +32,7 @@ const handleShiftedDigit = (
   });
 };
 
-export type NumericPromptOverlayProps = {
+type NumericPromptOverlayProps = {
   onSubmit: (lengthMm: number, angleDeg: number) => void;
   onCancel: () => void;
   initialAngleDeg?: number;

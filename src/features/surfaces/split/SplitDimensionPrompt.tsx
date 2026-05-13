@@ -3,7 +3,7 @@ import { parseLength, ParseLengthError, formatLength } from '@/domain/units';
 import { useProjectStore, useSplitToolStore } from '@/state';
 import { distance } from '@/domain/geometry';
 
-export type SplitDimensionPromptProps = {
+type SplitDimensionPromptProps = {
   onSubmit: (input: { surfaceId: string; edgeIndex: number; offsetMm: number }) => boolean;
 };
 

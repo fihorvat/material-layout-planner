@@ -1,5 +1,4 @@
 export type { Command, CommandFactory, CommandContext, CommandResult } from './types';
-export { registerCommand, getCommandFactory } from './registry';
 export { dispatchCommand, undo, redo, canUndo, canRedo } from './dispatcher';
 export { replaceProjectCommand } from './builtin/replaceProjectCommand';
 export { addDrawingEntityCommand } from './builtin/addDrawingEntityCommand';
@@ -67,9 +66,3 @@ export {
   setMaterialLayoutsCommand,
   clearMaterialLayoutsCommand,
 } from './builtin/materialLayoutCommands';
-export {
-  addBackgroundImageCommand,
-  removeBackgroundImageCommand,
-  updateBackgroundImageCommand,
-  calibrateBackgroundImageCommand,
-} from './builtin/backgroundImageCommands';

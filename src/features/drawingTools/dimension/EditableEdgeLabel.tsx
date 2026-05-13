@@ -5,7 +5,7 @@ import { useEditorStore, useDimensionEditStore, useThemeStore, type DimensionEdi
 import { formatLength } from '@/domain/units';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 
-export type EditableEdgeLabelProps = {
+type EditableEdgeLabelProps = {
   midpoint: Point2D;
   lengthMm: number;
   angleDeg?: number;

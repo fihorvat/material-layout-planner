@@ -14,7 +14,7 @@ export const decodeEdgeId = (edgeId: string): { surfaceId: string; edgeIndex: nu
   };
 };
 
-export type ConnectionInput = {
+type ConnectionInput = {
   surfaceAId: string;
   edgeAIndex: number;
   surfaceBId: string;
@@ -47,7 +47,7 @@ export const makeConnection = (input: ConnectionInput): SurfaceConnection => ({
   thicknessMode: input.thicknessMode ?? 'ignoreThickness',
 });
 
-export type ConnectionValidation = {
+type ConnectionValidation = {
   valid: boolean;
   issues: { code: string; message: string }[];
   warnings: { code: string; message: string }[];

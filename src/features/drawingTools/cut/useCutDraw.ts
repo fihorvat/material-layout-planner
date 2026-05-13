@@ -20,7 +20,7 @@ import {
 import { dispatchCommand, replaceProjectCommand } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
 
-export type CutDrawState =
+type CutDrawState =
   | { phase: 'pickFirst' }
   | { phase: 'pickSecond'; first: Point2D; cursor: Point2D };
 

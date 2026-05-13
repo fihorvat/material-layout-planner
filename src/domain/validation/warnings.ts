@@ -1,6 +1,6 @@
-export type WarningSeverity = 'info' | 'warning' | 'error';
+type WarningSeverity = 'info' | 'warning' | 'error';
 
-export type WarningTarget =
+type WarningTarget =
   | { kind: 'surface'; id: string }
   | { kind: 'opening'; surfaceId: string; holeIndex: number }
   | { kind: 'piece'; layoutId: string; pieceId: string }

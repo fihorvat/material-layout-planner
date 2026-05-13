@@ -6,7 +6,7 @@ import { useThemeStore, useSelectionStore, useEditorStore } from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { dispatchCommand, updateLabelCommand } from '@/domain/commands';
 
-export type LabelRendererProps = {
+type LabelRendererProps = {
   labels: LabelEntity[];
   project: Project;
 };

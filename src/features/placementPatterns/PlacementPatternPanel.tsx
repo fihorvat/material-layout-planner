@@ -18,12 +18,14 @@ import {
   OriginPreview,
   DirectionPreview,
   SymmetryPreview,
+} from './PatternVisuals';
+import {
   TYPE_META,
   ORIENTATION_META,
   ORIGIN_META,
   DIRECTION_META,
   SYMMETRY_META,
-} from './PatternVisuals';
+} from './patternMeta';
 
 const labelStyle = (disabled = false): React.CSSProperties => ({
   display: 'flex',
@@ -43,7 +45,7 @@ const inputStyle = (disabled = false): React.CSSProperties => ({
   fontSize: 13,
 });
 
-export type PlacementPatternPanelProps = {
+type PlacementPatternPanelProps = {
   patternId: string;
   /** When true, panel is rendered standalone (e.g. inside a modal). Show delete + heading. */
   showHeader?: boolean;

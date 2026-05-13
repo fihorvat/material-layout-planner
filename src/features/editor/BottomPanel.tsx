@@ -23,7 +23,7 @@ const TABS: TabItem[] = [
   { id: 'info', label: 'Info' },
 ];
 
-export type BottomPanelProps = {
+type BottomPanelProps = {
   collapsed: boolean;
   onToggleCollapsed: () => void;
 };

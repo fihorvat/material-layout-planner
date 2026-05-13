@@ -3,7 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { newId } from '@/domain/ids';
 
-export type ToastSeverity = 'info' | 'success' | 'warning' | 'error';
+type ToastSeverity = 'info' | 'success' | 'warning' | 'error';
 
 export type Toast = {
   id: string;

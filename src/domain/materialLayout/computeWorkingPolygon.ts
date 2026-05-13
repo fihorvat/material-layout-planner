@@ -3,7 +3,7 @@ import type { Polygon } from '@/domain/geometry';
 import { polygonUnion } from '@/domain/geometry';
 import { getEffectiveEdgeRule } from '@/domain/surfaces/edgeRules';
 
-export type WorkingPolygonResult = { visible: Polygon; physical: Polygon };
+type WorkingPolygonResult = { visible: Polygon; physical: Polygon };
 
 export const computeWorkingPolygon = (input: {
   surface: Surface;

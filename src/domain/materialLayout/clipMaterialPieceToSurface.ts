@@ -1,4 +1,4 @@
-import type { Point2D, Material } from '@/types';
+import type { Point2D } from '@/types';
 import type { Polygon } from '@/domain/geometry';
 import { polygonIntersection, polygonDifference, polygonArea, rotate } from '@/domain/geometry';
 import type { UnitRectangle } from './types';
@@ -31,7 +31,7 @@ const localBoundingBox = (poly: Point2D[], origin: Point2D, rotationDeg: number)
   return { width: maxX - minX, height: maxY - minY };
 };
 
-export type ClipResult = {
+type ClipResult = {
   visiblePolygon: Point2D[];
   physicalPolygon: Point2D[];
   overlapPolygons: Point2D[][];
@@ -43,8 +43,6 @@ export const clipMaterialPieceToSurface = (input: {
   unit: UnitRectangle;
   visibleSurfacePolygon: Polygon;
   physicalWorkingPolygon: Polygon;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  material: Material;
 }): ClipResult | null => {
   const unitPoly = cornersToPolygon(input.unit.corners);
   const physicalParts = polygonIntersection(unitPoly, input.physicalWorkingPolygon);

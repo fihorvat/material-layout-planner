@@ -14,21 +14,21 @@ import { computeAnchorPosition } from '@/features/drawingTools/label/computeAnch
 const APPROX_CHAR_WIDTH = 0.6;
 const LABEL_LINE_HEIGHT = 1.2;
 
-export type HitCandidate = {
+type HitCandidate = {
   kind: SelectableKind;
   id: string;
   zIndex: number;
   bbox: Aabb;
 };
 
-export type HitTestInput = {
+type HitTestInput = {
   worldPoint: Point2D;
   tolerancePxAsMm: number;
   project: Project;
   layers: LayerVisibility;
 };
 
-export type HitTestResult = {
+type HitTestResult = {
   topHit: HitCandidate | null;
   allHits: HitCandidate[];
 };

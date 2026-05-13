@@ -2,7 +2,7 @@ import type { PlacementPattern, Project, Material } from '@/types';
 import { defaultOptimizationPriority } from '@/types';
 import { newPlacementPatternId } from '@/domain/ids';
 
-export type CreatePatternInput = { name: string } & Partial<PlacementPattern>;
+type CreatePatternInput = { name: string } & Partial<PlacementPattern>;
 
 export const createPlacementPattern = (input: CreatePatternInput): PlacementPattern => ({
   id: input.id ?? newPlacementPatternId(),
@@ -53,5 +53,3 @@ export const isPlacementPatternUsed = (project: Project, patternId: string): boo
   project.surfaces.some((s) => s.placementPatternId === patternId) ||
   project.materialLayouts.some((l) => l.placementPatternId === patternId);
 
-export const isManualOffsetLocked = (p: PlacementPattern): boolean =>
-  p.optimizationPriority.manualOffsetLocked;

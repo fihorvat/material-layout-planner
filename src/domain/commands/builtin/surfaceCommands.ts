@@ -2,15 +2,14 @@ import type { Surface, SurfaceHoleMeta, Project, Point2D } from '@/types';
 import { defaultDrawingStyle } from '@/types';
 import type { Command, CommandFactory } from '../types';
 import { newCommandId, newOpeningId } from '@/domain/ids';
-import { registerCommand } from '../registry';
 
-export type CreateSurfacePayload = { surface: Surface };
-export type DeleteSurfacePayload = { id: string };
-export type UpdateSurfacePayload = { id: string; patch: Partial<Surface> };
-export type RenameSurfacePayload = { id: string; name: string };
-export type AddSurfaceHolePayload = { surfaceId: string; hole: Point2D[]; meta?: SurfaceHoleMeta };
-export type RemoveSurfaceHolePayload = { surfaceId: string; holeIndex: number };
-export type UpdateSurfaceHolePayload = { surfaceId: string; holeIndex: number; hole: Point2D[] };
+type CreateSurfacePayload = { surface: Surface };
+type DeleteSurfacePayload = { id: string };
+type UpdateSurfacePayload = { id: string; patch: Partial<Surface> };
+type RenameSurfacePayload = { id: string; name: string };
+type AddSurfaceHolePayload = { surfaceId: string; hole: Point2D[]; meta?: SurfaceHoleMeta };
+type RemoveSurfaceHolePayload = { surfaceId: string; holeIndex: number };
+type UpdateSurfaceHolePayload = { surfaceId: string; holeIndex: number; hole: Point2D[] };
 
 const defaultHoleMeta = (): SurfaceHoleMeta => ({
   id: newOpeningId(),
@@ -189,12 +188,3 @@ export const renameSurfaceCommand: CommandFactory<RenameSurfacePayload> = rename
 export const addSurfaceHoleCommand: CommandFactory<AddSurfaceHolePayload> = addSurfaceHoleCmd;
 export const removeSurfaceHoleCommand: CommandFactory<RemoveSurfaceHolePayload> = removeSurfaceHoleCmd;
 export const updateSurfaceHoleCommand: CommandFactory<UpdateSurfaceHolePayload> = updateSurfaceHoleCmd;
-
-registerCommand('createSurface', createSurfaceCommand);
-registerCommand('deleteSurface', deleteSurfaceCommand);
-registerCommand('updateSurface', updateSurfaceCommand);
-registerCommand('renameSurface', renameSurfaceCommand);
-registerCommand('addSurfaceHole', addSurfaceHoleCommand);
-registerCommand('removeSurfaceHole', removeSurfaceHoleCommand);
-registerCommand('updateSurfaceHole', updateSurfaceHoleCommand);
-registerCommand('reinsertSurface', reinsertSurface as unknown as CommandFactory<unknown>);

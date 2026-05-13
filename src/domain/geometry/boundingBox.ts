@@ -30,10 +30,3 @@ export const expandAabb = (a: Aabb, mm: number): Aabb => ({
   maxX: a.maxX + mm,
   maxY: a.maxY + mm,
 });
-
-export const aabbWidth = (a: Aabb): number => a.maxX - a.minX;
-export const aabbHeight = (a: Aabb): number => a.maxY - a.minY;
-export const aabbCenter = (a: Aabb): Point2D => ({
-  x: (a.minX + a.maxX) / 2,
-  y: (a.minY + a.maxY) / 2,
-});

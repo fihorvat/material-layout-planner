@@ -19,7 +19,7 @@ const edgeEnds = (surfaceId: string, edgeIndex: number) => {
   return { a, b };
 };
 
-export type ConnectionEdgePreviewProps = {
+type ConnectionEdgePreviewProps = {
   phase: UseConnectionDrawReturn['phase'];
   hover: ConnectionHover;
 };
