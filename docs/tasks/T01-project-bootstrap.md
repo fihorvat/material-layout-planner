@@ -95,7 +95,7 @@ Install them in one `npm install`.
 
 ## Implementation steps
 
-1. Run `npm init -y`. Edit `package.json` to set `"type": "module"`, name `2d-material-layout-planner`, version `0.1.0`, private `true`.
+1. Run `npm init -y`. Edit `package.json` to set `"type": "module"`, name `material-layout-planner`, version `0.1.0`, private `true`.
 2. Install dependencies listed above.
 3. Add scripts:
    - `"dev": "vite"`
