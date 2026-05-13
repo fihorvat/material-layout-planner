@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import type Konva from 'konva';
 import { useOpeningDraw } from './opening/useOpeningDraw';
 import { OpeningRectPreview, OpeningPolyPreview } from './opening/OpeningPreview';
@@ -6,20 +5,16 @@ import { RectangleNumericPromptOverlay } from './rectangle/RectangleNumericPromp
 import { NumericPromptOverlay } from './line/NumericPromptOverlay';
 import { TypeLengthHint } from './TypeLengthHint';
 import { numericTriggerChar } from './numericKeyTrigger';
-import { registerDrawingCancel } from './drawingCancelRegistry';
+import { useDrawingToolShell } from './useDrawingToolShell';
 
 export const useOpeningTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const draw = useOpeningDraw(stageRef);
 
-  useEffect(() => registerDrawingCancel(draw.cancel), [draw.cancel]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
-      if (e.key === 'Escape') {
-        draw.cancel();
-        return;
-      }
+  const { onStagePointerDown, onStagePointerMove } = useDrawingToolShell({
+    cancel: draw.cancel,
+    onPointerDown: draw.onPointerDown,
+    onPointerMove: draw.onPointerMove,
+    onKeyDown: (e) => {
       if (e.key === 'Enter' && draw.mode === 'polygon') {
         draw.closePolygonNow();
         return;
@@ -42,18 +37,8 @@ export const useOpeningTool = (stageRef: React.RefObject<Konva.Stage | null>) =>
           draw.openNumericPrompt(digit);
         }
       }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [draw]);
-
-  const onStagePointerDown = (e: { evt: MouseEvent }) => {
-    if (e.evt.button !== 0) return;
-    draw.onPointerDown({ shift: e.evt.shiftKey, alt: e.evt.altKey, ctrl: e.evt.ctrlKey });
-  };
-  const onStagePointerMove = (e: { evt: MouseEvent }) => {
-    draw.onPointerMove({ shift: e.evt.shiftKey, alt: e.evt.altKey, ctrl: e.evt.ctrlKey });
-  };
+    },
+  });
 
   let overlay: React.ReactNode = null;
   if (draw.state.phase === 'rectPickSecond' && draw.rectPreview) {

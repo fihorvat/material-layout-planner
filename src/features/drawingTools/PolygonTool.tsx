@@ -1,41 +1,34 @@
-import { useEffect } from 'react';
 import type Konva from 'konva';
 import { usePolygonDraw } from './polygon/usePolygonDraw';
 import { PolygonPreview } from './polygon/PolygonPreview';
 import { NumericPromptOverlay } from './line/NumericPromptOverlay';
 import { TypeLengthHint } from './TypeLengthHint';
 import { numericTriggerChar } from './numericKeyTrigger';
-import { registerDrawingCancel } from './drawingCancelRegistry';
+import { useDrawingToolShell } from './useDrawingToolShell';
 
 export const usePolygonTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const draw = usePolygonDraw(stageRef);
-  useEffect(() => registerDrawingCancel(draw.cancel), [draw.cancel]);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return;
-      if (e.key === 'Escape') draw.cancel();
-      else if (e.key === 'Enter') draw.closeNow();
-      else if (e.key === 'Backspace') draw.removeLast();
-      else {
-        const digit = numericTriggerChar(e);
-        if (digit !== null && draw.state.phase === 'drawing' && !draw.numericPrompt) {
-          e.preventDefault();
-          draw.openNumericPrompt(digit);
-        }
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [draw]);
 
-  const onStagePointerDown = (e: { evt: MouseEvent }) => {
-    if (e.evt.button !== 0) return;
-    draw.onPointerDown({ shift: e.evt.shiftKey, alt: e.evt.altKey, ctrl: e.evt.ctrlKey });
-  };
-  const onStagePointerMove = (e: { evt: MouseEvent }) => {
-    draw.onPointerMove({ shift: e.evt.shiftKey, alt: e.evt.altKey, ctrl: e.evt.ctrlKey });
-  };
+  const { onStagePointerDown, onStagePointerMove } = useDrawingToolShell({
+    cancel: draw.cancel,
+    onPointerDown: draw.onPointerDown,
+    onPointerMove: draw.onPointerMove,
+    onKeyDown: (e) => {
+      if (e.key === 'Enter') {
+        draw.closeNow();
+        return;
+      }
+      if (e.key === 'Backspace') {
+        draw.removeLast();
+        return;
+      }
+      const digit = numericTriggerChar(e);
+      if (digit !== null && draw.state.phase === 'drawing' && !draw.numericPrompt) {
+        e.preventDefault();
+        draw.openNumericPrompt(digit);
+      }
+    },
+  });
 
   const overlays =
     draw.state.phase === 'drawing' ? (
