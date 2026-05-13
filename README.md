@@ -34,4 +34,18 @@ npm run preview    # 👀 preview the production build
 
 ## 📚 Documentation
 
-Detailed documentation for tools, data model, workflows, and deployment lives on the **GitHub Wiki**.
+Detailed documentation for every feature, tool, data model, and workflow lives on the **[GitHub Wiki](https://github.com/fihorvat/material-layout-planner/wiki)**.
+
+Quick links:
+
+- 🖊️ [2D Drawing Tools](https://github.com/fihorvat/material-layout-planner/wiki/2D-Drawing-Tools)
+- 🧩 [Surfaces, Openings & Connections](https://github.com/fihorvat/material-layout-planner/wiki/Surfaces-Openings-and-Connections)
+- 🎨 [Material Library](https://github.com/fihorvat/material-layout-planner/wiki/Material-Library)
+- 🔁 [Placement Patterns](https://github.com/fihorvat/material-layout-planner/wiki/Placement-Patterns)
+- 🪚 [Cut Lists & Layouts](https://github.com/fihorvat/material-layout-planner/wiki/Cut-Lists-and-Layouts)
+- ↔️ [Edge Overlap Visualization](https://github.com/fihorvat/material-layout-planner/wiki/Edge-Overlap-Visualization)
+- 🖼️ [Background Image Calibration](https://github.com/fihorvat/material-layout-planner/wiki/Background-Image-Calibration)
+- 💾 [Local Storage & JSON Import/Export](https://github.com/fihorvat/material-layout-planner/wiki/Local-Storage-and-JSON-Import-Export)
+- 📄 [PDF Export](https://github.com/fihorvat/material-layout-planner/wiki/PDF-Export)
+
+When you change a feature in this codebase, you **must** also update the matching wiki page. See [`AGENTS.md`](./AGENTS.md) for the agent-level rules.
