@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import type Konva from 'konva';
 import type { Point2D, PolygonEntity } from '@/types';
 import { useDrawingToolStore, useEditorStore, useProjectStore } from '@/state';
-import { screenToWorld } from '@/features/editor/canvas/coords';
 import { distance, ensureCCW, validatePolygon, degToRad } from '@/domain/geometry';
 import { dispatchCommand, addDrawingEntityCommand } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
@@ -11,6 +10,7 @@ import {
   isDrawingModeActiveSnapshot,
   snapToBoundingBoxEdge,
 } from '@/features/drawingTools/drawingMode';
+import { resolveWorldFromStage as resolveWorld } from '@/features/drawingTools/drawingCoords';
 
 export type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
 
@@ -72,15 +72,6 @@ const computeAxisAlignment = (
     y: horizontal ? horizontal.y : raw.y,
   };
   return { cursor, alignments: { horizontal, vertical } };
-};
-
-const resolveWorld = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | null => {
-  const s = stageRef.current;
-  if (!s) return null;
-  const pos = s.getPointerPosition();
-  if (!pos) return null;
-  const v = useEditorStore.getState().viewport;
-  return screenToWorld(pos.x, pos.y, v);
 };
 
 type PolygonDrawOptions = {

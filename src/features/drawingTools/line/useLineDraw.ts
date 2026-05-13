@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react';
 import type Konva from 'konva';
 import type { Point2D, LineEntity, PolygonEntity } from '@/types';
 import { useDrawingToolStore, useEditorStore, useProjectStore } from '@/state';
-import { screenToWorld } from '@/features/editor/canvas/coords';
 import { snap } from '@/features/editor/canvas/snap';
 import { degToRad, ensureCCW, validatePolygon } from '@/domain/geometry';
 import {
@@ -10,6 +9,7 @@ import {
   isDrawingModeActiveSnapshot,
   snapToBoundingBoxEdge,
 } from '@/features/drawingTools/drawingMode';
+import { collectSnapCandidates, resolveWorldFromStage } from '@/features/drawingTools/drawingCoords';
 import {
   dispatchCommand,
   addDrawingEntityCommand,
@@ -59,35 +59,6 @@ const constrainAngle = (from: Point2D, to: Point2D, stepDeg = 90): Point2D => {
   };
 };
 
-const candidatePoints = (): Point2D[] => {
-  const project = useProjectStore.getState().project;
-  const pts: Point2D[] = [];
-  for (const e of project.drawingEntities) {
-    if (e.type === 'line') {
-      pts.push(e.start, e.end);
-    } else if (e.type === 'rectangle') {
-      pts.push(
-        { x: e.origin.x, y: e.origin.y },
-        { x: e.origin.x + e.widthMm, y: e.origin.y },
-        { x: e.origin.x + e.widthMm, y: e.origin.y + e.heightMm },
-        { x: e.origin.x, y: e.origin.y + e.heightMm },
-      );
-    } else if (e.type === 'polygon') {
-      pts.push(...e.points);
-    }
-  }
-  return pts;
-};
-
-const resolveWorldFromStage = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | null => {
-  const stage = stageRef.current;
-  if (!stage) return null;
-  const pos = stage.getPointerPosition();
-  if (!pos) return null;
-  const v = useEditorStore.getState().viewport;
-  return screenToWorld(pos.x, pos.y, v);
-};
-
 export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const [state, setState] = useState<LineDrawState>({ phase: 'pickFirst' });
   const [numericPrompt, setNumericPrompt] = useState<
@@ -123,7 +94,7 @@ export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
         gridSizeMm: settings.gridSizeMm,
         snapEnabled,
         snapModes: ['endpoint', 'point', 'grid'],
-        candidatePoints: candidatePoints(),
+        candidatePoints: collectSnapCandidates(useProjectStore.getState().project),
       });
       return { point: result.point, bboxSnapped: false };
     },

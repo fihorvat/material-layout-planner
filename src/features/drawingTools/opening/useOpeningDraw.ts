@@ -8,7 +8,7 @@ import {
   useOpeningToolStore,
 } from '@/state';
 import { useToastStore } from '@/state/toastStore';
-import { screenToWorld } from '@/features/editor/canvas/coords';
+import { resolveWorldFromStage as resolveWorld } from '@/features/drawingTools/drawingCoords';
 import { ensureCW, validatePolygon, distance, degToRad } from '@/domain/geometry';
 import {
   dispatchCommand,
@@ -101,14 +101,6 @@ const tryBboxEdgeSnap = (raw: Point2D): Point2D | null => {
   return snapToBoundingBoxEdge(raw, tolMm, bboxes);
 };
 
-const resolveWorld = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | null => {
-  const s = stageRef.current;
-  if (!s) return null;
-  const pos = s.getPointerPosition();
-  if (!pos) return null;
-  const v = useEditorStore.getState().viewport;
-  return screenToWorld(pos.x, pos.y, v);
-};
 
 // Resolve the world position of the cursor for a rectangle-mode click,
 // applying bbox-edge snap when Shift is held with drawing mode active.

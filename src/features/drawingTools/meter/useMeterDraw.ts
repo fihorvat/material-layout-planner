@@ -2,9 +2,12 @@ import { useCallback, useMemo, useState } from 'react';
 import type Konva from 'konva';
 import type { Point2D, LineEntity } from '@/types';
 import { useDrawingToolStore, useEditorStore, useProjectStore } from '@/state';
-import { screenToWorld } from '@/features/editor/canvas/coords';
 import { snap } from '@/features/editor/canvas/snap';
 import { collectShapeEdges, type ShapeEdge } from '@/features/drawingTools/drawingMode';
+import {
+  collectSnapCandidates,
+  resolveWorldFromStage,
+} from '@/features/drawingTools/drawingCoords';
 import { dispatchCommand, addDrawingEntityCommand } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
 
@@ -62,35 +65,6 @@ export const snapToNearestEdge = (
   return best ? best.point : null;
 };
 
-const candidatePoints = (): Point2D[] => {
-  const project = useProjectStore.getState().project;
-  const pts: Point2D[] = [];
-  for (const e of project.drawingEntities) {
-    if (e.type === 'line') {
-      pts.push(e.start, e.end);
-    } else if (e.type === 'rectangle') {
-      pts.push(
-        { x: e.origin.x, y: e.origin.y },
-        { x: e.origin.x + e.widthMm, y: e.origin.y },
-        { x: e.origin.x + e.widthMm, y: e.origin.y + e.heightMm },
-        { x: e.origin.x, y: e.origin.y + e.heightMm },
-      );
-    } else if (e.type === 'polygon') {
-      pts.push(...e.points);
-    }
-  }
-  return pts;
-};
-
-const resolveWorldFromStage = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | null => {
-  const stage = stageRef.current;
-  if (!stage) return null;
-  const pos = stage.getPointerPosition();
-  if (!pos) return null;
-  const v = useEditorStore.getState().viewport;
-  return screenToWorld(pos.x, pos.y, v);
-};
-
 export const useMeterDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
   const [state, setState] = useState<MeterDrawState>({ phase: 'pickFirst' });
 
@@ -121,7 +95,7 @@ export const useMeterDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
         gridSizeMm: settings.gridSizeMm,
         snapEnabled,
         snapModes: ['endpoint', 'point', 'grid'],
-        candidatePoints: candidatePoints(),
+        candidatePoints: collectSnapCandidates(useProjectStore.getState().project),
       });
       return { point: result.point, snappedToEdge: false };
     },

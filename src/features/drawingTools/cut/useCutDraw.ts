@@ -9,7 +9,6 @@ import type {
   PolygonEntity,
 } from '@/types';
 import { useEditorStore, useProjectStore } from '@/state';
-import { screenToWorld } from '@/features/editor/canvas/coords';
 import { snap } from '@/features/editor/canvas/snap';
 import {
   degToRad,
@@ -17,6 +16,10 @@ import {
   ensureCCW,
   segmentsIntersect,
 } from '@/domain/geometry';
+import {
+  collectSnapCandidates,
+  resolveWorldFromStage,
+} from '@/features/drawingTools/drawingCoords';
 import { dispatchCommand, replaceProjectCommand } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
 
@@ -31,36 +34,14 @@ export type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
 // from cuts that graze a corner.
 const VERTEX_EPSILON_MM = 1e-3;
 
-const candidatePoints = (project: Project): Point2D[] => {
-  const pts: Point2D[] = [];
-  for (const e of project.drawingEntities) {
-    if (e.type === 'line') {
-      pts.push(e.start, e.end);
-    } else if (e.type === 'rectangle') {
-      pts.push(
-        { x: e.origin.x, y: e.origin.y },
-        { x: e.origin.x + e.widthMm, y: e.origin.y },
-        { x: e.origin.x + e.widthMm, y: e.origin.y + e.heightMm },
-        { x: e.origin.x, y: e.origin.y + e.heightMm },
-      );
-    } else if (e.type === 'polygon') {
-      pts.push(...e.points);
-    }
-  }
-  return pts;
-};
-
 const resolveWorld = (
   stageRef: React.RefObject<Konva.Stage | null>,
   mods: ModifierKeys,
 ): Point2D | null => {
-  const stage = stageRef.current;
-  if (!stage) return null;
-  const pos = stage.getPointerPosition();
-  if (!pos) return null;
+  const raw = resolveWorldFromStage(stageRef);
+  if (!raw) return null;
   const editor = useEditorStore.getState();
   const v = editor.viewport;
-  const raw = screenToWorld(pos.x, pos.y, v);
   const project = useProjectStore.getState().project;
   const settings = project.settings;
   const snapEnabled = editor.snapEnabled && !mods.alt;
@@ -71,7 +52,7 @@ const resolveWorld = (
     gridSizeMm: settings.gridSizeMm,
     snapEnabled,
     snapModes: ['endpoint', 'point', 'grid'],
-    candidatePoints: candidatePoints(project),
+    candidatePoints: collectSnapCandidates(project),
   });
   return result.point;
 };

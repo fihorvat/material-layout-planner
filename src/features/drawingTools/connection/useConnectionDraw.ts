@@ -6,7 +6,7 @@ import {
   useEditorStore,
   useProjectStore,
 } from '@/state';
-import { screenToWorld } from '@/features/editor/canvas/coords';
+import { resolveWorldFromStage as resolveWorld } from '@/features/drawingTools/drawingCoords';
 import { closestEdgeOfPoints } from '@/domain/geometry';
 
 type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
@@ -20,14 +20,6 @@ export type ConnectionHover = {
 
 const EDGE_PICK_TOL_PX = 14;
 
-const resolveWorld = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | null => {
-  const s = stageRef.current;
-  if (!s) return null;
-  const pos = s.getPointerPosition();
-  if (!pos) return null;
-  const v = useEditorStore.getState().viewport;
-  return screenToWorld(pos.x, pos.y, v);
-};
 
 const findNearestEdge = (
   cursor: Point2D,

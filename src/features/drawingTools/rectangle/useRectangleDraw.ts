@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import type Konva from 'konva';
 import type { Point2D, RectangleEntity } from '@/types';
-import { useDrawingToolStore, useEditorStore } from '@/state';
-import { screenToWorld } from '@/features/editor/canvas/coords';
+import { useDrawingToolStore } from '@/state';
+import { resolveWorldFromStage as resolveWorld } from '@/features/drawingTools/drawingCoords';
 import { dispatchCommand, addDrawingEntityCommand } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
 
@@ -11,15 +11,6 @@ export type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
 type RectangleDrawState =
   | { phase: 'pickFirst' }
   | { phase: 'pickSecond'; first: Point2D; cursor: Point2D; alt: boolean; shift: boolean };
-
-const resolveWorld = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | null => {
-  const s = stageRef.current;
-  if (!s) return null;
-  const pos = s.getPointerPosition();
-  if (!pos) return null;
-  const v = useEditorStore.getState().viewport;
-  return screenToWorld(pos.x, pos.y, v);
-};
 
 type RectInputs = { origin: Point2D; widthMm: number; heightMm: number };
 
