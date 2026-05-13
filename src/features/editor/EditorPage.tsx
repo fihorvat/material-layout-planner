@@ -17,10 +17,12 @@ const DEFAULT = {
   propertiesWidth: 320,
   bottomHeight: 220,
   bottomCollapsed: false,
+  propertiesCollapsed: false,
 };
 
 const PROP_MIN = 240;
 const PROP_MAX = 520;
+const PROP_COLLAPSED_W = 32;
 const BOTTOM_MIN = 120;
 const BOTTOM_MAX = 500;
 
@@ -35,6 +37,7 @@ const loadPrefs = (): LayoutPrefs => {
       propertiesWidth: clamp(parsed.propertiesWidth ?? DEFAULT.propertiesWidth, PROP_MIN, PROP_MAX),
       bottomHeight: clamp(parsed.bottomHeight ?? DEFAULT.bottomHeight, BOTTOM_MIN, BOTTOM_MAX),
       bottomCollapsed: Boolean(parsed.bottomCollapsed ?? false),
+      propertiesCollapsed: Boolean(parsed.propertiesCollapsed ?? false),
     };
   } catch {
     return DEFAULT;
@@ -68,6 +71,10 @@ export const EditorPage = () => {
     setPrefs((p) => ({ ...p, bottomHeight: clamp(p.bottomHeight - delta, BOTTOM_MIN, BOTTOM_MAX) }));
   };
   const toggleCollapsed = () => setPrefs((p) => ({ ...p, bottomCollapsed: !p.bottomCollapsed }));
+  const togglePropertiesCollapsed = () =>
+    setPrefs((p) => ({ ...p, propertiesCollapsed: !p.propertiesCollapsed }));
+
+  const propWidth = prefs.propertiesCollapsed ? PROP_COLLAPSED_W : prefs.propertiesWidth;
 
   return (
     <ErrorBoundary>
@@ -81,16 +88,23 @@ export const EditorPage = () => {
     >
       <EditorToolbar />
       <div className={styles.main} style={{
-        gridTemplateColumns: `var(--mlp-rail-w) 1fr 4px ${prefs.propertiesWidth}px`,
+        gridTemplateColumns: prefs.propertiesCollapsed
+          ? `var(--mlp-rail-w) 1fr 0px ${propWidth}px`
+          : `var(--mlp-rail-w) 1fr 4px ${propWidth}px`,
       }}>
         <ToolRail />
         <CanvasStage />
-        <ResizableDivider
-          orientation="vertical"
-          onResize={onResizeProperties}
-          ariaLabel="Resize properties panel"
+        {!prefs.propertiesCollapsed ? (
+          <ResizableDivider
+            orientation="vertical"
+            onResize={onResizeProperties}
+            ariaLabel="Resize properties panel"
+          />
+        ) : <div />}
+        <PropertiesPanel
+          collapsed={prefs.propertiesCollapsed}
+          onToggleCollapsed={togglePropertiesCollapsed}
         />
-        <PropertiesPanel />
       </div>
       {!prefs.bottomCollapsed ? (
         <ResizableDivider

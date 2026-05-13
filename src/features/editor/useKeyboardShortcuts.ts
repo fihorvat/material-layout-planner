@@ -3,6 +3,7 @@ import { undo, redo } from '@/domain/commands';
 import { useSelectionStore, useEditorStore, useDimensionEditStore } from '@/state';
 import { deleteSelected, duplicateSelected, selectAll } from '@/features/drawingTools/select/useSelectInteractions';
 import { cancelAllDrawings } from '@/features/drawingTools/drawingCancelRegistry';
+import { isToolEnabled } from './toolAvailability';
 import { useSaveProject } from './useSaveProject';
 
 const TOOL_KEYS: Record<string, ReturnType<typeof useEditorStore.getState>['activeTool']> = {
@@ -75,7 +76,12 @@ export const useKeyboardShortcuts = (): void => {
       if (!mod && !e.shiftKey && !e.altKey) {
         const t = TOOL_KEYS[key];
         if (t) {
-          useEditorStore.getState().setActiveTool(t);
+          const hasSurfaceSelected = useSelectionStore
+            .getState()
+            .selected.some((s) => s.kind === 'surface');
+          if (isToolEnabled(t, { hasSurfaceSelected })) {
+            useEditorStore.getState().setActiveTool(t);
+          }
         } else if (key === 'g') {
           const es = useEditorStore.getState();
           es.setGridVisible(!es.gridVisible);

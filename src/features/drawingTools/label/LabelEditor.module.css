@@ -34,12 +34,12 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--mlp-radius-sm);
-  width: 22px;
-  height: 22px;
+  width: 28px;
+  height: 28px;
   line-height: 1;
   cursor: pointer;
   color: var(--mlp-muted);
-  font-size: 16px;
+  font-size: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

@@ -17,7 +17,12 @@ const TOOL_PANEL_TITLE: Partial<Record<string, { title: string; hint: string }>>
   meter: { title: 'Meter tool', hint: 'Click two points to drop a dimensioned measurement line. Hold Shift to snap the point onto the nearest existing line/edge.' },
 };
 
-export const PropertiesPanel = () => {
+export type PropertiesPanelProps = {
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+};
+
+export const PropertiesPanel = ({ collapsed, onToggleCollapsed }: PropertiesPanelProps) => {
   const selected = useSelectionStore((s) => s.selected);
   const activeTool = useEditorStore((s) => s.activeTool);
   const connection = selected.find((e) => e.kind === 'connection');
@@ -57,9 +62,23 @@ export const PropertiesPanel = () => {
   }
 
   return (
-    <aside className={styles.propertiesPanel} aria-label="Properties panel">
-      <div className={styles.panelHeader}>Properties</div>
-      <div className={styles.panelBody}>{body}</div>
+    <aside
+      className={collapsed ? styles.propertiesPanelCollapsed : styles.propertiesPanel}
+      aria-label="Properties panel"
+    >
+      <div className={styles.panelHeader}>
+        {!collapsed && <span>Properties</span>}
+        <button
+          type="button"
+          className={styles.collapseBtn}
+          aria-label={collapsed ? 'Expand properties panel' : 'Collapse properties panel'}
+          aria-expanded={!collapsed}
+          onClick={onToggleCollapsed}
+        >
+          {collapsed ? '\u25C0' : '\u25B6'}
+        </button>
+      </div>
+      {!collapsed && <div className={styles.panelBody}>{body}</div>}
     </aside>
   );
 };

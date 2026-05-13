@@ -12,6 +12,7 @@ export const SurfaceHoleMetaSchema = z
     name: z.string().optional(),
     showDimensions: z.boolean(),
     style: DrawingStyleSchema,
+    labelOffset: Point2DSchema.optional(),
   })
   .strict();
 

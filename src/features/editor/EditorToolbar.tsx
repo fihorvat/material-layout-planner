@@ -9,7 +9,13 @@ import {
 import { undo, redo } from '@/domain/commands';
 import { useGenerateLayout } from '@/features/materialLayout/useGenerateLayout';
 import { useSaveProject } from './useSaveProject';
+import { useExportPdf } from './useExportPdf';
 import { FileMenu } from './FileMenu';
+import { getActiveStage } from './canvas/activeStage';
+import {
+  computeFitViewport,
+  computeProjectContentBounds,
+} from './canvas/fitToContent';
 import styles from './editor.module.css';
 
 export const EditorToolbar = () => {
@@ -34,6 +40,7 @@ export const EditorToolbar = () => {
 
   const { generateAndPersist, running: generating } = useGenerateLayout();
   const { saveProject, saving } = useSaveProject();
+  const { exportPdf, exporting } = useExportPdf();
 
   const [name, setName] = useState(project.name);
   useEffect(() => {
@@ -70,7 +77,7 @@ export const EditorToolbar = () => {
         disabled={saving}
         onClick={() => void saveProject()}
       >
-        <span aria-hidden>{'\u{1F4BE}'}</span>
+        <span aria-hidden>{'\u{1F5AB}'}</span>
       </IconButton>
       <span className={styles.toolbarSep} aria-hidden />
       <IconButton label="Zoom out" shortcut="-" onClick={() => zoomAt(center, 1 / 1.2)}>
@@ -80,7 +87,24 @@ export const EditorToolbar = () => {
       <IconButton label="Zoom in" shortcut="+" onClick={() => zoomAt(center, 1.2)}>
         <span aria-hidden>+</span>
       </IconButton>
-      <IconButton label="Fit to content" shortcut="F" onClick={() => resetViewport()}>
+      <IconButton
+        label="Fit to content"
+        shortcut="F"
+        onClick={() => {
+          const stage = getActiveStage();
+          const bounds = computeProjectContentBounds(project);
+          if (!stage || !bounds) {
+            resetViewport();
+            return;
+          }
+          setViewport(
+            computeFitViewport(bounds, {
+              width: stage.width(),
+              height: stage.height(),
+            }),
+          );
+        }}
+      >
         <span aria-hidden>{'\u26F6'}</span>
       </IconButton>
       <IconButton label="Reset zoom" shortcut="0" onClick={() => setViewport({ ...viewport, scale: clampZoom(1) })}>
@@ -110,7 +134,12 @@ export const EditorToolbar = () => {
       >
         <span aria-hidden>{generating ? '\u29D7' : '\u25A6'}</span>
       </IconButton>
-      <IconButton label="Export PDF" shortcut="" onClick={() => {}}>
+      <IconButton
+        label={exporting ? 'Exporting PDF\u2026' : 'Export PDF'}
+        shortcut=""
+        disabled={exporting}
+        onClick={() => void exportPdf()}
+      >
         <span aria-hidden>PDF</span>
       </IconButton>
       <span className={styles.toolbarSpacer} />

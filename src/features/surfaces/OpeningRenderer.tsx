@@ -1,9 +1,11 @@
 import { Group, Line as KLine, Text } from 'react-konva';
+import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Surface, Point2D } from '@/types';
 import { useEditorStore, useSelectionStore, useThemeStore } from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { polygonCentroid, radToDeg, distance } from '@/domain/geometry';
 import { EditableEdgeLabel } from '@/features/drawingTools/dimension/EditableEdgeLabel';
+import { dispatchCommand, updateOpeningCommand } from '@/domain/commands';
 
 const flat = (pts: Point2D[]): number[] => {
   const out: number[] = [];
@@ -38,6 +40,7 @@ const NAME_FONT_PX = 16;
 export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
   const theme = useThemeStore((s) => s.theme);
   const scale = useEditorStore((s) => s.viewport.scale);
+  const activeTool = useEditorStore((s) => s.activeTool);
   const selected = useSelectionStore((s) => s.selected);
   const selectedIds = new Set(selected.filter((e) => e.kind === 'opening').map((e) => e.id));
   const nameFontMm = NAME_FONT_PX / scale;
@@ -51,6 +54,10 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
     const textColor = meta ? themedShapeColor(meta.style.textColor, theme) : '#111827';
     const isSelected = meta ? selectedIds.has(meta.id) : false;
     const strokeWidth = meta?.style.strokeWidthPx ?? 1;
+    const fillColor = meta?.style.fillColor
+      ? themedShapeColor(meta.style.fillColor, theme)
+      : undefined;
+    const fillOpacity = meta?.style.fillOpacity ?? 1;
     items.push(
       <KLine
         key={`opn-outline:${surface.id}:${i}`}
@@ -61,20 +68,56 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
         strokeScaleEnabled={false}
         dash={isSelected ? [6, 4] : undefined}
         dashEnabled={isSelected}
+        fill={fillColor}
+        opacity={fillColor ? fillOpacity : 1}
+        listening={false}
       />,
     );
     if (meta?.name) {
       const c = polygonCentroid(hole);
+      const offset = meta.labelOffset ?? { x: 0, y: 0 };
+      const labelX = c.x + offset.x;
+      const labelY = c.y + offset.y;
+      const isDraggable = activeTool === 'select' && isSelected;
+      const surfaceId = surface.id;
+      const openingId = meta.id;
       items.push(
         <Text
           key={`opn-name:${surface.id}:${i}`}
-          x={c.x}
-          y={c.y}
+          x={labelX}
+          y={labelY}
           text={meta.name}
           fontSize={nameFontMm}
           fontStyle="bold"
           fill={textColor}
-          listening={false}
+          draggable={isDraggable}
+          listening={isDraggable}
+          onMouseDown={(e: KonvaEventObject<MouseEvent>) => {
+            if (isDraggable) e.cancelBubble = true;
+          }}
+          onDragStart={(e: KonvaEventObject<DragEvent>) => {
+            e.cancelBubble = true;
+          }}
+          onDragMove={(e: KonvaEventObject<DragEvent>) => {
+            e.cancelBubble = true;
+          }}
+          onDragEnd={(e: KonvaEventObject<DragEvent>) => {
+            e.cancelBubble = true;
+            const nx = e.target.x();
+            const ny = e.target.y();
+            const newOffset: Point2D = { x: nx - c.x, y: ny - c.y };
+            if (newOffset.x === offset.x && newOffset.y === offset.y) return;
+            dispatchCommand(
+              updateOpeningCommand(
+                {
+                  surfaceId,
+                  openingId,
+                  patch: { meta: { labelOffset: newOffset } },
+                },
+                'Move opening label',
+              ),
+            );
+          }}
         />,
       );
     }

@@ -78,6 +78,18 @@
   background: var(--mlp-surface);
   width: var(--mlp-rail-w);
 }
+.toolRailGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+.toolRailGroupDivider {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--mlp-border);
+}
 
 .canvasArea {
   position: relative;
@@ -106,6 +118,19 @@
   background: var(--mlp-surface);
   min-width: 0;
   overflow: hidden;
+}
+.propertiesPanelCollapsed {
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--mlp-border);
+  background: var(--mlp-surface);
+  min-width: 0;
+  overflow: hidden;
+}
+.propertiesPanelCollapsed .panelHeader {
+  padding: 8px 0;
+  justify-content: center;
+  border-bottom: none;
 }
 .panelHeader {
   display: flex;
@@ -141,7 +166,7 @@
 .bottomBody {
   flex: 1 1 auto;
   overflow: auto;
-  padding: 12px;
+  padding: 0 12px 12px;
   background: var(--mlp-bg);
   color: var(--mlp-text);
 }

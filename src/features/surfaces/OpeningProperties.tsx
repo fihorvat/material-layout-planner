@@ -5,7 +5,7 @@ import {
   updateOpeningCommand,
   findOpeningSurface,
 } from '@/domain/commands';
-import type { DrawingStyle } from '@/types';
+import type { DrawingStyle, Point2D } from '@/types';
 
 export const OpeningProperties = () => {
   const selection = useSelectionStore((s) => s.selected);
@@ -19,11 +19,24 @@ export const OpeningProperties = () => {
   const meta = surface.holeMeta.find((m) => m.id === entry.id);
   if (!meta) return null;
 
-  const setMeta = (patch: Partial<{ name: string; showDimensions: boolean; style: DrawingStyle }>) => {
-    const metaPatch: { name?: string; showDimensions?: boolean; style?: DrawingStyle } = {};
+  const setMeta = (
+    patch: Partial<{
+      name: string;
+      showDimensions: boolean;
+      style: DrawingStyle;
+      labelOffset: Point2D | undefined;
+    }>,
+  ) => {
+    const metaPatch: {
+      name?: string;
+      showDimensions?: boolean;
+      style?: DrawingStyle;
+      labelOffset?: Point2D;
+    } = {};
     if (patch.name !== undefined) metaPatch.name = patch.name;
     if (patch.showDimensions !== undefined) metaPatch.showDimensions = patch.showDimensions;
     if (patch.style !== undefined) metaPatch.style = patch.style;
+    if ('labelOffset' in patch) metaPatch.labelOffset = patch.labelOffset;
     dispatchCommand(
       updateOpeningCommand({
         surfaceId: surface.id,
@@ -32,6 +45,10 @@ export const OpeningProperties = () => {
       }),
     );
   };
+
+  const fillEnabled = meta.style.fillColor !== undefined;
+  const fillColorValue = meta.style.fillColor ?? '#ffffff';
+  const fillOpacityValue = meta.style.fillOpacity ?? 1;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -74,6 +91,76 @@ export const OpeningProperties = () => {
           style={{ width: 80 }}
         />
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={fillEnabled}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setMeta({
+                style: {
+                  ...meta.style,
+                  fillColor: fillColorValue,
+                  fillOpacity: fillOpacityValue,
+                },
+              });
+            } else {
+              const nextStyle: DrawingStyle = { ...meta.style };
+              delete nextStyle.fillColor;
+              delete nextStyle.fillOpacity;
+              setMeta({ style: nextStyle });
+            }
+          }}
+        />
+        Fill background
+      </label>
+      {fillEnabled && (
+        <>
+          <label>
+            Fill color{' '}
+            <input
+              type="color"
+              value={fillColorValue}
+              onChange={(e) =>
+                setMeta({
+                  style: {
+                    ...meta.style,
+                    fillColor: e.target.value,
+                    fillOpacity: fillOpacityValue,
+                  },
+                })
+              }
+            />
+          </label>
+          <label>
+            Fill opacity{' '}
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={fillOpacityValue}
+              onChange={(e) => {
+                const v = Number(e.target.value);
+                if (!Number.isFinite(v)) return;
+                setMeta({
+                  style: { ...meta.style, fillColor: fillColorValue, fillOpacity: v },
+                });
+              }}
+            />
+            <span style={{ marginLeft: 6, fontSize: 12 }}>{fillOpacityValue.toFixed(2)}</span>
+          </label>
+        </>
+      )}
+      {meta.name && (
+        <button
+          type="button"
+          disabled={!meta.labelOffset}
+          onClick={() => setMeta({ labelOffset: undefined })}
+        >
+          Reset label position
+        </button>
+      )}
       <div style={{ fontSize: 12, color: '#6b7280' }}>
         Parent surface: <strong>{surface.name}</strong>
       </div>

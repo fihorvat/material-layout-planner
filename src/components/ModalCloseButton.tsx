@@ -1,4 +1,5 @@
 import { IconButton } from './IconButton';
+import styles from './controls.module.css';
 
 export type ModalCloseButtonProps = {
   onClose: () => void;
@@ -9,6 +10,6 @@ export type ModalCloseButtonProps = {
 /** Standard X-icon close button for modal/dialog headers. */
 export const ModalCloseButton = ({ onClose, label = 'Close' }: ModalCloseButtonProps) => (
   <IconButton label={label} onClick={onClose}>
-    <span aria-hidden>{'\u00D7'}</span>
+    <span aria-hidden className={styles.closeGlyph}>{'\u00D7'}</span>
   </IconButton>
 );

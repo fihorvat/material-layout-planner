@@ -4,6 +4,7 @@ import { createPage, drawHeader, PT_PER_MM } from './layout';
 import { drawText } from './text';
 import { drawWorldGeometry, type PdfDrawCmd } from './svg';
 import { rgb } from 'pdf-lib';
+import type { RGB } from 'pdf-lib';
 import { pointsToAabb } from '@/domain/geometry';
 
 const projectAabb = (project: PdfBuildContext['project']) => {
@@ -35,6 +36,34 @@ const makeWorldToPagePt = (build: PdfBuildContext, ctx: ReturnType<typeof create
   });
 };
 
+const pushEdgeDimensionLabels = (
+  cmds: PdfDrawCmd[],
+  ring: Point2D[],
+  color: RGB,
+): void => {
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i]!;
+    const b = ring[(i + 1) % ring.length]!;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lenMm = Math.hypot(dx, dy);
+    if (lenMm < 1) continue;
+    const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    // Offset the label slightly away from the edge along its normal.
+    const nx = -dy / lenMm;
+    const ny = dx / lenMm;
+    const offsetMm = 20;
+    cmds.push({
+      kind: 'text',
+      text: `${Math.round(lenMm)} mm`,
+      pos: { x: mid.x + nx * offsetMm, y: mid.y + ny * offsetMm },
+      size: 7,
+      font: 'regular',
+      color,
+    });
+  }
+};
+
 export const renderTechnicalDrawingPage = (build: PdfBuildContext): void => {
   const ctx = createPage(build.doc, build.settings, build.fonts);
   build.contexts.push(ctx);
@@ -49,6 +78,9 @@ export const renderTechnicalDrawingPage = (build: PdfBuildContext): void => {
       stroke: rgb(0.1, 0.1, 0.15),
       strokeWidthPt: 0.75,
     });
+    if (build.settings.includeDimensions) {
+      pushEdgeDimensionLabels(cmds, surface.outerBoundary, rgb(0.15, 0.15, 0.25));
+    }
     for (const hole of surface.holes) {
       cmds.push({
         kind: 'polygon',
@@ -57,6 +89,9 @@ export const renderTechnicalDrawingPage = (build: PdfBuildContext): void => {
         stroke: rgb(0.5, 0.5, 0.55),
         strokeWidthPt: 0.5,
       });
+      if (build.settings.includeDimensions) {
+        pushEdgeDimensionLabels(cmds, hole, rgb(0.35, 0.35, 0.4));
+      }
     }
     if (build.settings.includeSurfaceNames) {
       cmds.push({
@@ -102,19 +137,39 @@ export const renderMaterialLayoutPage = (build: PdfBuildContext): void => {
           });
         }
       }
+    }
+  }
+  drawWorldGeometry(ctx, cmds, toPt);
+
+  // Draw piece labels in page-space so the offset between id and dimensions is
+  // not shrunk by the world-to-page scale (which can collapse to a few points
+  // for large projects and cause the two labels to overlap).
+  const labelSize = 6;
+  const labelLineHeightPt = labelSize + 2;
+  for (const layout of build.project.materialLayouts) {
+    const material = build.project.materials.find((m) => m.id === layout.materialId);
+    if (!material) continue;
+    for (const piece of layout.pieces) {
+      const labelPt = toPt(piece.labelPosition);
+      let lineY = labelPt.y;
       if (build.settings.includePieceIds) {
-        cmds.push({
-          kind: 'text',
-          text: piece.pieceCode,
-          pos: piece.labelPosition,
-          size: 6,
-          font: 'regular',
+        drawText(ctx, piece.pieceCode, labelPt.x, lineY, {
+          size: labelSize,
           color: rgb(0.15, 0.15, 0.2),
+        });
+        lineY -= labelLineHeightPt;
+      }
+      if (build.settings.includePieceDimensions) {
+        const w = Math.round(piece.boundingWidthMm);
+        const h = Math.round(piece.boundingHeightMm);
+        drawText(ctx, `${w}×${h}`, labelPt.x, lineY, {
+          size: labelSize,
+          color: rgb(0.25, 0.25, 0.3),
         });
       }
     }
   }
-  drawWorldGeometry(ctx, cmds, toPt);
+
   drawText(ctx, `${build.project.materialLayouts.length} layout(s)`, ctx.contentBox.x, ctx.marginPt + 14, { size: 8 });
 };
 

@@ -23,6 +23,12 @@ export const ProjectSettingsSchema = z
 
     defaultOverlapOpacity: z.number().min(0).max(1),
 
+    // Saw blade thickness (kerf) used when packing pieces onto raw material
+    // sheets. Each cut consumes this width of material, so adjacent pieces
+    // must be spaced by at least this amount. Defaulted for backwards
+    // compatibility with v1 projects saved before this field existed.
+    bladeKerfMm: z.number().finite().nonnegative().default(2.5),
+
     autosaveEnabled: z.boolean(),
   })
   .strict();

@@ -50,7 +50,15 @@ export const ToastContainer = () => {
           <button
             type="button"
             onClick={() => dismiss(t.id)}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--mlp-muted)' }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--mlp-muted)',
+              fontSize: 22,
+              lineHeight: 1,
+              padding: '0 4px',
+            }}
             aria-label="Dismiss toast"
           >
             {'\u00D7'}

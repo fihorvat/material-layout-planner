@@ -1,4 +1,5 @@
 import { Group, Line as KLine, Text } from 'react-konva';
+import type { SceneContext } from 'konva/lib/Context';
 import { useProjectStore, useThemeStore, type Theme } from '@/state';
 import { surfaceCentroid, surfaceArea, surfaceEdges } from '@/domain/surfaces/surfaceGeometry';
 import type { Surface, Point2D } from '@/types';
@@ -18,8 +19,38 @@ const renderSurface = (s: Surface, theme: Theme) => {
   const stroke = themedShapeColor(s.style.strokeColor, theme);
   const fill = themedShapeColor(s.style.fillColor, theme);
   const text = themedShapeColor(s.style.textColor, theme);
-  const holeFill = themedShapeColor('#ffffff', theme);
   const lines: React.ReactNode[] = [];
+  // Clip the surface's filled outer boundary by the even-odd combination of
+  // outer + each hole subpath, so that opening regions are not painted at
+  // all. This leaves the openings truly transparent (the canvas grid /
+  // underlying layers show through) instead of being masked by an opaque
+  // white polygon drawn on top.
+  const clipFunc = (ctx: SceneContext) => {
+    const outer = s.outerBoundary;
+    if (outer.length === 0) return;
+    ctx.beginPath();
+    ctx.moveTo(outer[0]!.x, outer[0]!.y);
+    for (let i = 1; i < outer.length; i++) ctx.lineTo(outer[i]!.x, outer[i]!.y);
+    ctx.closePath();
+    for (const hole of s.holes) {
+      if (hole.length === 0) continue;
+      ctx.moveTo(hole[0]!.x, hole[0]!.y);
+      for (let i = 1; i < hole.length; i++) ctx.lineTo(hole[i]!.x, hole[i]!.y);
+      ctx.closePath();
+    }
+    return ['evenodd' as CanvasFillRule] as [CanvasFillRule];
+  };
+  lines.push(
+    <Group key={`f:${s.id}`} clipFunc={clipFunc} listening={false}>
+      <KLine
+        points={flat(s.outerBoundary)}
+        closed
+        fill={fill}
+        opacity={s.style.fillOpacity}
+        listening={false}
+      />
+    </Group>,
+  );
   lines.push(
     <KLine
       key={`o:${s.id}`}
@@ -28,8 +59,6 @@ const renderSurface = (s: Surface, theme: Theme) => {
       stroke={stroke}
       strokeWidth={s.style.strokeWidthPx}
       strokeScaleEnabled={false}
-      fill={fill}
-      opacity={s.style.fillOpacity}
     />,
   );
   for (let i = 0; i < s.holes.length; i++) {
@@ -41,8 +70,6 @@ const renderSurface = (s: Surface, theme: Theme) => {
         stroke={stroke}
         strokeWidth={s.style.strokeWidthPx}
         strokeScaleEnabled={false}
-        fill={holeFill}
-        opacity={1}
       />,
     );
   }

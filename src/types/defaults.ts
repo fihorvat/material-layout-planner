@@ -48,6 +48,7 @@ export const defaultProjectSettings = (): ProjectSettings => ({
   defaultLineColor: '#1f2937',
   defaultTextColor: '#111827',
   defaultOverlapOpacity: 0.25,
+  bladeKerfMm: 2.5,
   autosaveEnabled: true,
 });
 

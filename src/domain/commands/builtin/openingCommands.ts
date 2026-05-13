@@ -8,6 +8,7 @@ export type OpeningMetaInput = {
   name?: string;
   showDimensions?: boolean;
   style?: DrawingStyle;
+  labelOffset?: Point2D;
 };
 
 export type AddOpeningPayload = {
@@ -27,6 +28,7 @@ const buildMeta = (input: OpeningMetaInput | undefined): SurfaceHoleMeta => ({
   ...(input?.name !== undefined ? { name: input.name } : {}),
   showDimensions: input?.showDimensions ?? false,
   style: input?.style ?? defaultDrawingStyle(),
+  ...(input?.labelOffset !== undefined ? { labelOffset: input.labelOffset } : {}),
 });
 
 const findSurface = (project: Project, surfaceId: string): Surface | undefined =>
@@ -132,6 +134,10 @@ const mergeMeta = (existing: SurfaceHoleMeta, patch: OpeningMetaInput): SurfaceH
   }
   if (patch.showDimensions !== undefined) out.showDimensions = patch.showDimensions;
   if (patch.style !== undefined) out.style = patch.style;
+  if ('labelOffset' in patch) {
+    if (patch.labelOffset === undefined) delete out.labelOffset;
+    else out.labelOffset = patch.labelOffset;
+  }
   return out;
 };
 
@@ -170,6 +176,7 @@ const updateOpeningCmd = (
         name: prevMeta.name,
         showDimensions: prevMeta.showDimensions,
         style: prevMeta.style,
+        labelOffset: prevMeta.labelOffset,
       };
     }
     return updateOpeningCmd(

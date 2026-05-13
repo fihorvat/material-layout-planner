@@ -8,6 +8,11 @@ export type IconButtonProps = {
   shortcut?: string;
   active?: boolean;
   disabled?: boolean;
+  /**
+   * Optional explanation shown in the tooltip when the button is disabled.
+   * Falls back to `label` when not provided.
+   */
+  disabledReason?: string;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   children: ReactNode;
   ariaPressed?: boolean;
@@ -22,6 +27,7 @@ export const IconButton = ({
   shortcut,
   active,
   disabled,
+  disabledReason,
   onClick,
   children,
   ariaPressed,
@@ -30,7 +36,9 @@ export const IconButton = ({
   const [hover, setHover] = useState(false);
   const [focus, setFocus] = useState(false);
   const tipId = useId();
-  const showTip = (hover || focus) && !disabled;
+  const showTip = hover || focus;
+  const tipReason = disabled && disabledReason ? disabledReason : null;
+  const tipShortcut = disabled ? undefined : shortcut;
   const innerBtnRef = useRef<HTMLButtonElement | null>(null);
   const tipRef = useRef<HTMLSpanElement | null>(null);
   const [tipPos, setTipPos] = useState<{ top: number; left: number } | null>(null);
@@ -74,7 +82,16 @@ export const IconButton = ({
       window.removeEventListener('scroll', place, true);
       window.removeEventListener('resize', place);
     };
-  }, [showTip, label, shortcut]);
+  }, [showTip, label, shortcut, tipReason, tipShortcut]);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    onClick?.(e);
+  };
 
   return (
     <>
@@ -85,8 +102,8 @@ export const IconButton = ({
         aria-label={label}
         aria-pressed={ariaPressed ?? active}
         aria-describedby={showTip ? tipId : undefined}
-        disabled={disabled}
-        onClick={onClick}
+        aria-disabled={disabled || undefined}
+        onClick={handleClick}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
         onFocus={() => setFocus(true)}
@@ -107,8 +124,15 @@ export const IconButton = ({
                 visibility: tipPos ? 'visible' : 'hidden',
               }}
             >
-              {label}
-              {shortcut ? <span className={styles.tooltipShortcut}> {shortcut}</span> : null}
+              <span>
+                {label}
+                {tipShortcut ? (
+                  <span className={styles.tooltipShortcut}> {tipShortcut}</span>
+                ) : null}
+              </span>
+              {tipReason ? (
+                <span className={styles.tooltipReason}>{tipReason}</span>
+              ) : null}
             </span>,
             document.body,
           )
