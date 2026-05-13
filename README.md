@@ -1,29 +1,37 @@
-# 2D Material Layout Planner
+# 📐 2D Material Layout Planner
 
-A local, browser-only React + TypeScript application for drawing measured 2D surfaces, assigning materials, and generating layouts, cut lists, and PDF documentation.
+> 🧱 A local, browser-only app for planning how rectangular materials are laid out across measured 2D surfaces.
 
-See `docs/plan.md` for the full product specification and `docs/tasks/` for the implementation task index.
+Draw real-world geometry, assign materials, preview placement patterns, and export cut lists and PDF documentation — all from your browser, with **no server, no account, no cloud**.
 
-## Requirements
+## ✨ Features
 
-- Node `>= 20.10`
-- npm (lockfile committed)
+- 🖊️ Accurate 2D drawing with real dimensions, grid, and snapping
+- 🧩 Named surfaces, openings, and multi-surface connections
+- 🎨 Material library with size, thickness, joints, and styles
+- 🔁 Placement patterns (stacked, running bond, custom offsets, …)
+- 🪚 Auto-generated cut lists, cutting diagrams, and waste reports
+- ↔️ Physical edge overlap with semi-transparent visualization
+- 🖼️ Background image import with two-point calibration
+- 💾 Local project storage + JSON import/export
+- 📄 One-click PDF export with technical drawings and instructions
 
-## Setup
+## 🧰 Tech Stack
+
+⚛️ React · 🟦 TypeScript · ⚡ Vite · 🐻 Zustand · 🎭 Konva · 📕 pdf-lib · 🧪 Vitest
+
+## 🛠️ Development
+
+Requires **Node `>= 20.10`** and **npm**.
 
 ```sh
-npm install
+npm install        # 📦 install dependencies
+npm run dev        # 🚀 start dev server
+npm test           # 🧪 run tests
+npm run build      # 🏗️ build for production
+npm run preview    # 👀 preview the production build
 ```
 
-## Scripts
+## 📚 Documentation
 
-| Script | Purpose |
-|---|---|
-| `npm run dev` | Start the Vite dev server. |
-| `npm run build` | Type-check and build a production bundle into `dist/`. |
-| `npm run preview` | Preview the production build locally. |
-| `npm run lint` | Run ESLint over the project. |
-| `npm run typecheck` | Run `tsc -b --noEmit`. |
-| `npm test` | Run the Vitest suite once. |
-| `npm run test:watch` | Run Vitest in watch mode. |
-| `npm run format` | Format the project with Prettier. |
+Detailed documentation for tools, data model, workflows, and deployment lives on the **GitHub Wiki**.
