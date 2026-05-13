@@ -15,6 +15,7 @@ export type ToolId =
   | 'connection'
   | 'patternOrigin'
   | 'splitSurface'
+  | 'cut'
   | 'calibrateImage';
 
 export type LayerId =

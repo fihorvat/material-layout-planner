@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import type Konva from 'konva';
 import type { Point2D, PolygonEntity } from '@/types';
-import { defaultDrawingStyle } from '@/types';
-import { useEditorStore, useProjectStore } from '@/state';
+import { useDrawingToolStore, useEditorStore, useProjectStore } from '@/state';
 import { screenToWorld } from '@/features/editor/canvas/coords';
 import { distance, ensureCCW, validatePolygon, degToRad } from '@/domain/geometry';
 import { dispatchCommand, addDrawingEntityCommand } from '@/domain/commands';
@@ -84,7 +83,23 @@ const resolveWorld = (stageRef: React.RefObject<Konva.Stage | null>): Point2D | 
   return screenToWorld(pos.x, pos.y, v);
 };
 
-export const usePolygonDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
+export type PolygonDrawOptions = {
+  /**
+   * Optional override for the commit step. When provided, the hook will call
+   * this with the validated (CCW-normalized) points instead of creating a
+   * polygon `DrawingEntity`. Return `true` to indicate the commit succeeded
+   * (the draw state will be reset to `idle`). Used by the Surface tool to
+   * produce a `Surface` instead of a polygon when the user closes the shape
+   * by clicking the first vertex.
+   */
+  onCommit?: (points: Point2D[]) => boolean;
+};
+
+export const usePolygonDraw = (
+  stageRef: React.RefObject<Konva.Stage | null>,
+  options: PolygonDrawOptions = {},
+) => {
+  const { onCommit } = options;
   const [state, setState] = useState<PolygonDrawState>({ phase: 'idle' });
   const [error, setError] = useState<string | null>(null);
   const [numericPrompt, setNumericPrompt] = useState<{ initialAngleDeg: number } | null>(null);
@@ -101,18 +116,23 @@ export const usePolygonDraw = (stageRef: React.RefObject<Konva.Stage | null>) =>
       setError(`Invalid polygon: ${codes}`);
       return false;
     }
+    if (onCommit) {
+      const ok = onCommit(normalized);
+      if (ok) setError(null);
+      return ok;
+    }
     const entity: PolygonEntity = {
       id: newDrawingEntityId(),
       type: 'polygon',
       points: normalized,
       showSegmentDimensions: true,
       showArea: false,
-      style: defaultDrawingStyle(),
+      style: { ...useDrawingToolStore.getState().style },
     };
     dispatchCommand(addDrawingEntityCommand({ entity }));
     setError(null);
     return true;
-  }, []);
+  }, [onCommit]);
 
   // When Shift is held with snap enabled AND drawing mode is active, try
   // projecting the cursor onto a nearby bounding-rectangle edge so a polygon

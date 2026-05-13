@@ -18,14 +18,45 @@ export class ErrorBoundary extends React.Component<Props, State> {
     console.error('Editor error boundary:', error, info);
   }
 
+  private handleRetry = () => {
+    this.setState({ hasError: false, message: null });
+  };
+
+  private handleReload = () => {
+    window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 32, fontFamily: 'system-ui, sans-serif' }}>
-          <h2>Something went wrong</h2>
-          <p>Your last autosave is intact in IndexedDB. You can reload the app safely.</p>
-          {this.state.message ? <pre style={{ color: '#dc2626' }}>{this.state.message}</pre> : null}
-          <button type="button" onClick={() => window.location.reload()}>Reload</button>
+        <div style={{ padding: 32, fontFamily: 'system-ui, sans-serif', maxWidth: 720 }}>
+          <h2 style={{ marginTop: 0 }}>The editor hit an unexpected error</h2>
+          <p>
+            Your project is autosaved to this browser&apos;s IndexedDB every second, so the
+            last persisted edits are safe. You can try to recover the current view, or
+            reload the app if it stays broken.
+          </p>
+          {this.state.message ? (
+            <details style={{ marginBottom: 16 }}>
+              <summary style={{ cursor: 'pointer', color: '#6b7280' }}>Show error details</summary>
+              <pre
+                style={{
+                  color: '#dc2626',
+                  whiteSpace: 'pre-wrap',
+                  background: '#fef2f2',
+                  padding: 12,
+                  borderRadius: 6,
+                  marginTop: 8,
+                }}
+              >
+                {this.state.message}
+              </pre>
+            </details>
+          ) : null}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button type="button" onClick={this.handleRetry}>Try to continue</button>
+            <button type="button" onClick={this.handleReload}>Reload app</button>
+          </div>
         </div>
       );
     }

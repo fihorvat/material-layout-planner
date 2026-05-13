@@ -19,6 +19,7 @@ import {
   validateOpening,
   findEnclosingSurface,
 } from '@/domain/surfaces/openingValidation';
+import { noEnclosingSurfaceMessage } from '@/domain/surfaces/noEnclosingSurfaceMessage';
 import { computeRect } from '@/features/drawingTools/rectangle/useRectangleDraw';
 
 export type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
@@ -75,7 +76,7 @@ export const useOpeningDraw = (stageRef: React.RefObject<Konva.Stage | null>) =>
       const parent: Surface | null = findEnclosingSurface(project.surfaces, referencePoint);
       if (!parent) {
         useToastStore.getState().pushToast(
-          'Opening must start inside a surface',
+          noEnclosingSurfaceMessage(project, referencePoint),
           'error',
         );
         return false;

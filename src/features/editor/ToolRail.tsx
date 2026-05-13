@@ -15,6 +15,7 @@ const TOOLS: ToolDef[] = [
   { id: 'label', label: 'Label', shortcut: 'T', icon: 'T' },
   { id: 'connection', label: 'Connection', shortcut: 'C', icon: '\u2310' },
   { id: 'splitSurface', label: 'Split surface', shortcut: 'X', icon: '\u2702' },
+  { id: 'cut', label: 'Cut (add points on edges)', shortcut: 'K', icon: '\u2700' },
   { id: 'patternOrigin', label: 'Pattern origin', shortcut: 'M', icon: '\u2316' },
 ];
 

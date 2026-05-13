@@ -35,4 +35,40 @@ describe('useSurfaceTool', () => {
     expect(result.current.overlays).toBeNull();
     expect(useProjectStore.getState().project.surfaces).toHaveLength(0);
   });
+
+  it('closing the surface by clicking the first vertex creates a Surface, not a polygon', () => {
+    const stageRef = makeStageRef({ x: 0, y: 0 });
+    const { result } = renderHook(() => useSurfaceTool(stageRef));
+    // three corners of a triangle
+    act(() => result.current.onStagePointerDown({ evt: { button: 0 } as MouseEvent }));
+    stageRef.current.getPointerPosition = () => ({ x: 100, y: 0 });
+    act(() => result.current.onStagePointerDown({ evt: { button: 0 } as MouseEvent }));
+    stageRef.current.getPointerPosition = () => ({ x: 100, y: 100 });
+    act(() => result.current.onStagePointerDown({ evt: { button: 0 } as MouseEvent }));
+    // click back on the first point to close
+    stageRef.current.getPointerPosition = () => ({ x: 0, y: 0 });
+    act(() => result.current.onStagePointerDown({ evt: { button: 0 } as MouseEvent }));
+
+    const project = useProjectStore.getState().project;
+    expect(project.surfaces).toHaveLength(1);
+    expect(project.drawingEntities).toHaveLength(0);
+  });
+
+  it('pressing Enter closes the surface and creates a Surface, not a polygon', () => {
+    const stageRef = makeStageRef({ x: 0, y: 0 });
+    const { result } = renderHook(() => useSurfaceTool(stageRef));
+    act(() => result.current.onStagePointerDown({ evt: { button: 0 } as MouseEvent }));
+    stageRef.current.getPointerPosition = () => ({ x: 100, y: 0 });
+    act(() => result.current.onStagePointerDown({ evt: { button: 0 } as MouseEvent }));
+    stageRef.current.getPointerPosition = () => ({ x: 100, y: 100 });
+    act(() => result.current.onStagePointerDown({ evt: { button: 0 } as MouseEvent }));
+
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    });
+
+    const project = useProjectStore.getState().project;
+    expect(project.surfaces).toHaveLength(1);
+    expect(project.drawingEntities).toHaveLength(0);
+  });
 });

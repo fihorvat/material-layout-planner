@@ -114,6 +114,7 @@ describe('hitTest', () => {
         showDimensions: false,
         showArea: false,
         style: defaultSurfaceStyle(),
+        holeMeta: [],
       });
     });
     const r = hitTest({

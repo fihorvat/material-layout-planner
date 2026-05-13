@@ -16,7 +16,7 @@ export type EditableEdgeLabelProps = {
 
 const PAD_X_PX = 4;
 const PAD_Y_PX = 2;
-const APPROX_CHAR_WIDTH = 0.55;
+const APPROX_CHAR_WIDTH = 0.62;
 
 export const EditableEdgeLabel = ({
   midpoint,
@@ -96,6 +96,8 @@ export const EditableEdgeLabel = ({
         width={textWidth}
         text={text}
         align="center"
+        wrap="none"
+        ellipsis={false}
         fontSize={fontSizeMm}
         fill={isEditing ? '#78350f' : color}
         listening={false}

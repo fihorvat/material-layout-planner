@@ -1,4 +1,4 @@
-import { useOpeningToolStore } from '@/state';
+import { useOpeningToolStore, useProjectStore } from '@/state';
 import { commitOpeningFromSelection } from '@/domain/surfaces/commitOpeningFromSelection';
 
 const modeButtonStyle = (active: boolean): React.CSSProperties => ({
@@ -18,6 +18,7 @@ export const OpeningToolPanel = () => {
   const setShowDimensions = useOpeningToolStore((s) => s.setShowDimensions);
   const style = useOpeningToolStore((s) => s.style);
   const setStyle = useOpeningToolStore((s) => s.setStyle);
+  const surfaceCount = useProjectStore((s) => s.project.surfaces.length);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -26,6 +27,22 @@ export const OpeningToolPanel = () => {
         Punch a hole into a surface. The first click determines the parent
         surface; the opening must stay inside it.
       </div>
+      {surfaceCount === 0 ? (
+        <div
+          style={{
+            fontSize: 12,
+            color: '#92400e',
+            background: '#fef3c7',
+            border: '1px solid #fde68a',
+            borderRadius: 4,
+            padding: '6px 8px',
+          }}
+        >
+          No surfaces in the project yet. Create one first with the Surface
+          tool (shortcut <kbd>F</kbd>) — openings can only be punched into
+          Surfaces, not into raw rectangles or polygons.
+        </div>
+      ) : null}
       <div style={{ display: 'flex', gap: 6 }}>
         <button
           type="button"

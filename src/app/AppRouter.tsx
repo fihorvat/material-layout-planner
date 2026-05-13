@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { EditorPage } from '@/features/editor/EditorPage';
 import { useProjectStore } from '@/state';
-import { createProjectRepository } from '@/storage';
+import { createProjectRepository, startAutosave } from '@/storage';
 
 const repo = createProjectRepository();
+const AUTOSAVE_INTERVAL_MS = 1000;
 
 type Route =
   | { kind: 'dashboard' }
@@ -53,6 +54,18 @@ export const AppRouter = () => {
       }
     });
   }, [route, replaceProject, loaded]);
+
+  // Run a real autosave loop while a project is open. Without this, the
+  // ErrorBoundary's reassurance about an "autosave intact in IndexedDB"
+  // would be misleading: the latest in-memory edits would only land on
+  // disk on manual Ctrl+S. Tearing down on route change ensures we do
+  // not keep a stale subscription writing after the user leaves.
+  useEffect(() => {
+    if (route.kind !== 'project') return;
+    if (loaded !== route.id) return;
+    const stop = startAutosave({ repo, intervalMs: AUTOSAVE_INTERVAL_MS });
+    return stop;
+  }, [route, loaded]);
 
   if (route.kind === 'project') {
     return <EditorPage />;

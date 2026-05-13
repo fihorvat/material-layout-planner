@@ -7,6 +7,7 @@ export { deleteDrawingEntityCommand } from './builtin/deleteDrawingEntityCommand
 export { updateDrawingEntityCommand } from './builtin/updateDrawingEntityCommand';
 export { updateDrawingEntitiesCommand } from './builtin/updateDrawingEntitiesCommand';
 export { splitLineCommand } from './builtin/splitLineCommand';
+export { replaceDrawingEntityCommand } from './builtin/replaceDrawingEntityCommand';
 export { changeProjectSettingsCommand } from './builtin/changeProjectSettingsCommand';
 export {
   addDimensionCommand,

@@ -33,6 +33,7 @@ const makeSurface = (): Surface => ({
   showDimensions: true,
   showArea: true,
   style: defaultSurfaceStyle(),
+  holeMeta: [],
 });
 
 beforeEach(() => {

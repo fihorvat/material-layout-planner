@@ -11,6 +11,7 @@ import { useLineTool } from '@/features/drawingTools/LineTool';
 import { useRectangleTool } from '@/features/drawingTools/RectangleTool';
 import { usePolygonTool } from '@/features/drawingTools/PolygonTool';
 import { useOpeningTool } from '@/features/drawingTools/OpeningTool';
+import { useCutTool } from '@/features/drawingTools/CutTool';
 import { ConstructionEntities } from '@/features/drawingTools/ConstructionEntities';
 import { DrawingModeOverlay } from '@/features/drawingTools/DrawingModeOverlay';
 import { useDrawingModeActive } from '@/features/drawingTools/drawingMode';
@@ -50,6 +51,7 @@ export const CanvasStage = () => {
   const dimension = useDimensionTool(stageRef);
   const label = useLabelTool(stageRef);
   const opening = useOpeningTool(stageRef);
+  const cut = useCutTool(stageRef);
   const project = useProjectStore((s) => s.project);
   const drawingModeActive = useDrawingModeActive();
 
@@ -71,6 +73,8 @@ export const CanvasStage = () => {
       label.onStagePointerDown(e);
     } else if (activeTool === 'opening') {
       opening.onStagePointerDown(e);
+    } else if (activeTool === 'cut') {
+      cut.onStagePointerDown(e as unknown as { evt: PointerEvent });
     }
   };
   const onMouseMove = (e: { evt: MouseEvent }) => {
@@ -87,6 +91,8 @@ export const CanvasStage = () => {
       surface.onStagePointerMove(e);
     } else if (activeTool === 'opening') {
       opening.onStagePointerMove(e);
+    } else if (activeTool === 'cut') {
+      cut.onStagePointerMove(e as unknown as { evt: PointerEvent });
     }
   };
   const onMouseUp = (e: { evt: MouseEvent }) => {
@@ -114,7 +120,9 @@ export const CanvasStage = () => {
               ? surface.overlays
               : activeTool === 'opening'
                 ? opening.overlays
-                : null;
+                : activeTool === 'cut'
+                  ? cut.overlays
+                  : null;
 
   const domOverlay =
     activeTool === 'line'

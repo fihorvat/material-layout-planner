@@ -1,6 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
 import type Konva from 'konva';
-import type { Point2D, DrawingEntity, LineEntity } from '@/types';
+import type {
+  Point2D,
+  DrawingEntity,
+  LineEntity,
+  PolygonEntity,
+  RectangleEntity,
+} from '@/types';
 import { useEditorStore, useProjectStore, useSelectionStore } from '@/state';
 import { screenToWorld } from '@/features/editor/canvas/coords';
 import { hitTest, entitiesIntersectingAabb } from './HitTest';
@@ -9,6 +15,8 @@ import {
   deleteDrawingEntityCommand,
   addDrawingEntityCommand,
   splitLineCommand,
+  replaceDrawingEntityCommand,
+  updateDrawingEntityCommand,
   deleteSurfaceCommand,
   deleteDimensionCommand,
   deleteLabelCommand,
@@ -16,7 +24,13 @@ import {
   findOpeningSurface,
 } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
-import { closestPointOnSegment, distance } from '@/domain/geometry';
+import {
+  closestPointOnSegment,
+  closestEdgeOfPoints,
+  distance,
+  degToRad,
+  ensureCCW,
+} from '@/domain/geometry';
 
 const HIT_TOLERANCE_PX = 8;
 const CLICK_DRAG_THRESHOLD_PX = 2;
@@ -144,38 +158,127 @@ export const useSelectInteractions = (stageRef: React.RefObject<Konva.Stage | nu
         project,
         layers,
       });
-      if (!result.topHit || result.topHit.kind !== 'line') return;
-      const line = project.drawingEntities.find(
-        (x) => x.id === result.topHit!.id && x.type === 'line',
-      ) as LineEntity | undefined;
-      if (!line) return;
-      const onSeg = closestPointOnSegment(world, { a: line.start, b: line.end });
+      if (!result.topHit) return;
       const minGapMm = (HIT_TOLERANCE_PX / 2) / v.scale;
-      if (
-        distance(onSeg, line.start) < minGapMm ||
-        distance(onSeg, line.end) < minGapMm
-      ) {
+
+      if (result.topHit.kind === 'line') {
+        const line = project.drawingEntities.find(
+          (x) => x.id === result.topHit!.id && x.type === 'line',
+        ) as LineEntity | undefined;
+        if (!line) return;
+        const onSeg = closestPointOnSegment(world, { a: line.start, b: line.end });
+        if (
+          distance(onSeg, line.start) < minGapMm ||
+          distance(onSeg, line.end) < minGapMm
+        ) {
+          return;
+        }
+        const partA: LineEntity = {
+          ...line,
+          id: newDrawingEntityId(),
+          start: line.start,
+          end: onSeg,
+        };
+        const partB: LineEntity = {
+          ...line,
+          id: newDrawingEntityId(),
+          start: onSeg,
+          end: line.end,
+        };
+        dispatchCommand(
+          splitLineCommand({ sourceId: line.id, parts: [partA, partB] }, 'Add point on line'),
+        );
+        useSelectionStore.getState().selectMany([
+          { kind: 'line', id: partA.id },
+          { kind: 'line', id: partB.id },
+        ]);
         return;
       }
-      const partA: LineEntity = {
-        ...line,
-        id: newDrawingEntityId(),
-        start: line.start,
-        end: onSeg,
-      };
-      const partB: LineEntity = {
-        ...line,
-        id: newDrawingEntityId(),
-        start: onSeg,
-        end: line.end,
-      };
-      dispatchCommand(
-        splitLineCommand({ sourceId: line.id, parts: [partA, partB] }, 'Add point on line'),
-      );
-      useSelectionStore.getState().selectMany([
-        { kind: 'line', id: partA.id },
-        { kind: 'line', id: partB.id },
-      ]);
+
+      if (result.topHit.kind === 'polygon') {
+        const poly = project.drawingEntities.find(
+          (x) => x.id === result.topHit!.id && x.type === 'polygon',
+        ) as PolygonEntity | undefined;
+        if (!poly) return;
+        const edge = closestEdgeOfPoints(world, poly.points, true);
+        if (!edge) return;
+        const n = poly.points.length;
+        const a = poly.points[edge.edgeIndex]!;
+        const b = poly.points[(edge.edgeIndex + 1) % n]!;
+        if (
+          distance(edge.projection, a) < minGapMm ||
+          distance(edge.projection, b) < minGapMm
+        ) {
+          return;
+        }
+        const nextPoints = [
+          ...poly.points.slice(0, edge.edgeIndex + 1),
+          edge.projection,
+          ...poly.points.slice(edge.edgeIndex + 1),
+        ];
+        const patch: Partial<PolygonEntity> = { points: nextPoints };
+        dispatchCommand(
+          updateDrawingEntityCommand({ id: poly.id, patch }, 'Add point on polygon'),
+        );
+        useSelectionStore.getState().select({ kind: 'polygon', id: poly.id });
+        return;
+      }
+
+      if (result.topHit.kind === 'rectangle') {
+        const rect = project.drawingEntities.find(
+          (x) => x.id === result.topHit!.id && x.type === 'rectangle',
+        ) as RectangleEntity | undefined;
+        if (!rect) return;
+        const rad = degToRad(rect.rotationDeg);
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const w = rect.widthMm;
+        const h = rect.heightMm;
+        const local: Point2D[] = [
+          { x: 0, y: 0 },
+          { x: w, y: 0 },
+          { x: w, y: h },
+          { x: 0, y: h },
+        ];
+        const cornersRaw: Point2D[] = local.map((p) => ({
+          x: rect.origin.x + p.x * cos - p.y * sin,
+          y: rect.origin.y + p.x * sin + p.y * cos,
+        }));
+        const corners = ensureCCW(cornersRaw);
+        const edge = closestEdgeOfPoints(world, corners, true);
+        if (!edge) return;
+        const cn = corners.length;
+        const ca = corners[edge.edgeIndex]!;
+        const cb = corners[(edge.edgeIndex + 1) % cn]!;
+        if (
+          distance(edge.projection, ca) < minGapMm ||
+          distance(edge.projection, cb) < minGapMm
+        ) {
+          return;
+        }
+        const nextPoints = [
+          ...corners.slice(0, edge.edgeIndex + 1),
+          edge.projection,
+          ...corners.slice(edge.edgeIndex + 1),
+        ];
+        const replacement: PolygonEntity = {
+          id: newDrawingEntityId(),
+          type: 'polygon',
+          points: nextPoints,
+          name: rect.name,
+          showSegmentDimensions: rect.showDimensions,
+          showArea: false,
+          style: rect.style,
+        };
+        dispatchCommand(
+          replaceDrawingEntityCommand(
+            { sourceId: rect.id, replacement },
+            'Add point on rectangle',
+          ),
+        );
+        useSelectionStore.getState().select({ kind: 'polygon', id: replacement.id });
+        return;
+      }
     },
     [stageRef],
   );

@@ -124,12 +124,16 @@ const removeOpeningCmd = (
   },
 });
 
-const mergeMeta = (existing: SurfaceHoleMeta, patch: OpeningMetaInput): SurfaceHoleMeta => ({
-  ...existing,
-  ...(patch.name !== undefined ? { name: patch.name } : {}),
-  ...(patch.showDimensions !== undefined ? { showDimensions: patch.showDimensions } : {}),
-  ...(patch.style !== undefined ? { style: patch.style } : {}),
-});
+const mergeMeta = (existing: SurfaceHoleMeta, patch: OpeningMetaInput): SurfaceHoleMeta => {
+  const out: SurfaceHoleMeta = { ...existing };
+  if ('name' in patch) {
+    if (patch.name === undefined) delete out.name;
+    else out.name = patch.name;
+  }
+  if (patch.showDimensions !== undefined) out.showDimensions = patch.showDimensions;
+  if (patch.style !== undefined) out.style = patch.style;
+  return out;
+};
 
 const updateOpeningCmd = (
   payload: UpdateOpeningPayload,

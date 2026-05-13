@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import type Konva from 'konva';
 import type { Point2D, LineEntity, PolygonEntity } from '@/types';
-import { defaultDrawingStyle } from '@/types';
-import { useEditorStore, useProjectStore } from '@/state';
+import { useDrawingToolStore, useEditorStore, useProjectStore } from '@/state';
 import { screenToWorld } from '@/features/editor/canvas/coords';
 import { snap } from '@/features/editor/canvas/snap';
 import { degToRad, ensureCCW, validatePolygon } from '@/domain/geometry';
@@ -159,7 +158,7 @@ export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
       start: first,
       end,
       showDimension: true,
-      style: defaultDrawingStyle(),
+      style: { ...useDrawingToolStore.getState().style },
     };
     dispatchCommand(addDrawingEntityCommand({ entity }));
     return id;
@@ -188,7 +187,7 @@ export const useLineDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
         points: candidate,
         showSegmentDimensions: true,
         showArea: false,
-        style: defaultDrawingStyle(),
+        style: { ...useDrawingToolStore.getState().style },
       };
       const nextProject = {
         ...project,

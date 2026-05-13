@@ -95,13 +95,13 @@ const DraggableHandle = ({
 }: {
   spec: HandleSpec;
   scale: number;
-  onPreview: (drag: DragKey, world: Point2D, mods: DragMods) => void;
+  onPreview: (drag: DragKey, world: Point2D, mods: DragMods) => Point2D | null;
   onCommit: (
     drag: DragKey,
     world: Point2D,
     mods: DragMods,
     startProject: Project | null,
-  ) => void;
+  ) => Point2D | null;
 }) => {
   const startProjectRef = useRef<Project | null>(null);
   const isJoint = spec.drag.kind === 'lineJoint';
@@ -125,20 +125,29 @@ const DraggableHandle = ({
       }}
       onDragMove={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
-        onPreview(
+        const visual = onPreview(
           spec.drag,
           { x: e.target.x(), y: e.target.y() },
           readMods(e.evt),
         );
+        // Override the konva-driven cursor position with the resolved
+        // snap point so the handle (and rubber-banded shape) visibly
+        // snap together while Shift is held.
+        if (visual && (visual.x !== e.target.x() || visual.y !== e.target.y())) {
+          e.target.position(visual);
+        }
       }}
       onDragEnd={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
-        onCommit(
+        const visual = onCommit(
           spec.drag,
           { x: e.target.x(), y: e.target.y() },
           readMods(e.evt),
           startProjectRef.current,
         );
+        if (visual && (visual.x !== e.target.x() || visual.y !== e.target.y())) {
+          e.target.position(visual);
+        }
         startProjectRef.current = null;
       }}
       onMouseEnter={(e: KonvaEventObject<MouseEvent>) => {
@@ -259,12 +268,16 @@ export const SelectionEditHandles = () => {
   const allSpecs = [...otherSpecs, ...mergedSpecs];
 
   // Build the Command that represents the move described by `drag`+`world`,
-  // without applying it. Returns null when nothing should change.
+  // without applying it. Also returns the resolved world-space position the
+  // dragged handle should visually snap to, so the konva Circle can be moved
+  // onto that point during the drag (otherwise it would keep tracking the
+  // raw cursor and the ortho snap would look broken).
+  // Returns null when nothing should change.
   const buildCommand = (
     drag: DragKey,
     world: Point2D,
     mods: DragMods,
-  ): Command | null => {
+  ): { command: Command; visualPosition: Point2D } | null => {
     const proj = useProjectStore.getState().project;
     if (drag.kind === 'lineEnd') {
       const e = proj.drawingEntities.find((x) => x.id === drag.entityId);
@@ -290,34 +303,58 @@ export const SelectionEditHandles = () => {
       }
       const patch: Partial<LineEntity> =
         drag.which === 'start' ? { start: resolved } : { end: resolved };
-      return updateDrawingEntityCommand(
-        { id: e.id, patch },
-        'Move line endpoint',
-      );
+      return {
+        command: updateDrawingEntityCommand(
+          { id: e.id, patch },
+          'Move line endpoint',
+        ),
+        visualPosition: resolved,
+      };
     } else if (drag.kind === 'lineJoint') {
-      const editor = useEditorStore.getState();
-      const excluded = new Set<string>(
-        drag.endpoints.map((ep) => `${ep.entityId}.${ep.which}`),
-      );
-      const snapped = snapDroppedLineEndpoint({
-        worldPoint: world,
-        project: proj,
-        excludedLineEndpoints: excluded,
-        snapEnabled: editor.snapEnabled,
-        snapTolerancePx: editor.snapTolerancePx,
-        viewportScale: editor.viewport.scale,
-      });
+      // Shift = ortho-snap the joint relative to the first member line's far
+      // end. Vertex-snap is skipped while Shift is held to keep the two
+      // snaps from fighting each other.
+      let resolved: Point2D;
+      if (mods.shift) {
+        const firstEp = drag.endpoints[0];
+        const firstLine = firstEp
+          ? proj.drawingEntities.find((x) => x.id === firstEp.entityId)
+          : undefined;
+        if (firstEp && firstLine && firstLine.type === 'line') {
+          const anchor =
+            firstEp.which === 'start' ? firstLine.end : firstLine.start;
+          resolved = constrainAngle(anchor, world);
+        } else {
+          resolved = world;
+        }
+      } else {
+        const editor = useEditorStore.getState();
+        const excluded = new Set<string>(
+          drag.endpoints.map((ep) => `${ep.entityId}.${ep.which}`),
+        );
+        resolved = snapDroppedLineEndpoint({
+          worldPoint: world,
+          project: proj,
+          excludedLineEndpoints: excluded,
+          snapEnabled: editor.snapEnabled,
+          snapTolerancePx: editor.snapTolerancePx,
+          viewportScale: editor.viewport.scale,
+        });
+      }
       const patches = drag.endpoints
         .map((ep) => {
           const e = proj.drawingEntities.find((x) => x.id === ep.entityId);
           if (!e || e.type !== 'line') return null;
           const patch: Partial<LineEntity> =
-            ep.which === 'start' ? { start: snapped } : { end: snapped };
+            ep.which === 'start' ? { start: resolved } : { end: resolved };
           return { id: ep.entityId, patch };
         })
         .filter((p): p is { id: string; patch: Partial<LineEntity> } => p !== null);
       if (patches.length === 0) return null;
-      return updateDrawingEntitiesCommand({ patches }, 'Move line joint');
+      return {
+        command: updateDrawingEntitiesCommand({ patches }, 'Move line joint'),
+        visualPosition: resolved,
+      };
     } else if (drag.kind === 'rectCorner') {
       const e = proj.drawingEntities.find((x) => x.id === drag.entityId);
       if (!e || e.type !== 'rectangle') return null;
@@ -328,42 +365,76 @@ export const SelectionEditHandles = () => {
         widthMm: next.widthMm,
         heightMm: next.heightMm,
       };
-      return updateDrawingEntityCommand(
-        { id: e.id, patch },
-        'Resize rectangle',
-      );
+      return {
+        command: updateDrawingEntityCommand(
+          { id: e.id, patch },
+          'Resize rectangle',
+        ),
+        visualPosition: world,
+      };
     } else if (drag.kind === 'polygonVertex') {
       const e = proj.drawingEntities.find((x) => x.id === drag.entityId);
       if (!e || e.type !== 'polygon') return null;
-      const nextPts = e.points.map((p, i) => (i === drag.index ? world : p));
+      // Anchor ortho-snap to the previous vertex in the polygon ring so the
+      // edge entering this corner becomes axis-aligned, matching the
+      // dashed-line preview behavior used while drawing.
+      let resolved = world;
+      if (mods.shift && e.points.length >= 2) {
+        const n = e.points.length;
+        const prev = e.points[(drag.index - 1 + n) % n]!;
+        resolved = constrainAngle(prev, world);
+      }
+      const nextPts = e.points.map((p, i) => (i === drag.index ? resolved : p));
       const patch: Partial<PolygonEntity> = { points: nextPts };
-      return updateDrawingEntityCommand(
-        { id: e.id, patch },
-        'Move polygon vertex',
-      );
+      return {
+        command: updateDrawingEntityCommand(
+          { id: e.id, patch },
+          'Move polygon vertex',
+        ),
+        visualPosition: resolved,
+      };
     } else if (drag.kind === 'surfaceVertex') {
       const s = proj.surfaces.find((x) => x.id === drag.surfaceId);
       if (!s) return null;
+      let resolved = world;
+      if (mods.shift && s.outerBoundary.length >= 2) {
+        const n = s.outerBoundary.length;
+        const prev = s.outerBoundary[(drag.index - 1 + n) % n]!;
+        resolved = constrainAngle(prev, world);
+      }
       const nextPts = s.outerBoundary.map((p, i) =>
-        i === drag.index ? world : p,
+        i === drag.index ? resolved : p,
       );
       const patch: Partial<Surface> = { outerBoundary: nextPts };
-      return updateSurfaceCommand({ id: s.id, patch }, 'Move surface vertex');
+      return {
+        command: updateSurfaceCommand(
+          { id: s.id, patch },
+          'Move surface vertex',
+        ),
+        visualPosition: resolved,
+      };
     }
     return null;
   };
 
   // Apply the in-progress drag to the project store WITHOUT pushing a history
   // entry. This lets the entity follow the drag handle visually while keeping
-  // undo as a single step back to the pre-drag state.
-  const onPreview = (drag: DragKey, world: Point2D, mods: DragMods) => {
-    const cmd = buildCommand(drag, world, mods);
-    if (!cmd) return;
+  // undo as a single step back to the pre-drag state. Returns the world-space
+  // position the handle's Circle should be visually moved to (so ortho-snap
+  // is reflected on the handle itself, not just on the underlying geometry).
+  const onPreview = (
+    drag: DragKey,
+    world: Point2D,
+    mods: DragMods,
+  ): Point2D | null => {
+    const built = buildCommand(drag, world, mods);
+    if (!built) return null;
     useProjectStore.setState((s) => ({
       ...s,
-      project: cmd.apply(s.project),
+      project: built.command.apply(s.project),
       isDirty: true,
     }));
+    return built.visualPosition;
   };
 
   // Finalize the drag: first restore the project to the snapshot taken at
@@ -375,13 +446,14 @@ export const SelectionEditHandles = () => {
     world: Point2D,
     mods: DragMods,
     startProject: Project | null,
-  ) => {
+  ): Point2D | null => {
     if (startProject) {
       useProjectStore.setState((s) => ({ ...s, project: startProject }));
     }
-    const cmd = buildCommand(drag, world, mods);
-    if (!cmd) return;
-    dispatchCommand(cmd);
+    const built = buildCommand(drag, world, mods);
+    if (!built) return null;
+    dispatchCommand(built.command);
+    return built.visualPosition;
   };
 
   return (

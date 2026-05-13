@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Tabs, type TabItem } from '@/components';
 import { SurfaceList } from '@/features/surfaces/SurfaceList';
+import { MaterialList } from '@/features/materials/MaterialList';
 import { MaterialCutListTable } from '@/features/materialLayout/MaterialCutListTable';
 import { ProjectStatsPanel } from '@/features/materialLayout/ProjectStatsPanel';
 import { WarningsPanel } from './WarningsPanel';
@@ -48,7 +49,7 @@ const BottomBody = ({ id }: { id: string }) => {
     case 'surfaces':
       return <SurfaceList />;
     case 'materials':
-      return <p>No materials yet. Create a material in the Materials panel.</p>;
+      return <MaterialList />;
     case 'layouts':
       return <p>No layouts yet. Assign a material and pattern to a surface.</p>;
     case 'cutList':

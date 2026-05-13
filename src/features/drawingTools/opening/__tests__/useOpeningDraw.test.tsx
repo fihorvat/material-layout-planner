@@ -65,7 +65,14 @@ describe('useOpeningDraw — rectangle mode', () => {
     const surfaces = useProjectStore.getState().project.surfaces;
     expect(surfaces[0]?.holes ?? []).toHaveLength(0);
     expect(
-      useToastStore.getState().toasts.some((t) => /start inside a surface/i.test(t.message)),
+      useToastStore
+        .getState()
+        .toasts.some(
+          (t) =>
+            /no surfaces yet/i.test(t.message) ||
+            /click inside a surface/i.test(t.message) ||
+            /start inside a surface/i.test(t.message),
+        ),
     ).toBe(true);
   });
 

@@ -62,6 +62,52 @@ export const collectShapeVertices = (project: Project): Point2D[] => {
 
 export type IdentifiedBbox = { id: string; bbox: Aabb };
 
+export type ShapeEdge = { a: Point2D; b: Point2D };
+
+const polylineEdges = (points: readonly Point2D[], closed: boolean): ShapeEdge[] => {
+  const out: ShapeEdge[] = [];
+  for (let i = 0; i < points.length - 1; i += 1) {
+    out.push({ a: points[i]!, b: points[i + 1]! });
+  }
+  if (closed && points.length >= 2) {
+    out.push({ a: points[points.length - 1]!, b: points[0]! });
+  }
+  return out;
+};
+
+/**
+ * Returns every actual edge segment of every visible shape: line entities,
+ * the four (potentially rotated) edges of rectangles, all polygon segments,
+ * and the outer plus hole boundaries of surfaces. Used by the ortho-measure
+ * overlay to project ray distances onto real geometry rather than the
+ * looser bounding-rectangle envelope.
+ */
+export const collectShapeEdges = (project: Project): ShapeEdge[] => {
+  const edges: ShapeEdge[] = [];
+  for (const e of project.drawingEntities) {
+    if (e.type === 'line') {
+      edges.push({ a: e.start, b: e.end });
+    } else if (e.type === 'rectangle') {
+      const corners = rectangleToPoints(
+        e.origin,
+        e.widthMm,
+        e.heightMm,
+        e.rotationDeg ?? 0,
+      );
+      edges.push(...polylineEdges(corners, true));
+    } else if (e.type === 'polygon') {
+      edges.push(...polylineEdges(e.points, true));
+    }
+  }
+  for (const s of project.surfaces) {
+    edges.push(...polylineEdges(s.outerBoundary, true));
+    for (const hole of s.holes) {
+      edges.push(...polylineEdges(hole, true));
+    }
+  }
+  return edges;
+};
+
 /**
  * Returns the axis-aligned bounding rectangles of polygons, rectangles, and
  * surfaces. Lines are intentionally omitted because their bbox degenerates

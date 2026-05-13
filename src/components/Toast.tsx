@@ -53,7 +53,7 @@ export const ToastContainer = () => {
             style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--mlp-muted)' }}
             aria-label="Dismiss toast"
           >
-            \u00D7
+            {'\u00D7'}
           </button>
         </div>
       ))}

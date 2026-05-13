@@ -1,8 +1,7 @@
 import { useCallback, useState } from 'react';
 import type Konva from 'konva';
 import type { Point2D, RectangleEntity } from '@/types';
-import { defaultDrawingStyle } from '@/types';
-import { useEditorStore } from '@/state';
+import { useDrawingToolStore, useEditorStore } from '@/state';
 import { screenToWorld } from '@/features/editor/canvas/coords';
 import { dispatchCommand, addDrawingEntityCommand } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
@@ -62,7 +61,7 @@ export const useRectangleDraw = (stageRef: React.RefObject<Konva.Stage | null>) 
       heightMm: inputs.heightMm,
       rotationDeg: 0,
       showDimensions: true,
-      style: defaultDrawingStyle(),
+      style: { ...useDrawingToolStore.getState().style },
     };
     dispatchCommand(addDrawingEntityCommand({ entity }));
   }, []);

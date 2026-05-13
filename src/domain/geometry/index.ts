@@ -25,7 +25,9 @@ export {
   segmentMidpoint,
   closestPointOnSegment,
   pointToLineDistance,
+  closestEdgeOfPoints,
   type Segment,
+  type ClosestEdgeResult,
 } from './line';
 
 export {

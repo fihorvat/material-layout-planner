@@ -57,3 +57,9 @@ export {
   type OpeningToolState,
   type OpeningToolMode,
 } from './openingToolStore';
+
+export {
+  useDrawingToolStore,
+  getDrawingTool,
+  type DrawingToolState,
+} from './drawingToolStore';

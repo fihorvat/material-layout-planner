@@ -32,3 +32,35 @@ export const closestPointOnSegment = (p: Point2D, line: Segment): Point2D => {
 
 export const pointToLineDistance = (p: Point2D, line: Segment): number =>
   distance(p, closestPointOnSegment(p, line));
+
+export type ClosestEdgeResult = {
+  edgeIndex: number;
+  projection: Point2D;
+  distance: number;
+};
+
+/**
+ * Find the closest edge of a ring/polyline of points to the given point.
+ * For closed rings (default), the last vertex is connected back to the first.
+ * `edgeIndex` is the index of the starting vertex of the closest edge.
+ */
+export const closestEdgeOfPoints = (
+  point: Point2D,
+  points: readonly Point2D[],
+  closed = true,
+): ClosestEdgeResult | null => {
+  const n = points.length;
+  if (n < 2) return null;
+  const edges = closed ? n : n - 1;
+  let best: ClosestEdgeResult | null = null;
+  for (let i = 0; i < edges; i++) {
+    const a = points[i]!;
+    const b = points[(i + 1) % n]!;
+    const proj = closestPointOnSegment(point, { a, b });
+    const d = distance(point, proj);
+    if (best === null || d < best.distance) {
+      best = { edgeIndex: i, projection: proj, distance: d };
+    }
+  }
+  return best;
+};

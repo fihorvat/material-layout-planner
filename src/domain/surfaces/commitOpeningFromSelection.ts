@@ -8,6 +8,7 @@ import {
   deleteDrawingEntityCommand,
 } from '@/domain/commands';
 import { validateOpening, findEnclosingSurface } from './openingValidation';
+import { noEnclosingSurfaceMessage } from './noEnclosingSurfaceMessage';
 
 const rectanglePolygon = (origin: Point2D, w: number, h: number): Point2D[] => [
   { x: origin.x, y: origin.y },
@@ -56,7 +57,7 @@ export const commitOpeningFromSelection = (): boolean => {
   if (!parent) {
     useToastStore
       .getState()
-      .pushToast('Opening must start inside a surface', 'error');
+      .pushToast(noEnclosingSurfaceMessage(project, reference), 'error');
     return false;
   }
   const normalized = ensureCW(polygon);

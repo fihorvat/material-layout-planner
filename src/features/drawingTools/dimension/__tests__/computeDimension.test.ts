@@ -111,6 +111,7 @@ describe('computeDimension', () => {
         showDimensions: false,
         showArea: true,
         style: defaultSurfaceStyle(),
+        holeMeta: [],
       });
     });
     const dim = makeDim({

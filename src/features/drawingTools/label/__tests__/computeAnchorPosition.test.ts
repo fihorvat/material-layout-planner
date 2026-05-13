@@ -46,6 +46,7 @@ describe('computeAnchorPosition', () => {
         showDimensions: false,
         showArea: false,
         style: defaultSurfaceStyle(),
+        holeMeta: [],
       });
     });
     const r = computeAnchorPosition(

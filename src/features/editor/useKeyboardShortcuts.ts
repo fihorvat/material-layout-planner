@@ -16,6 +16,7 @@ const TOOL_KEYS: Record<string, ReturnType<typeof useEditorStore.getState>['acti
   t: 'label',
   c: 'connection',
   x: 'splitSurface',
+  k: 'cut',
 };
 
 export const useKeyboardShortcuts = (): void => {
