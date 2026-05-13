@@ -4,3 +4,5 @@ coverage
 .idea
 .vscode
 *.log
+.vite
+.DS_Store
