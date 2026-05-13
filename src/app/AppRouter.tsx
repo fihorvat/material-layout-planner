@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { EditorPage } from '@/features/editor/EditorPage';
-import { useProjectStore } from '@/state';
+import { useEditorStore, useProjectStore } from '@/state';
 import { createProjectRepository, startAutosave } from '@/storage';
+import { getActiveStage } from '@/features/editor/canvas/activeStage';
+import {
+  computeFitViewport,
+  computeProjectContentBounds,
+} from '@/features/editor/canvas/fitToContent';
 
 const repo = createProjectRepository();
 const AUTOSAVE_INTERVAL_MS = 1000;
@@ -65,6 +70,42 @@ export const AppRouter = () => {
     if (loaded !== route.id) return;
     const stop = startAutosave({ repo, intervalMs: AUTOSAVE_INTERVAL_MS });
     return stop;
+  }, [route, loaded]);
+
+  // Invoke the existing "Fit to content" command once after the project
+  // is loaded. The stage is mounted by CanvasStage on the next frames, so
+  // we poll via requestAnimationFrame until it has a non-zero size, then
+  // run the same logic the toolbar's Fit to content button uses.
+  useEffect(() => {
+    if (route.kind !== 'project' || loaded !== route.id) return;
+    let cancelled = false;
+    let frame = 0;
+    const attempt = () => {
+      if (cancelled) return;
+      const stage = getActiveStage();
+      if (!stage || stage.width() <= 0 || stage.height() <= 0) {
+        frame = requestAnimationFrame(attempt);
+        return;
+      }
+      const project = useProjectStore.getState().project;
+      const editor = useEditorStore.getState();
+      const bounds = computeProjectContentBounds(project);
+      if (!bounds) {
+        editor.resetViewport();
+        return;
+      }
+      editor.setViewport(
+        computeFitViewport(bounds, {
+          width: stage.width(),
+          height: stage.height(),
+        }),
+      );
+    };
+    frame = requestAnimationFrame(attempt);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+    };
   }, [route, loaded]);
 
   if (route.kind === 'project') {
