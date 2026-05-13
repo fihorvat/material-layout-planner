@@ -1,6 +1,6 @@
 .iconButton {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -9,28 +9,37 @@
   background: transparent;
   cursor: pointer;
   color: var(--mlp-text);
-  transition: background-color 80ms ease, border-color 80ms ease;
+  padding: 0;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease),
+              border-color var(--mlp-dur-fast) var(--mlp-ease),
+              color var(--mlp-dur-fast) var(--mlp-ease),
+              box-shadow var(--mlp-dur-fast) var(--mlp-ease);
 }
 .iconButton:hover:not(:disabled):not([aria-disabled='true']) {
   background: var(--mlp-surface-2);
+  border-color: transparent;
 }
 .iconButton:focus-visible {
-  outline: 2px solid var(--mlp-accent);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--mlp-accent);
+  box-shadow: var(--mlp-focus-ring);
 }
 .iconButton:disabled,
 .iconButton[aria-disabled='true'] {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 .iconButtonActive {
   background: var(--mlp-accent-soft);
-  border-color: var(--mlp-accent);
   color: var(--mlp-accent);
+  border-color: transparent;
+}
+.iconButtonActive:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--mlp-accent-soft-strong);
 }
 
 .closeGlyph {
-  font-size: 28px;
+  font-size: 22px;
   line-height: 1;
   font-weight: 400;
 }
@@ -48,11 +57,12 @@
   white-space: nowrap;
   background: var(--mlp-tooltip-bg);
   color: var(--mlp-tooltip-fg);
-  padding: 4px 8px;
+  padding: 5px 9px;
   border-radius: var(--mlp-radius-sm);
   font-size: 12px;
+  font-weight: 500;
   pointer-events: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--mlp-shadow-md);
 }
 .tooltipFloat {
   position: fixed;
@@ -63,11 +73,12 @@
   white-space: normal;
   background: var(--mlp-tooltip-bg);
   color: var(--mlp-tooltip-fg);
-  padding: 4px 8px;
+  padding: 5px 9px;
   border-radius: var(--mlp-radius-sm);
   font-size: 12px;
+  font-weight: 500;
   pointer-events: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--mlp-shadow-md);
   max-width: min(260px, calc(100vw - 16px));
   width: max-content;
   text-align: center;
@@ -85,7 +96,7 @@
 
 .tabs {
   display: flex;
-  gap: 2px;
+  gap: 4px;
   border-bottom: 1px solid var(--mlp-border);
   align-items: stretch;
 }
@@ -93,51 +104,66 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 8px 12px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
+  border-radius: 0;
   cursor: pointer;
   color: var(--mlp-muted);
   font-size: 13px;
+  font-weight: 500;
+  margin-bottom: -1px;
+  transition: color var(--mlp-dur-fast) var(--mlp-ease),
+              border-color var(--mlp-dur-fast) var(--mlp-ease),
+              background-color var(--mlp-dur-fast) var(--mlp-ease);
 }
-.tab:hover {
+.tab:hover:not(:disabled) {
   color: var(--mlp-text);
+  background: transparent;
+  border-bottom-color: var(--mlp-border-strong);
 }
 .tab:focus-visible {
-  outline: 2px solid var(--mlp-accent);
-  outline-offset: -2px;
-}
-.tabActive {
+  outline: none;
   color: var(--mlp-text);
+  box-shadow: var(--mlp-focus-ring);
+  border-radius: var(--mlp-radius-sm) var(--mlp-radius-sm) 0 0;
+}
+.tabActive,
+.tabActive:hover:not(:disabled) {
+  color: var(--mlp-accent);
   border-bottom-color: var(--mlp-accent);
 }
 .badge {
-  background: var(--mlp-accent);
-  color: white;
-  border-radius: 999px;
-  padding: 0 6px;
+  background: var(--mlp-accent-soft);
+  color: var(--mlp-accent);
+  border-radius: var(--mlp-radius-pill);
+  padding: 1px 7px;
   font-size: 11px;
-  min-width: 16px;
+  font-weight: 600;
+  min-width: 18px;
   text-align: center;
+  line-height: 1.4;
 }
 
 .dividerV {
-  width: 4px;
+  width: 5px;
   cursor: col-resize;
   background: transparent;
-  flex: 0 0 4px;
+  flex: 0 0 5px;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease);
 }
 .dividerV:hover, .dividerV:focus-visible {
-  background: var(--mlp-border-strong);
+  background: var(--mlp-accent-soft);
   outline: none;
 }
 .dividerH {
-  height: 4px;
+  height: 5px;
   cursor: row-resize;
   background: transparent;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease);
 }
 .dividerH:hover, .dividerH:focus-visible {
-  background: var(--mlp-border-strong);
+  background: var(--mlp-accent-soft);
   outline: none;
 }

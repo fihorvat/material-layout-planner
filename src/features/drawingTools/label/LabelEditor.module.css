@@ -1,17 +1,17 @@
 .popover {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 14px;
+  left: 14px;
   z-index: 50;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 220px;
-  padding: 10px 12px 12px;
-  background: var(--mlp-surface);
+  gap: 10px;
+  min-width: 240px;
+  padding: 14px;
+  background: var(--mlp-card);
   color: var(--mlp-text);
   border: 1px solid var(--mlp-border);
-  border-radius: var(--mlp-radius-md);
+  border-radius: var(--mlp-radius-lg);
   box-shadow: var(--mlp-shadow-lg);
   font-family: var(--mlp-font);
   font-size: 13px;
@@ -27,61 +27,85 @@
 .title {
   font-weight: 600;
   font-size: 13px;
+  color: var(--mlp-text);
 }
 
 .closeBtn {
   appearance: none;
   background: transparent;
   border: 1px solid transparent;
-  border-radius: var(--mlp-radius-sm);
-  width: 28px;
-  height: 28px;
+  border-radius: var(--mlp-radius-md);
+  width: 26px;
+  height: 26px;
+  padding: 0;
   line-height: 1;
   cursor: pointer;
   color: var(--mlp-muted);
-  font-size: 22px;
+  font-size: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease),
+              color var(--mlp-dur-fast) var(--mlp-ease);
 }
 .closeBtn:hover {
   background: var(--mlp-surface-2);
   color: var(--mlp-text);
-  border-color: var(--mlp-border);
+}
+.closeBtn:focus-visible {
+  outline: none;
+  border-color: var(--mlp-accent);
+  box-shadow: var(--mlp-focus-ring);
 }
 
 .input {
   width: 100%;
-  padding: 6px 8px;
+  padding: 7px 10px;
   background: var(--mlp-card);
   color: var(--mlp-text);
-  border: 1px solid var(--mlp-border-strong);
-  border-radius: var(--mlp-radius-sm);
+  border: 1px solid var(--mlp-border);
+  border-radius: var(--mlp-radius-md);
   outline: none;
+  transition: border-color var(--mlp-dur-fast) var(--mlp-ease),
+              box-shadow var(--mlp-dur-fast) var(--mlp-ease);
+}
+.input:hover:not(:focus) {
+  border-color: var(--mlp-border-strong);
 }
 .input:focus {
   border-color: var(--mlp-accent);
-  box-shadow: 0 0 0 2px var(--mlp-accent-soft);
+  box-shadow: var(--mlp-focus-ring);
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
+  margin-top: 2px;
 }
 
 .btn {
   appearance: none;
-  border: 1px solid var(--mlp-border-strong);
-  background: var(--mlp-card);
+  border: 1px solid var(--mlp-border);
+  background: var(--mlp-surface);
   color: var(--mlp-text);
-  padding: 4px 10px;
-  border-radius: var(--mlp-radius-sm);
+  padding: 6px 14px;
+  border-radius: var(--mlp-radius-md);
   cursor: pointer;
   font-size: 12px;
+  font-weight: 500;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease),
+              border-color var(--mlp-dur-fast) var(--mlp-ease),
+              box-shadow var(--mlp-dur-fast) var(--mlp-ease);
 }
 .btn:hover {
   background: var(--mlp-surface-2);
+  border-color: var(--mlp-border-strong);
+}
+.btn:focus-visible {
+  outline: none;
+  border-color: var(--mlp-accent);
+  box-shadow: var(--mlp-focus-ring);
 }
 .btnPrimary {
   background: var(--mlp-accent);
@@ -89,8 +113,12 @@
   color: var(--mlp-accent-contrast);
 }
 .btnPrimary:hover {
-  filter: brightness(0.95);
-  background: var(--mlp-accent);
+  background: var(--mlp-accent-hover);
+  border-color: var(--mlp-accent-hover);
+}
+.btnPrimary:focus-visible {
+  border-color: var(--mlp-accent);
+  box-shadow: var(--mlp-focus-ring);
 }
 
 .hint {

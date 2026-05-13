@@ -12,8 +12,8 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 8px;
+  gap: 6px;
+  padding: 0 10px;
   border-bottom: 1px solid var(--mlp-border);
   background: var(--mlp-surface);
   height: var(--mlp-toolbar-h);
@@ -21,7 +21,7 @@
 .toolbarSep {
   width: 1px;
   align-self: stretch;
-  margin: 6px 4px;
+  margin: 10px 6px;
   background: var(--mlp-border);
 }
 .toolbarSpacer {
@@ -41,24 +41,33 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--mlp-text);
-  padding: 4px 8px;
-  border-radius: var(--mlp-radius-sm);
-  min-width: 120px;
+  padding: 6px 10px;
+  border-radius: var(--mlp-radius-md);
+  min-width: 140px;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease),
+              border-color var(--mlp-dur-fast) var(--mlp-ease),
+              box-shadow var(--mlp-dur-fast) var(--mlp-ease);
 }
-.projectNameInput:hover, .projectNameInput:focus {
-  border-color: var(--mlp-border-strong);
+.projectNameInput:hover {
+  background: var(--mlp-surface-2);
+}
+.projectNameInput:focus {
+  border-color: var(--mlp-accent);
+  background: var(--mlp-card);
   outline: none;
-  background: var(--mlp-bg);
+  box-shadow: var(--mlp-focus-ring);
 }
 .dirty {
-  color: var(--mlp-danger);
+  color: var(--mlp-warning);
   font-weight: 700;
+  margin-left: -2px;
 }
 .zoomValue {
   font-variant-numeric: tabular-nums;
   min-width: 48px;
   text-align: center;
   font-size: 12px;
+  color: var(--mlp-muted);
 }
 
 .main {
@@ -73,7 +82,7 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 8px 4px;
+  padding: 10px 6px;
   border-right: 1px solid var(--mlp-border);
   background: var(--mlp-surface);
   width: var(--mlp-rail-w);
@@ -82,12 +91,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
   width: 100%;
 }
 .toolRailGroupDivider {
-  margin-top: 6px;
-  padding-top: 6px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid var(--mlp-border);
 }
 
@@ -106,8 +115,7 @@
   justify-content: center;
   color: var(--mlp-muted);
   background:
-    linear-gradient(var(--mlp-border) 1px, transparent 1px) 0 0 / 50px 50px,
-    linear-gradient(90deg, var(--mlp-border) 1px, transparent 1px) 0 0 / 50px 50px,
+    radial-gradient(circle, var(--mlp-border) 1px, transparent 1px) 0 0 / 20px 20px,
     var(--mlp-bg);
 }
 
@@ -128,7 +136,7 @@
   overflow: hidden;
 }
 .propertiesPanelCollapsed .panelHeader {
-  padding: 8px 0;
+  padding: 10px 0;
   justify-content: center;
   border-bottom: none;
 }
@@ -136,17 +144,31 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--mlp-border);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mlp-muted);
+  background: var(--mlp-surface);
 }
 .panelBody {
   flex: 1 1 auto;
   overflow: auto;
-  padding: 12px;
-  color: var(--mlp-muted);
+  /* No top padding: lets sticky table headers (and other top-anchored content)
+     dock flush against the scroll container's top edge. Without this, scrolled
+     rows leak into the gap above a sticky <thead>. */
+  padding: 0 14px 14px;
+  color: var(--mlp-text);
   font-size: 13px;
+}
+.panelBody > :first-child {
+  margin-top: 14px;
+}
+.panelBody > .dataTable:first-child,
+.panelBody > table:first-child {
+  margin-top: 0;
 }
 
 .bottomPanel {
@@ -160,15 +182,31 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 12px;
-  height: 32px;
+  padding: 0 14px;
+  height: 36px;
+  border-bottom: 1px solid var(--mlp-border);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--mlp-muted);
 }
 .bottomBody {
   flex: 1 1 auto;
   overflow: auto;
-  padding: 0 12px 12px;
+  /* No top padding: lets sticky table headers dock flush against the scroll
+     container's top edge. Otherwise scrolled rows leak into the gap above a
+     sticky <thead> (which sticks to the padding-edge, not the border-edge). */
+  padding: 0 14px 14px;
   background: var(--mlp-bg);
   color: var(--mlp-text);
+}
+.bottomBody > :first-child {
+  margin-top: 14px;
+}
+.bottomBody > .dataTable:first-child,
+.bottomBody > table:first-child {
+  margin-top: 0;
 }
 .bottomBodyCollapsed {
   display: none;
@@ -184,18 +222,24 @@
 .dataTable thead th {
   text-align: left;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   color: var(--mlp-muted);
-  background: var(--mlp-surface-2);
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--mlp-border-strong);
+  background: var(--mlp-surface);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--mlp-border);
   position: sticky;
   top: 0;
+  z-index: 1;
 }
 .dataTable tbody td {
-  padding: 6px 8px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--mlp-border);
   vertical-align: middle;
+}
+.dataTable tbody tr {
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease);
 }
 .dataTable tbody tr:hover td {
   background: var(--mlp-surface-2);
@@ -208,8 +252,11 @@
   border: 1px solid transparent;
   cursor: pointer;
   color: var(--mlp-muted);
-  padding: 2px 6px;
+  padding: 3px 8px;
   border-radius: var(--mlp-radius-sm);
+  font-size: 12px;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease),
+              color var(--mlp-dur-fast) var(--mlp-ease);
 }
 .collapseBtn:hover {
   background: var(--mlp-surface-2);
@@ -219,14 +266,15 @@
 .fileMenu {
   position: fixed;
   z-index: 1100;
-  min-width: 220px;
-  background: var(--mlp-surface);
+  min-width: 240px;
+  background: var(--mlp-card);
   border: 1px solid var(--mlp-border);
-  border-radius: var(--mlp-radius-md);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  padding: 4px;
+  border-radius: var(--mlp-radius-lg);
+  box-shadow: var(--mlp-shadow-lg);
+  padding: 6px;
   display: flex;
   flex-direction: column;
+  gap: 1px;
 }
 .fileMenuItem {
   display: flex;
@@ -234,25 +282,37 @@
   justify-content: space-between;
   gap: 16px;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   text-align: left;
-  padding: 6px 10px;
+  padding: 7px 10px;
   border-radius: var(--mlp-radius-sm);
   font-size: 13px;
+  font-weight: 500;
   color: var(--mlp-text);
   cursor: pointer;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease),
+              color var(--mlp-dur-fast) var(--mlp-ease);
 }
 .fileMenuItem:hover:not(:disabled),
 .fileMenuItem:focus-visible {
-  background: var(--mlp-surface-2);
+  background: var(--mlp-accent-soft);
+  color: var(--mlp-accent);
   outline: none;
+  border-color: transparent;
 }
 .fileMenuItem:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 .fileMenuShortcut {
   font-family: var(--mlp-font-mono);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--mlp-muted);
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.fileMenuItem:hover:not(:disabled) .fileMenuShortcut,
+.fileMenuItem:focus-visible .fileMenuShortcut {
+  color: var(--mlp-accent);
 }

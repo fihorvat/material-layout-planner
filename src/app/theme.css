@@ -1,71 +1,125 @@
 :root {
   color-scheme: light;
 
-  /* Light theme (default) */
+  /* === Light theme (default) === */
+  /* Neutrals */
   --mlp-bg: #ffffff;
-  --mlp-surface: #f8fafc;
-  --mlp-surface-2: #f1f5f9;
+  --mlp-surface: #fafbfc;
+  --mlp-surface-2: #f3f5f8;
+  --mlp-surface-3: #e9ecf1;
   --mlp-card: #ffffff;
-  --mlp-border: #e5e7eb;
-  --mlp-border-strong: #cbd5e1;
-  --mlp-text: #111827;
-  --mlp-muted: #6b7280;
-  --mlp-accent: #2563eb;
-  --mlp-accent-soft: #dbeafe;
+  --mlp-border: #e6e8ec;
+  --mlp-border-strong: #d2d6dd;
+  --mlp-text: #0b1220;
+  --mlp-muted: #5b6472;
+  --mlp-subtle: #8a93a3;
+
+  /* Accent (modernized blue) */
+  --mlp-accent: #2f6feb;
+  --mlp-accent-hover: #2861d6;
+  --mlp-accent-soft: #e6efff;
+  --mlp-accent-soft-strong: #cfdeff;
   --mlp-accent-contrast: #ffffff;
-  --mlp-danger: #dc2626;
-  --mlp-success: #059669;
-  --mlp-warning: #d97706;
-  --mlp-info: #2563eb;
-  --mlp-tooltip-bg: #111827;
-  --mlp-tooltip-fg: #f9fafb;
-  --mlp-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --mlp-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
 
-  --mlp-grid-minor: #e5e7eb;
-  --mlp-grid-major: #cbd5e1;
-  --mlp-grid-axis: #9ca3af;
-  --mlp-thumb-bg: #f1f5f9;
-  --mlp-thumb-fg: #9ca3af;
+  /* Status */
+  --mlp-danger: #e5484d;
+  --mlp-danger-soft: #fdecee;
+  --mlp-success: #22c55e;
+  --mlp-success-soft: #e7f7ec;
+  --mlp-warning: #f59e0b;
+  --mlp-warning-soft: #fff3df;
+  --mlp-info: #2f6feb;
 
+  /* Overlay & tooltip */
+  --mlp-overlay: rgba(11, 18, 32, 0.45);
+  --mlp-tooltip-bg: #0b1220;
+  --mlp-tooltip-fg: #f5f7fb;
+
+  /* Shadows (layered, softer) */
+  --mlp-shadow-sm: 0 1px 2px rgba(11, 18, 32, 0.05), 0 1px 1px rgba(11, 18, 32, 0.04);
+  --mlp-shadow-md: 0 4px 12px rgba(11, 18, 32, 0.07), 0 1px 3px rgba(11, 18, 32, 0.05);
+  --mlp-shadow-lg: 0 16px 40px rgba(11, 18, 32, 0.12), 0 4px 12px rgba(11, 18, 32, 0.06);
+
+  /* Canvas helpers */
+  --mlp-grid-minor: #eef0f4;
+  --mlp-grid-major: #d9dde4;
+  --mlp-grid-axis: #9aa3b1;
+  --mlp-thumb-bg: #f3f5f8;
+  --mlp-thumb-fg: #9aa3b1;
+
+  /* Layout */
   --mlp-toolbar-h: 48px;
   --mlp-rail-w: 56px;
 
-  --mlp-radius-sm: 4px;
-  --mlp-radius-md: 6px;
+  /* Radii */
+  --mlp-radius-sm: 6px;
+  --mlp-radius-md: 8px;
+  --mlp-radius-lg: 12px;
+  --mlp-radius-pill: 999px;
 
-  --mlp-font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --mlp-font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, monospace;
+  /* Typography */
+  --mlp-font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --mlp-font-mono: ui-monospace, 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Menlo, Consolas, monospace;
+
+  /* Motion */
+  --mlp-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --mlp-dur-fast: 120ms;
+  --mlp-dur-med: 200ms;
+
+  /* Focus ring */
+  --mlp-focus-ring: 0 0 0 3px var(--mlp-accent-soft-strong);
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --mlp-bg: #0f172a;
-  --mlp-surface: #1e293b;
-  --mlp-surface-2: #334155;
-  --mlp-card: #1e293b;
-  --mlp-border: #334155;
-  --mlp-border-strong: #475569;
-  --mlp-text: #e2e8f0;
-  --mlp-muted: #94a3b8;
-  --mlp-accent: #60a5fa;
-  --mlp-accent-soft: #1e3a8a;
-  --mlp-accent-contrast: #0f172a;
-  --mlp-danger: #f87171;
-  --mlp-success: #34d399;
-  --mlp-warning: #fbbf24;
-  --mlp-info: #60a5fa;
-  --mlp-tooltip-bg: #e2e8f0;
-  --mlp-tooltip-fg: #0f172a;
-  --mlp-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.5);
-  --mlp-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  /* Neutrals */
+  --mlp-bg: #0b0d12;
+  --mlp-surface: #11141b;
+  --mlp-surface-2: #171b24;
+  --mlp-surface-3: #1f2430;
+  --mlp-card: #11141b;
+  --mlp-border: #232838;
+  --mlp-border-strong: #2e3446;
+  --mlp-text: #e6e9ef;
+  --mlp-muted: #97a0b0;
+  --mlp-subtle: #6b7384;
 
-  --mlp-grid-minor: #1f2a3d;
-  --mlp-grid-major: #334155;
-  --mlp-grid-axis: #64748b;
-  --mlp-thumb-bg: #1e293b;
-  --mlp-thumb-fg: #64748b;
+  /* Accent */
+  --mlp-accent: #7aa2ff;
+  --mlp-accent-hover: #8fb1ff;
+  --mlp-accent-soft: #1c2540;
+  --mlp-accent-soft-strong: #243056;
+  --mlp-accent-contrast: #0b0d12;
+
+  /* Status */
+  --mlp-danger: #ff6369;
+  --mlp-danger-soft: #361a1d;
+  --mlp-success: #34d399;
+  --mlp-success-soft: #112a22;
+  --mlp-warning: #fbbf24;
+  --mlp-warning-soft: #2e2412;
+  --mlp-info: #7aa2ff;
+
+  /* Overlay & tooltip */
+  --mlp-overlay: rgba(0, 0, 0, 0.55);
+  --mlp-tooltip-bg: #e6e9ef;
+  --mlp-tooltip-fg: #0b0d12;
+
+  /* Shadows */
+  --mlp-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --mlp-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.4);
+  --mlp-shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.6), 0 6px 16px rgba(0, 0, 0, 0.45);
+
+  /* Canvas helpers */
+  --mlp-grid-minor: #161b27;
+  --mlp-grid-major: #232838;
+  --mlp-grid-axis: #4b5468;
+  --mlp-thumb-bg: #171b24;
+  --mlp-thumb-fg: #5a6377;
+
+  /* Focus ring */
+  --mlp-focus-ring: 0 0 0 3px var(--mlp-accent-soft-strong);
 }
 
 html, body, #root {
@@ -75,26 +129,181 @@ html, body, #root {
   background: var(--mlp-bg);
   color: var(--mlp-text);
   font-family: var(--mlp-font);
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 13.5px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 html, body {
-  transition: background-color 120ms ease, color 120ms ease;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease),
+              color var(--mlp-dur-fast) var(--mlp-ease);
 }
 
 * {
   box-sizing: border-box;
 }
 
+::selection {
+  background: var(--mlp-accent-soft-strong);
+  color: var(--mlp-text);
+}
+
+/* ===== Global element baseline =====
+   Most feature panels/dialogs use raw <button>, <input>, <select>, <textarea>,
+   and inline styles referencing CSS vars. The rules below give those a modern
+   default look without touching the markup. Components with their own CSS
+   modules continue to override as needed. */
+
 button {
   font-family: inherit;
   font-size: inherit;
-  color: inherit;
+  font-weight: 500;
+  color: var(--mlp-text);
+  background: var(--mlp-surface);
+  border: 1px solid var(--mlp-border);
+  border-radius: var(--mlp-radius-md);
+  padding: 6px 12px;
+  cursor: pointer;
+  line-height: 1.2;
+  transition: background-color var(--mlp-dur-fast) var(--mlp-ease),
+              border-color var(--mlp-dur-fast) var(--mlp-ease),
+              color var(--mlp-dur-fast) var(--mlp-ease),
+              box-shadow var(--mlp-dur-fast) var(--mlp-ease);
+}
+button:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--mlp-surface-2);
+  border-color: var(--mlp-border-strong);
+}
+button:active:not(:disabled):not([aria-disabled='true']) {
+  background: var(--mlp-surface-3);
+}
+button:focus-visible {
+  outline: none;
+  border-color: var(--mlp-accent);
+  box-shadow: var(--mlp-focus-ring);
+}
+button:disabled,
+button[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 input, select, textarea {
   font-family: inherit;
   font-size: inherit;
-  color: inherit;
+  color: var(--mlp-text);
+  background: var(--mlp-card);
+  border: 1px solid var(--mlp-border);
+  border-radius: var(--mlp-radius-md);
+  padding: 6px 10px;
+  line-height: 1.3;
+  transition: border-color var(--mlp-dur-fast) var(--mlp-ease),
+              box-shadow var(--mlp-dur-fast) var(--mlp-ease);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--mlp-subtle);
+}
+input:hover:not(:disabled):not(:focus),
+select:hover:not(:disabled):not(:focus),
+textarea:hover:not(:disabled):not(:focus) {
+  border-color: var(--mlp-border-strong);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--mlp-accent);
+  box-shadow: var(--mlp-focus-ring);
+}
+input:disabled, select:disabled, textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+input[type='checkbox'], input[type='radio'] {
+  accent-color: var(--mlp-accent);
+}
+input[type='range'] {
+  accent-color: var(--mlp-accent);
+  padding: 0;
+}
+input[type='color'] {
+  padding: 2px;
+  height: 28px;
+  width: 36px;
+  cursor: pointer;
+}
+input[type='file'] {
+  font-size: 12px;
+}
+
+label {
+  color: var(--mlp-text);
+}
+
+a {
+  color: var(--mlp-accent);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--mlp-border);
+  margin: 8px 0;
+}
+
+code, kbd, samp {
+  font-family: var(--mlp-font-mono);
+  font-size: 0.92em;
+  background: var(--mlp-surface-2);
+  color: var(--mlp-text);
+  border: 1px solid var(--mlp-border);
+  border-radius: var(--mlp-radius-sm);
+  padding: 1px 6px;
+}
+kbd {
+  font-weight: 600;
+  box-shadow: inset 0 -1px 0 var(--mlp-border-strong);
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+dialog {
+  background: var(--mlp-card);
+  color: var(--mlp-text);
+  border: 1px solid var(--mlp-border);
+  border-radius: var(--mlp-radius-lg);
+  box-shadow: var(--mlp-shadow-lg);
+  padding: 18px;
+}
+dialog::backdrop {
+  background: var(--mlp-overlay);
+}
+
+/* Scrollbars (WebKit + Firefox) */
+* {
+  scrollbar-color: var(--mlp-border-strong) transparent;
+  scrollbar-width: thin;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--mlp-border);
+  border-radius: var(--mlp-radius-pill);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--mlp-border-strong);
+  background-clip: padding-box;
 }

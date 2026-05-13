@@ -47,11 +47,12 @@ export const ShortcutsHelpDialog = ({ open, onClose }: ShortcutsHelpDialogProps)
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(15, 23, 42, 0.4)',
+        background: 'var(--mlp-overlay)',
         zIndex: 8000,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        backdropFilter: 'blur(2px)',
       }}
       onClick={onClose}
     >
@@ -61,41 +62,50 @@ export const ShortcutsHelpDialog = ({ open, onClose }: ShortcutsHelpDialogProps)
           color: 'var(--mlp-text)',
           border: '1px solid var(--mlp-border)',
           boxShadow: 'var(--mlp-shadow-lg)',
-          borderRadius: 8,
-          padding: 20,
-          minWidth: 480,
+          borderRadius: 'var(--mlp-radius-lg)',
+          padding: '20px 24px 24px',
+          minWidth: 520,
           maxWidth: 'calc(100vw - 32px)',
           maxHeight: '80vh',
           overflow: 'auto',
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0 }}>Keyboard shortcuts</h2>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 4,
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: '-0.01em' }}>
+            Keyboard shortcuts
+          </h2>
           <ModalCloseButton onClose={onClose} />
         </div>
         {groups.map((g) => (
-          <section key={g} style={{ marginTop: 12 }}>
-            <h3 style={{ fontSize: 13, color: 'var(--mlp-muted)', margin: '8px 0' }}>{g}</h3>
+          <section key={g} style={{ marginTop: 16 }}>
+            <h3
+              style={{
+                fontSize: 11,
+                color: 'var(--mlp-muted)',
+                margin: '8px 0',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                fontWeight: 600,
+              }}
+            >
+              {g}
+            </h3>
             <table style={{ width: '100%', fontSize: 13 }}>
               <tbody>
                 {ROWS.filter((r) => r.group === g).map((r) => (
                   <tr key={r.keys}>
-                    <td style={{ width: '50%', padding: 4 }}>
-                      <code
-                        style={{
-                          background: 'var(--mlp-surface-2)',
-                          color: 'var(--mlp-text)',
-                          border: '1px solid var(--mlp-border)',
-                          padding: '2px 6px',
-                          borderRadius: 3,
-                          fontFamily: 'var(--mlp-font-mono)',
-                        }}
-                      >
-                        {r.keys}
-                      </code>
+                    <td style={{ width: '50%', padding: '4px 4px 4px 0' }}>
+                      <kbd>{r.keys}</kbd>
                     </td>
-                    <td>{r.action}</td>
+                    <td style={{ color: 'var(--mlp-text)' }}>{r.action}</td>
                   </tr>
                 ))}
               </tbody>
