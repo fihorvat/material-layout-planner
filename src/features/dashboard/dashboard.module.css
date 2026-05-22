@@ -51,7 +51,7 @@
               border-color var(--mlp-dur-fast) var(--mlp-ease),
               box-shadow var(--mlp-dur-fast) var(--mlp-ease);
 }
-.primaryBtn:hover:not(:disabled) {
+.primaryBtn:hover:not(:disabled):not([aria-disabled='true']) {
   background: var(--mlp-accent-hover);
   border-color: var(--mlp-accent-hover);
 }
