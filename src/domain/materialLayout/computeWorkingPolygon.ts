@@ -3,7 +3,9 @@ import type { Polygon } from '@/domain/geometry';
 import { polygonUnion } from '@/domain/geometry';
 import { getEffectiveEdgeRule } from '@/domain/surfaces/edgeRules';
 
-type WorkingPolygonResult = { visible: Polygon; physical: Polygon };
+export type OverlapZone = { polygon: Polygon; opacity01: number };
+
+type WorkingPolygonResult = { visible: Polygon; physical: Polygon; overlapZones: OverlapZone[] };
 
 export const computeWorkingPolygon = (input: {
   surface: Surface;
@@ -16,6 +18,7 @@ export const computeWorkingPolygon = (input: {
   };
   const pts = surface.outerBoundary;
   const expansions: Polygon[] = [];
+  const overlapZones: OverlapZone[] = [];
   for (let i = 0; i < pts.length; i++) {
     const rule = getEffectiveEdgeRule(surface, i, connections);
     if (
@@ -40,7 +43,9 @@ export const computeWorkingPolygon = (input: {
       { x: b.x + nx * off, y: b.y + ny * off },
       { x: a.x + nx * off, y: a.y + ny * off },
     ];
-    expansions.push({ outer: quad });
+    const expansion = { outer: quad };
+    expansions.push(expansion);
+    overlapZones.push({ polygon: expansion, opacity01: rule.overlapOpacity });
   }
 
   let physical: Polygon = visible;
@@ -48,5 +53,5 @@ export const computeWorkingPolygon = (input: {
     const merged = polygonUnion(physical, exp);
     if (merged[0]) physical = merged[0];
   }
-  return { visible, physical };
+  return { visible, physical, overlapZones };
 };

@@ -10,20 +10,20 @@ export type SelectedVertex =
 
 export const sameSelectedVertex = (a: SelectedVertex, b: SelectedVertex): boolean => {
   if (a.kind !== b.kind) return false;
-  if (a.kind === 'rectCorner' && b.kind === 'rectCorner') {
-    return a.entityId === b.entityId && a.corner === b.corner;
+  switch (a.kind) {
+    case 'rectCorner':
+      if (b.kind !== 'rectCorner') return false;
+      return a.entityId === b.entityId && a.corner === b.corner;
+    case 'polygonVertex':
+      if (b.kind !== 'polygonVertex') return false;
+      return a.entityId === b.entityId && a.index === b.index;
+    case 'surfaceVertex':
+      if (b.kind !== 'surfaceVertex') return false;
+      return a.surfaceId === b.surfaceId && a.index === b.index;
+    case 'openingVertex':
+      if (b.kind !== 'openingVertex') return false;
+      return a.surfaceId === b.surfaceId && a.openingId === b.openingId && a.index === b.index;
   }
-  if (a.kind === 'polygonVertex' && b.kind === 'polygonVertex') {
-    return a.entityId === b.entityId && a.index === b.index;
-  }
-  if (a.kind === 'surfaceVertex' && b.kind === 'surfaceVertex') {
-    return a.surfaceId === b.surfaceId && a.index === b.index;
-  }
-  return (
-    a.surfaceId === b.surfaceId &&
-    a.openingId === b.openingId &&
-    a.index === b.index
-  );
 };
 
 export type SelectedVertexState = {

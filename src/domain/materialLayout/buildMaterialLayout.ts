@@ -3,6 +3,7 @@ import type {
   Material,
   PlacementPattern,
   EdgeRule,
+  SurfaceConnection,
   MaterialPiece,
   MaterialLayout,
   Point2D,
@@ -14,6 +15,7 @@ import { clipMaterialPieceToSurface } from './clipMaterialPieceToSurface';
 import { buildPieceCode, buildSurfaceLetter } from './pieceCodes';
 import { newMaterialPieceId, newMaterialLayoutId } from '@/domain/ids';
 import type { UnitRectangle } from './types';
+import type { OverlapZone } from './computeWorkingPolygon';
 
 const FULL_UNIT_EPS_AREA = 0.5;
 
@@ -54,8 +56,10 @@ type BuildMaterialLayoutInput = {
   patternVirtualOffset?: Point2D;
   patternOriginTranslation?: Point2D;
   edgeRules: EdgeRule[];
+  connections?: SurfaceConnection[];
   visibleSurfacePolygon: Polygon;
   physicalWorkingPolygon: Polygon;
+  overlapZones?: OverlapZone[];
   generatedAt?: string;
 };
 
@@ -71,6 +75,10 @@ export const buildMaterialLayout = (input: BuildMaterialLayoutInput): MaterialLa
   const physicalWorkingPolygon = renderOffset
     ? translatePolygon(input.physicalWorkingPolygon, patternVirtualOffset)
     : input.physicalWorkingPolygon;
+  const overlapZones = input.overlapZones?.map((zone) => ({
+    polygon: renderOffset ? translatePolygon(zone.polygon, patternVirtualOffset) : zone.polygon,
+    opacity01: zone.opacity01,
+  }));
   const workingAabb = pointsToAabb(physicalWorkingPolygon.outer);
   const grid = generatePlacementGrid({
     surface: input.surface,
@@ -83,44 +91,51 @@ export const buildMaterialLayout = (input: BuildMaterialLayoutInput): MaterialLa
   const surfaceLetter = buildSurfaceLetter(input.surfaceIndex);
   const pieces: MaterialPiece[] = [];
   let index = 0;
-  for (const unit of grid) {
-    const result = clipMaterialPieceToSurface({
+  for (let unitIndex = 0; unitIndex < grid.length; unitIndex++) {
+    const unit = grid[unitIndex]!;
+    const results = clipMaterialPieceToSurface({
       unit,
       visibleSurfacePolygon,
       physicalWorkingPolygon,
+      overlapZones,
     });
-    if (!result) continue;
-    const visiblePolygon = renderOffset
-      ? translatePoints(result.visiblePolygon, renderOffset)
-      : result.visiblePolygon;
-    const physicalPolygon = renderOffset
-      ? translatePoints(result.physicalPolygon, renderOffset)
-      : result.physicalPolygon;
-    const overlapPolygons = renderOffset
-      ? result.overlapPolygons.map((polygon) => translatePoints(polygon, renderOffset))
-      : result.overlapPolygons;
-    const labelPos = polygonCentroid(visiblePolygon);
-    const fullUnit = isFullUnitPolygon(unit, result.physicalPolygon);
-    const irregular = !isAxisAlignedRectangle(result.physicalPolygon, unit.widthMm, unit.heightMm);
-    pieces.push({
-      id: newMaterialPieceId(),
-      surfaceId: input.surface.id,
-      materialId: input.material.id,
-      pieceCode: buildPieceCode({ surfaceLetter, index }),
-      physicalPolygon,
-      visiblePolygon,
-      overlapPolygons,
-      boundingWidthMm: result.boundingWidthMm,
-      boundingHeightMm: result.boundingHeightMm,
-      thicknessMm: input.material.thicknessMm,
-      rotationDeg: unit.rotationDeg,
-      isFullUnit: fullUnit,
-      isCutPiece: !fullUnit,
-      isIrregular: irregular,
-      labelPosition: labelPos,
-      warnings: [],
-    });
-    index += 1;
+    for (const result of results) {
+      const visiblePolygon = renderOffset
+        ? translatePoints(result.visiblePolygon, renderOffset)
+        : result.visiblePolygon;
+      const physicalPolygon = renderOffset
+        ? translatePoints(result.physicalPolygon, renderOffset)
+        : result.physicalPolygon;
+      const overlapPolygons = renderOffset
+        ? result.overlapPolygons.map((polygon) => translatePoints(polygon, renderOffset))
+        : result.overlapPolygons;
+      const overlapPolygonOpacities = result.overlapPolygonOpacities;
+      const labelPos = polygonCentroid(visiblePolygon);
+      const fullUnit = isFullUnitPolygon(unit, result.physicalPolygon);
+      const irregular = !isAxisAlignedRectangle(result.physicalPolygon, unit.widthMm, unit.heightMm);
+      pieces.push({
+        id: newMaterialPieceId(),
+        surfaceId: input.surface.id,
+        materialId: input.material.id,
+        pieceCode: buildPieceCode({ surfaceLetter, index }),
+        sourceUnitIndex: unitIndex,
+        physicalPolygon,
+        visiblePolygon,
+        overlapPolygons,
+        overlapPolygonOpacities:
+          overlapPolygonOpacities.length > 0 ? overlapPolygonOpacities : undefined,
+        boundingWidthMm: result.boundingWidthMm,
+        boundingHeightMm: result.boundingHeightMm,
+        thicknessMm: input.material.thicknessMm,
+        rotationDeg: unit.rotationDeg,
+        isFullUnit: fullUnit,
+        isCutPiece: !fullUnit,
+        isIrregular: irregular,
+        labelPosition: labelPos,
+        warnings: [],
+      });
+      index += 1;
+    }
   }
   return {
     id: newMaterialLayoutId(),
@@ -133,6 +148,7 @@ export const buildMaterialLayout = (input: BuildMaterialLayoutInput): MaterialLa
       material: input.material,
       placementPattern: input.pattern,
       edgeRules: input.edgeRules,
+      surfaceConnections: input.connections?.length ? input.connections : undefined,
     },
     stats: {
       visibleAreaMm2: 0,

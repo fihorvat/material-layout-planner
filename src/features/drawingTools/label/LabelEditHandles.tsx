@@ -1,10 +1,11 @@
 import { Circle, Group, Line } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import { useProjectStore, useSelectionStore, useEditorStore } from '@/state';
+import { useProjectStore, useSelectionStore, useEditorStore, useLabelUiStore } from '@/state';
 import { degToRad } from '@/domain/geometry';
 import { computeAnchorPosition } from './computeAnchorPosition';
 import { dispatchCommand, updateLabelCommand } from '@/domain/commands';
 import type { Point2D } from '@/types';
+import { getLabelDisplayText } from './labelPresentation';
 
 const APPROX_CHAR_WIDTH = 0.6;
 const LABEL_LINE_HEIGHT = 1.2;
@@ -20,6 +21,7 @@ export const LabelEditHandles = () => {
   const project = useProjectStore((s) => s.project);
   const activeTool = useEditorStore((s) => s.activeTool);
   const scale = useEditorStore((s) => s.viewport.scale);
+  const dragPreviewPositions = useLabelUiStore((s) => s.dragPreviewPositions);
 
   if (activeTool !== 'select') return null;
   const entries = selected.filter((e) => e.kind === 'label');
@@ -30,11 +32,13 @@ export const LabelEditHandles = () => {
       {entries.map((entry) => {
         const label = project.labels.find((l) => l.id === entry.id);
         if (!label) return null;
-        const pos = computeAnchorPosition(label, project);
-        if (!pos) return null;
+        const anchorPos = computeAnchorPosition(label, project);
+        if (!anchorPos) return null;
+        const pos = dragPreviewPositions[label.id] ?? anchorPos;
 
         const fontSize = label.style.fontSizePx;
-        const width = Math.max(label.text.length, 1) * fontSize * APPROX_CHAR_WIDTH;
+        const text = getLabelDisplayText(label.text, label.style);
+        const width = Math.max(text.length, 1) * fontSize * APPROX_CHAR_WIDTH;
         const height = fontSize * LABEL_LINE_HEIGHT;
         const rad = degToRad(label.rotationDeg);
         const cos = Math.cos(rad);

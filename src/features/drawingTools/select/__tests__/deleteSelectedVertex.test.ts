@@ -43,7 +43,10 @@ describe('deleteSelectedVertex', () => {
 
     const entity = useProjectStore.getState().project.drawingEntities[0];
     expect(entity?.type).toBe('polygon');
-    expect(entity?.points).toHaveLength(3);
+    if (!entity || entity.type !== 'polygon') {
+      throw new Error('Expected rectangle replacement to be a polygon.');
+    }
+    expect(entity.points).toHaveLength(3);
     expect(useSelectionStore.getState().selected).toEqual([
       { kind: 'polygon', id: entity?.id ?? '' },
     ]);
@@ -80,7 +83,10 @@ describe('deleteSelectedVertex', () => {
 
     const entity = useProjectStore.getState().project.drawingEntities[0];
     expect(entity?.type).toBe('polygon');
-    expect(entity?.points).toEqual([
+    if (!entity || entity.type !== 'polygon') {
+      throw new Error('Expected updated entity to remain a polygon.');
+    }
+    expect(entity.points).toEqual([
       { x: 0, y: 0 },
       { x: 100, y: 0 },
       { x: 0, y: 100 },
@@ -113,8 +119,12 @@ describe('deleteSelectedVertex', () => {
     });
 
     expect(deleteSelectedVertex()).toBe(false);
-    expect(useProjectStore.getState().project.drawingEntities[0]?.type).toBe('polygon');
-    expect(useProjectStore.getState().project.drawingEntities[0]?.points).toHaveLength(3);
+    const entity = useProjectStore.getState().project.drawingEntities[0];
+    expect(entity?.type).toBe('polygon');
+    if (!entity || entity.type !== 'polygon') {
+      throw new Error('Expected triangle to remain a polygon.');
+    }
+    expect(entity.points).toHaveLength(3);
   });
 
   it('removes vertices from surfaces and openings', () => {

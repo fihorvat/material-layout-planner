@@ -5,6 +5,7 @@ import { buildPdfDocument } from '@/domain/pdf';
 import { buildCutList } from '@/domain/materialLayout/materialCutList';
 import { buildCuttingDiagram, type CuttingDiagram } from '@/domain/materialLayout/cuttingDiagram';
 import { computeProjectStats } from '@/domain/materialLayout/layoutStats';
+import { resolveCurrentMaterialLayouts } from '@/domain/materialLayout/resolveCurrentMaterialLayouts';
 
 const sanitizeFileName = (name: string): string => {
   const trimmed = name.trim() || 'project';
@@ -35,12 +36,14 @@ export const useExportPdf = () => {
     setExporting(true);
     try {
       const project = useProjectStore.getState().project;
+      const layouts = resolveCurrentMaterialLayouts(project);
+      const projectForExport = { ...project, materialLayouts: layouts };
 
-      const cutList = buildCutList(project);
+      const cutList = buildCutList(projectForExport);
 
       const cuttingDiagrams: CuttingDiagram[] = [];
       const diagramsByLayoutId: Record<string, CuttingDiagram> = {};
-      for (const layout of project.materialLayouts) {
+      for (const layout of layouts) {
         const material = project.materials.find((m) => m.id === layout.materialId);
         if (!material) continue;
         const diagram = buildCuttingDiagram(layout, material, {
@@ -50,12 +53,12 @@ export const useExportPdf = () => {
         diagramsByLayoutId[layout.id] = diagram;
       }
 
-      const projectStats = computeProjectStats(project, diagramsByLayoutId);
+      const projectStats = computeProjectStats(projectForExport, diagramsByLayoutId);
 
       const bytes = await buildPdfDocument({
-        project,
+        project: projectForExport,
         settings: project.pdfSettings,
-        layouts: project.materialLayouts,
+        layouts,
         cutList,
         cuttingDiagrams,
         projectStats,

@@ -38,6 +38,7 @@ export const TextStyleSchema = z
     textColor: colorString,
     bold: z.boolean(),
     italic: z.boolean(),
+    uppercase: z.boolean().default(false),
   })
   .strict();
 

@@ -8,7 +8,7 @@ import type { LabelEntity, TextStyle } from '@/types';
 
 /**
  * Properties editor for a selected label entity. Allows editing the text,
- * font size, bold/italic, color, rotation, and anchor offset; plus a
+ * font size, bold/italic/uppercase, color, rotation, and anchor offset; plus a
  * delete action.
  */
 export const LabelProperties = () => {
@@ -76,6 +76,14 @@ export const LabelProperties = () => {
             onChange={(e) => patchStyle({ italic: e.target.checked })}
           />{' '}
           Italic
+        </label>
+        <label>
+          <input
+            type="checkbox"
+            checked={label.style.uppercase}
+            onChange={(e) => patchStyle({ uppercase: e.target.checked })}
+          />{' '}
+          Uppercase
         </label>
       </div>
       <label>

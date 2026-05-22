@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { ProjectSchema } from '../project';
 import { SurfaceSchema } from '../surface';
-import { createEmptyProject } from '../defaults';
+import { createEmptyProject, defaultTextStyle } from '../defaults';
 
 describe('ProjectSchema', () => {
   it('parses a freshly created empty project without throwing', () => {
@@ -31,6 +31,23 @@ describe('ProjectSchema', () => {
     const project = createEmptyProject('test');
     const withExtra = { ...project, extra: 'nope' };
     expect(ProjectSchema.safeParse(withExtra).success).toBe(false);
+  });
+
+  it('defaults missing label uppercase style to false', () => {
+    const project = createEmptyProject('test');
+    project.labels.push({
+      id: 'lbl_1',
+      text: 'Label',
+      anchorType: 'free',
+      position: { x: 10, y: 20 },
+      rotationDeg: 0,
+      style: defaultTextStyle(),
+    });
+
+    const parsed = JSON.parse(JSON.stringify(project)) as typeof project;
+    delete (parsed.labels[0]!.style as { uppercase?: boolean }).uppercase;
+
+    expect(ProjectSchema.parse(parsed).labels[0]?.style.uppercase).toBe(false);
   });
 });
 

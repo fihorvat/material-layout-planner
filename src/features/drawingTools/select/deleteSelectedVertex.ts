@@ -58,7 +58,8 @@ const deletePolygonVertex = (selectedVertex: SelectedVertex): boolean => {
   if (selectedVertex.kind !== 'polygonVertex') return false;
   const project = useProjectStore.getState().project;
   const entity = project.drawingEntities.find(
-    (candidate) => candidate.id === selectedVertex.entityId && candidate.type === 'polygon',
+    (candidate): candidate is PolygonEntity =>
+      candidate.id === selectedVertex.entityId && candidate.type === 'polygon',
   );
   if (!entity) return false;
   if (selectedVertex.index < 0 || selectedVertex.index >= entity.points.length) return false;
@@ -80,7 +81,8 @@ const deleteRectangleCorner = (selectedVertex: SelectedVertex): boolean => {
   if (selectedVertex.kind !== 'rectCorner') return false;
   const project = useProjectStore.getState().project;
   const entity = project.drawingEntities.find(
-    (candidate) => candidate.id === selectedVertex.entityId && candidate.type === 'rectangle',
+    (candidate): candidate is RectangleEntity =>
+      candidate.id === selectedVertex.entityId && candidate.type === 'rectangle',
   );
   if (!entity) return false;
   const corners = rectangleCorners(entity);

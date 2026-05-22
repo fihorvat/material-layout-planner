@@ -3,11 +3,19 @@ import styles from './LabelEditor.module.css';
 
 type LabelEditorProps = {
   initialText?: string;
+  title?: string;
+  submitLabel?: string;
   onSubmit: (text: string) => void;
   onCancel: () => void;
 };
 
-export const LabelEditor = ({ initialText = '', onSubmit, onCancel }: LabelEditorProps) => {
+export const LabelEditor = ({
+  initialText = '',
+  title = 'Label text',
+  submitLabel = 'Add',
+  onSubmit,
+  onCancel,
+}: LabelEditorProps) => {
   const [text, setText] = useState(initialText);
   const ref = useRef<HTMLInputElement | null>(null);
 
@@ -35,7 +43,7 @@ export const LabelEditor = ({ initialText = '', onSubmit, onCancel }: LabelEdito
       aria-label="Edit label text"
     >
       <div className={styles.header}>
-        <span className={styles.title}>Label text</span>
+        <span className={styles.title}>{title}</span>
         <button
           type="button"
           className={styles.closeBtn}
@@ -72,7 +80,7 @@ export const LabelEditor = ({ initialText = '', onSubmit, onCancel }: LabelEdito
           className={`${styles.btn} ${styles.btnPrimary}`}
           onClick={() => onSubmit(text)}
         >
-          Add
+          {submitLabel}
         </button>
       </div>
       <div className={styles.hint}>Enter to confirm · Esc to cancel</div>

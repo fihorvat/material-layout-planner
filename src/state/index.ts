@@ -61,6 +61,12 @@ export {
 } from './dimensionEditStore';
 
 export {
+  useLabelUiStore,
+  getLabelUi,
+  type LabelUiState,
+} from './labelUiStore';
+
+export {
   useOpeningToolStore,
   getOpeningTool,
   type OpeningToolState,

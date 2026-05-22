@@ -1,13 +1,15 @@
 import { useMemo } from 'react';
-import type { MaterialLayout } from '@/types';
 import { useProjectStore } from '@/state';
-import { generateLayoutsForProject } from '@/domain/materialLayout/generateLayoutsForProject';
 import { computeLayoutStats } from '@/domain/materialLayout/layoutStats';
 import { formatArea } from '@/domain/units';
 import editorStyles from '@/features/editor/editor.module.css';
 import { useGenerateLayout } from './useGenerateLayout';
+import {
+  resolveCurrentMaterialLayoutEntries,
+  type ResolvedMaterialLayoutEntry,
+} from '@/domain/materialLayout/resolveCurrentMaterialLayouts';
 
-type Row = { layout: MaterialLayout; status: 'optimized' | 'preview' };
+type Row = ResolvedMaterialLayoutEntry;
 
 /**
  * Lists every surface that has both a material and a placement pattern
@@ -25,27 +27,7 @@ export const LayoutsListPanel = () => {
   const { generateAndPersist, running } = useGenerateLayout();
 
   const rows = useMemo<Row[]>(() => {
-    const live = generateLayoutsForProject(project);
-    const persistedBySurface = new Map<string, MaterialLayout>();
-    for (const l of project.materialLayouts) persistedBySurface.set(l.surfaceId, l);
-    return live.map((l) => {
-      const persisted = persistedBySurface.get(l.surfaceId);
-      // Match `MaterialLayoutLayer`: the persisted optimizer result is only
-      // still valid when its snapshot (material / pattern / edgeRules)
-      // hasn't been edited. The store replaces those object references on
-      // every patch, so reference equality detects stale snapshots cheaply.
-      if (
-        persisted &&
-        persisted.materialId === l.materialId &&
-        persisted.placementPatternId === l.placementPatternId &&
-        persisted.settingsSnapshot.material === l.settingsSnapshot.material &&
-        persisted.settingsSnapshot.placementPattern === l.settingsSnapshot.placementPattern &&
-        persisted.settingsSnapshot.edgeRules === l.settingsSnapshot.edgeRules
-      ) {
-        return { layout: persisted, status: 'optimized' as const };
-      }
-      return { layout: l, status: 'preview' as const };
-    });
+    return resolveCurrentMaterialLayoutEntries(project);
   }, [project]);
 
   if (rows.length === 0) {

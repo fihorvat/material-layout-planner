@@ -3,6 +3,7 @@ import { Point2DSchema } from './geometry';
 import { MaterialSchema } from './material';
 import { PlacementPatternSchema } from './placementPattern';
 import { EdgeRuleSchema } from './edgeRule';
+import { SurfaceConnectionSchema } from './surfaceConnection';
 
 const idString = z.string().min(1);
 
@@ -30,6 +31,7 @@ export const MaterialPieceSchema = z
     physicalPolygon: z.array(Point2DSchema).min(3),
     visiblePolygon: z.array(Point2DSchema).min(3),
     overlapPolygons: z.array(z.array(Point2DSchema).min(3)),
+    overlapPolygonOpacities: z.array(z.number().min(0).max(1)).optional(),
 
     boundingWidthMm: z.number().finite().nonnegative(),
     boundingHeightMm: z.number().finite().nonnegative(),
@@ -74,6 +76,7 @@ export const MaterialLayoutSettingsSnapshotSchema = z
     material: MaterialSchema,
     placementPattern: PlacementPatternSchema,
     edgeRules: z.array(EdgeRuleSchema),
+    surfaceConnections: z.array(SurfaceConnectionSchema).optional(),
   })
   .strict();
 

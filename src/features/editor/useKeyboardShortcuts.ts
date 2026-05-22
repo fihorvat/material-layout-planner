@@ -4,6 +4,7 @@ import {
   useSelectionStore,
   useEditorStore,
   useDimensionEditStore,
+  useLabelUiStore,
   useSelectedVertexStore,
 } from '@/state';
 import {
@@ -84,6 +85,8 @@ export const useKeyboardShortcuts = (): void => {
       }
       if (e.key === 'Escape') {
         useDimensionEditStore.getState().cancelEdit();
+        useLabelUiStore.getState().cancelEdit();
+        useLabelUiStore.getState().clearDragPreviews();
         useSelectionStore.getState().clear();
         useSelectedVertexStore.getState().clear();
         useEditorStore.getState().clearPendingDraw();
@@ -103,6 +106,14 @@ export const useKeyboardShortcuts = (): void => {
         return;
       }
       if (!mod && !e.shiftKey && !e.altKey) {
+        if (e.key === 'F2') {
+          const selected = useSelectionStore.getState().selected;
+          if (selected.length === 1 && selected[0]?.kind === 'label') {
+            e.preventDefault();
+            useLabelUiStore.getState().startEdit(selected[0].id);
+          }
+          return;
+        }
         const t = TOOL_KEYS[key];
         if (t) {
           const hasSurfaceSelected = useSelectionStore

@@ -39,6 +39,7 @@ export const defaultTextStyle = (): TextStyle => ({
   textColor: '#111827',
   bold: false,
   italic: false,
+  uppercase: false,
 });
 
 export const defaultProjectSettings = (): ProjectSettings => ({

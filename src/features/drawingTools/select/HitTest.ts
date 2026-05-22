@@ -10,6 +10,7 @@ import {
   degToRad,
 } from '@/domain/geometry';
 import { computeAnchorPosition } from '@/features/drawingTools/label/computeAnchorPosition';
+import { getLabelDisplayText } from '@/features/drawingTools/label/labelPresentation';
 
 const APPROX_CHAR_WIDTH = 0.6;
 const LABEL_LINE_HEIGHT = 1.2;
@@ -120,7 +121,8 @@ export const hitTest = (input: HitTestInput): HitTestResult => {
       const pos = computeAnchorPosition(label, project);
       if (!pos) continue;
       const fontSize = label.style.fontSizePx;
-      const width = Math.max(label.text.length, 1) * fontSize * APPROX_CHAR_WIDTH;
+      const text = getLabelDisplayText(label.text, label.style);
+      const width = Math.max(text.length, 1) * fontSize * APPROX_CHAR_WIDTH;
       const height = fontSize * LABEL_LINE_HEIGHT;
       const rad = degToRad(label.rotationDeg);
       const cos = Math.cos(rad);

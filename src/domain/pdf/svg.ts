@@ -17,6 +17,17 @@ export type PdfDrawCmd =
   | { kind: 'text'; text: string; pos: Point2D; size: number; font: 'regular' | 'bold'; color: RGB }
   | { kind: 'rect'; pos: Point2D; w: number; h: number; fill?: RGB; stroke?: RGB; strokeWidthPt?: number };
 
+const toSvgPath = (points: Point2D[], closed: boolean): string => {
+  if (points.length === 0) return '';
+  const [first, ...rest] = points;
+  let path = `M ${first!.x} ${first!.y}`;
+  for (const point of rest) {
+    path += ` L ${point.x} ${point.y}`;
+  }
+  if (closed) path += ' Z';
+  return path;
+};
+
 export const drawWorldGeometry = (
   ctx: PageContext,
   cmds: PdfDrawCmd[],
@@ -35,6 +46,19 @@ export const drawWorldGeometry = (
       });
     } else if (cmd.kind === 'polygon') {
       const pts = cmd.points.map(worldToPagePt);
+      if (cmd.fill && cmd.closed) {
+        const path = toSvgPath(pts, true);
+        if (path) {
+          ctx.page.drawSvgPath(path, {
+            color: cmd.fill,
+            opacity: cmd.fillOpacity01 ?? 1,
+            borderColor: cmd.stroke,
+            borderWidth: cmd.stroke ? (cmd.strokeWidthPt ?? 0.5) : 0,
+            borderOpacity: cmd.stroke ? 1 : undefined,
+          });
+          continue;
+        }
+      }
       for (let i = 0; i < pts.length; i++) {
         const a = pts[i]!;
         const b = pts[(i + 1) % pts.length]!;

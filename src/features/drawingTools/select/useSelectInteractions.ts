@@ -9,6 +9,7 @@ import type {
 } from '@/types';
 import {
   useEditorStore,
+  useLabelUiStore,
   useProjectStore,
   useSelectionStore,
   useSelectedVertexStore,
@@ -165,6 +166,11 @@ export const useSelectInteractions = (stageRef: React.RefObject<Konva.Stage | nu
         layers,
       });
       if (!result.topHit) return;
+      if (result.topHit.kind === 'label') {
+        useSelectionStore.getState().select({ kind: 'label', id: result.topHit.id });
+        useLabelUiStore.getState().startEdit(result.topHit.id);
+        return;
+      }
       const minGapMm = (HIT_TOLERANCE_PX / 2) / v.scale;
 
       if (result.topHit.kind === 'line') {

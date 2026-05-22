@@ -2,6 +2,19 @@ import type { MaterialLayout, Surface, Material, OptimizationPriority } from '@/
 import { polygonArea, pointsToAabb } from '@/domain/geometry';
 import { surfaceCentroid } from '@/domain/surfaces/surfaceGeometry';
 
+const countPurchasedUnits = (layout: MaterialLayout): number => {
+  const sourceUnits = new Set<number>();
+  for (const piece of layout.pieces) {
+    if (typeof piece.sourceUnitIndex === 'number') {
+      sourceUnits.add(piece.sourceUnitIndex);
+    }
+  }
+  if (layout.pieces.length > 0 && layout.pieces.every((piece) => typeof piece.sourceUnitIndex === 'number')) {
+    return sourceUnits.size;
+  }
+  return layout.pieces.length;
+};
+
 export type LayoutScore = {
   total: number;
   parts: {
@@ -37,7 +50,7 @@ export const scoreMaterialLayout = (input: {
       smallPiece += 1;
     }
   }
-  const purchasedArea = (fullUnitCount + cutCount) * unitArea;
+  const purchasedArea = countPurchasedUnits(layout) * unitArea;
   const waste = purchasedArea > 0 ? (purchasedArea - physicalArea) / purchasedArea : 0;
 
   const centroid = surfaceCentroid(surface);

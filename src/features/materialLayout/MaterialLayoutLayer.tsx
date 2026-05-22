@@ -9,7 +9,7 @@ import {
   type Theme,
 } from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
-import { generateLayoutsForProject } from '@/domain/materialLayout/generateLayoutsForProject';
+import { resolveCurrentMaterialLayouts } from '@/domain/materialLayout/resolveCurrentMaterialLayouts';
 
 const flat = (pts: Point2D[]): number[] => {
   const out: number[] = [];
@@ -82,7 +82,7 @@ const renderPiece = (
           points={flat(poly)}
           closed
           fill={fill}
-          opacity={0.25}
+          opacity={piece.overlapPolygonOpacities?.[i] ?? 0.25}
           stroke={stroke}
           strokeWidth={1}
           strokeScaleEnabled={false}
@@ -140,29 +140,7 @@ export const MaterialLayoutLayer = () => {
   const interactive = shouldEnableMaterialPieceHitTargets(activeTool, selectionEntries);
 
   const layouts = useMemo<MaterialLayout[]>(() => {
-    const live = generateLayoutsForProject(project);
-    const persistedBySurface = new Map<string, MaterialLayout>();
-    for (const l of project.materialLayouts) persistedBySurface.set(l.surfaceId, l);
-    return live.map((l) => {
-      const persisted = persistedBySurface.get(l.surfaceId);
-      // Prefer the optimizer-produced persisted layout, but only when its
-      // snapshot still matches the live material / pattern / edge rules.
-      // Comparing snapshot references (not just ids) lets the canvas refresh
-      // immediately when the user edits pattern.type, material dimensions,
-      // edge rules, etc. — the store produces new objects on every patch,
-      // so a stale snapshot is detectable by referential inequality.
-      if (
-        persisted &&
-        persisted.materialId === l.materialId &&
-        persisted.placementPatternId === l.placementPatternId &&
-        persisted.settingsSnapshot.material === l.settingsSnapshot.material &&
-        persisted.settingsSnapshot.placementPattern === l.settingsSnapshot.placementPattern &&
-        persisted.settingsSnapshot.edgeRules === l.settingsSnapshot.edgeRules
-      ) {
-        return persisted;
-      }
-      return l;
-    });
+    return resolveCurrentMaterialLayouts(project);
   }, [project]);
 
   return (

@@ -4,6 +4,19 @@ import type { CuttingDiagram } from './cuttingDiagram';
 
 const round01 = (n: number): number => Math.round(n * 10) / 10;
 
+const countPurchasedUnits = (layout: MaterialLayout): number => {
+  const sourceUnits = new Set<number>();
+  for (const piece of layout.pieces) {
+    if (typeof piece.sourceUnitIndex === 'number') {
+      sourceUnits.add(piece.sourceUnitIndex);
+    }
+  }
+  if (layout.pieces.length > 0 && layout.pieces.every((piece) => typeof piece.sourceUnitIndex === 'number')) {
+    return sourceUnits.size;
+  }
+  return layout.pieces.length;
+};
+
 export const computeLayoutStats = (
   layout: MaterialLayout,
   material: Material,
@@ -35,7 +48,7 @@ export const computeLayoutStats = (
   const unitArea = material.unitWidthMm * material.unitHeightMm;
   const purchased = cuttingDiagram
     ? cuttingDiagram.units.length * unitArea
-    : (fullUnitCount + cutPieceCount) * unitArea;
+    : countPurchasedUnits(layout) * unitArea;
   const wasteArea = Math.max(0, purchased - physicalArea);
   const wastePercent = purchased > 0 ? (wasteArea / purchased) * 100 : 0;
   return {

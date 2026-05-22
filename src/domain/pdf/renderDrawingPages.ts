@@ -113,7 +113,7 @@ export const renderMaterialLayoutPage = (build: PdfBuildContext): void => {
   drawHeader(ctx, 'Material Layout', build.project.name);
   const toPt = makeWorldToPagePt(build, ctx);
   const cmds: PdfDrawCmd[] = [];
-  for (const layout of build.project.materialLayouts) {
+  for (const layout of build.layouts) {
     const material = build.project.materials.find((m) => m.id === layout.materialId);
     if (!material) continue;
     const fillColor = rgb(0.85, 0.78, 0.65);
@@ -127,11 +127,13 @@ export const renderMaterialLayoutPage = (build: PdfBuildContext): void => {
         fill: fillColor,
       });
       if (build.settings.includeOverlapZones) {
-        for (const overlap of piece.overlapPolygons) {
+        for (const [index, overlap] of piece.overlapPolygons.entries()) {
           cmds.push({
             kind: 'polygon',
             points: overlap,
             closed: true,
+            fill: fillColor,
+            fillOpacity01: piece.overlapPolygonOpacities?.[index] ?? 0.25,
             stroke: rgb(0.45, 0.42, 0.35),
             strokeWidthPt: 0.3,
           });
@@ -146,7 +148,7 @@ export const renderMaterialLayoutPage = (build: PdfBuildContext): void => {
   // for large projects and cause the two labels to overlap).
   const labelSize = 6;
   const labelLineHeightPt = labelSize + 2;
-  for (const layout of build.project.materialLayouts) {
+  for (const layout of build.layouts) {
     const material = build.project.materials.find((m) => m.id === layout.materialId);
     if (!material) continue;
     for (const piece of layout.pieces) {
@@ -170,7 +172,7 @@ export const renderMaterialLayoutPage = (build: PdfBuildContext): void => {
     }
   }
 
-  drawText(ctx, `${build.project.materialLayouts.length} layout(s)`, ctx.contentBox.x, ctx.marginPt + 14, { size: 8 });
+  drawText(ctx, `${build.layouts.length} layout(s)`, ctx.contentBox.x, ctx.marginPt + 14, { size: 8 });
 };
 
 export const renderFinalAppearancePage = (build: PdfBuildContext): void => {

@@ -19,7 +19,7 @@ export const generateLayoutsForProject = (
     const anchorSurfaceId = placement?.anchorSurfaceId ?? surface.id;
     const patternAnchorSurface =
       project.surfaces.find((entry) => entry.id === anchorSurfaceId) ?? surface;
-    const { visible, physical } = computeWorkingPolygon({
+    const { visible, physical, overlapZones } = computeWorkingPolygon({
       surface,
       connections: project.surfaceConnections,
     });
@@ -33,8 +33,10 @@ export const generateLayoutsForProject = (
         patternVirtualOffset: placement?.virtualOffset,
         patternOriginTranslation: placement?.originTranslation,
         edgeRules: surface.edgeRules,
+        connections: project.surfaceConnections,
         visibleSurfacePolygon: visible,
         physicalWorkingPolygon: physical,
+        overlapZones,
         generatedAt: opts?.generatedAt,
       }),
     );

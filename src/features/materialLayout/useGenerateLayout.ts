@@ -15,7 +15,7 @@ const buildOptimizeInputs = (project: Project): OptimizeInput[] => {
     const material = project.materials.find((m) => m.id === surface.materialId);
     const pattern = project.placementPatterns.find((p) => p.id === surface.placementPatternId);
     if (!material || !pattern) continue;
-    const { visible, physical } = computeWorkingPolygon({
+    const { visible, physical, overlapZones } = computeWorkingPolygon({
       surface,
       connections: project.surfaceConnections,
     });
@@ -28,6 +28,7 @@ const buildOptimizeInputs = (project: Project): OptimizeInput[] => {
       connections: project.surfaceConnections,
       visibleSurfacePolygon: visible,
       physicalWorkingPolygon: physical,
+      overlapZones,
       priority: pattern.optimizationPriority,
     });
   }

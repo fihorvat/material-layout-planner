@@ -6,7 +6,9 @@ import { useEditorStore } from '@/state';
 describe('EditorPage', () => {
   beforeEach(() => {
     useEditorStore.getState().resetForTests();
-    localStorage.clear();
+    if (typeof localStorage.clear === 'function') {
+      localStorage.clear();
+    }
   });
   afterEach(() => {
     cleanup();

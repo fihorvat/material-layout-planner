@@ -13,7 +13,9 @@ export const renderInstructionsPage = (build: PdfBuildContext): void => {
     '3. Cut pieces from the cutting diagrams; respect each piece code.',
     '4. Mind material thickness at corners and connections.',
   ];
-  const hasOverlap = build.project.materialLayouts.some((l) => l.pieces.some((p) => p.overlapPolygons.length > 0));
+  const hasOverlap = build.layouts.some((layout) =>
+    layout.pieces.some((piece) => piece.overlapPolygons.length > 0),
+  );
   if (hasOverlap) {
     lines.push(
       '5. Some pieces extend physically beyond a surface edge (overlap). The visible portion is on the target surface; the overlap portion wraps around or supports the connection.',

@@ -34,7 +34,8 @@ import { DimensionLengthPrompt } from '@/features/drawingTools/dimension/Dimensi
 import { MaterialLayoutLayer } from '@/features/materialLayout/MaterialLayoutLayer';
 import { PatternOriginLayer } from '@/features/materialLayout/PatternOriginLayer';
 import { setActiveStage } from './canvas/activeStage';
-import { useProjectStore } from '@/state';
+import { useProjectStore, useLabelUiStore } from '@/state';
+import { dispatchCommand, updateLabelCommand } from '@/domain/commands';
 import styles from './editor.module.css';
 
 export const CanvasStage = () => {
@@ -64,8 +65,19 @@ export const CanvasStage = () => {
   const splitSurface = useSplitSurfaceTool(stageRef);
   const connection = useConnectionTool(stageRef);
   const project = useProjectStore((s) => s.project);
+  const editingLabelId = useLabelUiStore((s) => s.editingLabelId);
+  const cancelLabelEdit = useLabelUiStore((s) => s.cancelEdit);
   const drawingModeActive = useDrawingModeActive();
   const [hoverWorld, setHoverWorld] = useState<Point2D | null>(null);
+  const editingLabel = editingLabelId
+    ? project.labels.find((entry) => entry.id === editingLabelId) ?? null
+    : null;
+
+  useEffect(() => {
+    if (editingLabelId && !editingLabel) {
+      cancelLabelEdit();
+    }
+  }, [cancelLabelEdit, editingLabel, editingLabelId]);
 
   const onMouseDown = (e: { evt: MouseEvent }) => {
     handlers.onMouseDown(e);
@@ -182,6 +194,22 @@ export const CanvasStage = () => {
 
   const labelEditor = label.pending ? (
     <LabelEditor onSubmit={label.commit} onCancel={label.cancel} />
+  ) : editingLabel ? (
+    <LabelEditor
+      initialText={editingLabel.text}
+      title="Edit label text"
+      submitLabel="Save"
+      onSubmit={(text) => {
+        dispatchCommand(
+          updateLabelCommand({
+            id: editingLabel.id,
+            patch: { text },
+          }),
+        );
+        cancelLabelEdit();
+      }}
+      onCancel={cancelLabelEdit}
+    />
   ) : null;
 
   // Drawing tools that benefit from the orthogonal distance-to-surface

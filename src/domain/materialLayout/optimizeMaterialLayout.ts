@@ -8,6 +8,7 @@ import type {
   OptimizationPriority,
 } from '@/types';
 import type { Polygon } from '@/domain/geometry';
+import type { OverlapZone } from './computeWorkingPolygon';
 import { generateMaterialCandidates } from './generateMaterialCandidates';
 import { buildMaterialLayout } from './buildMaterialLayout';
 import { scoreMaterialLayout, type LayoutScore } from './scoreMaterialLayout';
@@ -22,6 +23,7 @@ export type OptimizeInput = {
   connections: SurfaceConnection[];
   visibleSurfacePolygon: Polygon;
   physicalWorkingPolygon: Polygon;
+  overlapZones?: OverlapZone[];
   priority: OptimizationPriority;
   context?: { connectedLayouts?: MaterialLayout[] };
 };
@@ -42,8 +44,10 @@ const buildLayoutForCandidate = (
     material: input.material,
     pattern: candidatePattern,
     edgeRules: input.edgeRules,
+    connections: input.connections,
     visibleSurfacePolygon: input.visibleSurfacePolygon,
     physicalWorkingPolygon: input.physicalWorkingPolygon,
+    overlapZones: input.overlapZones,
   });
 
 export const optimizeMaterialLayout = (input: OptimizeInput): OptimizeResult => {
