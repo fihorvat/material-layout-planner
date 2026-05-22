@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { SurfaceConnection } from '@/types';
+import { createConnectionDefaults } from '@/features/surfaces/connectionDefaults';
 
 export type ConnectionToolPhase =
   | { kind: 'pickA' }
@@ -40,16 +41,7 @@ export type ConnectionToolState = {
   resetForTests: () => void;
 };
 
-const buildDefaults = (): ConnectionToolState['defaults'] => ({
-  connectionType: 'outsideCorner',
-  angleDeg: 90,
-  jointAtConnectionMm: 3,
-  allowPatternContinuation: false,
-  allowPhysicalOverlap: false,
-  defaultOverlapMm: 0,
-  overlapOpacity: 0.25,
-  thicknessMode: 'ignoreThickness',
-});
+const buildDefaults = (): ConnectionToolState['defaults'] => createConnectionDefaults();
 
 const buildInitial = () => ({
   phase: { kind: 'pickA' } as ConnectionToolPhase,
