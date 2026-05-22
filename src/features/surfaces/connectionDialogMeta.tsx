@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
-import type { SurfaceConnection } from '@/types';
+import type { SurfaceConnection, SurfaceConnectionOverlapSide } from '@/types';
 import { Tooltip } from '@/components';
 export {
   createConnectionDefaults,
   getConnectionTypeDefaults,
   inferConnectionMaterialThicknessMm,
+  normalizeConnectionFormValues,
 } from './connectionDefaults';
 
 type ConnectionTypeMeta = {
@@ -15,6 +16,12 @@ type ConnectionTypeMeta = {
 
 type ThicknessModeMeta = {
   id: SurfaceConnection['thicknessMode'];
+  label: string;
+  description: string;
+};
+
+type OverlapSideMeta = {
+  id: SurfaceConnectionOverlapSide;
   label: string;
   description: string;
 };
@@ -36,9 +43,16 @@ export const CONNECTION_TYPE_META: ConnectionTypeMeta[] = [
     description: 'Both faces stay in the same plane with a shared seam along the connection.',
   },
   {
+    id: 'mitreCut',
+    label: 'Mitre cut',
+    description:
+      'Both faces are cut to meet on an angled seam, typically 45° + 45° for a 90° corner.',
+  },
+  {
     id: 'buttJoint',
     label: 'Butt joint',
-    description: 'One face terminates into another face. The recommended preset turns on overlap and thickness compensation.',
+    description:
+      'One face terminates into another face. The recommended preset turns on overlap and thickness compensation.',
   },
   {
     id: 'custom',
@@ -51,22 +65,47 @@ export const THICKNESS_MODE_META: ThicknessModeMeta[] = [
   {
     id: 'ignoreThickness',
     label: 'Ignore thickness',
-    description: 'Treat the connection as a simple edge-to-edge relationship with no thickness compensation.',
+    description:
+      'Treat the connection as a simple edge-to-edge relationship with no thickness compensation.',
   },
   {
     id: 'showThicknessOnly',
     label: 'Show thickness only',
-    description: 'Display the material thickness at the connection without offsetting the covered edge.',
+    description:
+      'Display the material thickness at the connection without offsetting the covered edge.',
   },
   {
     id: 'compensateCoveredEdge',
     label: 'Compensate covered edge',
-    description: 'Shift the covered side by the material thickness so the connection matches a physical wrap or lap.',
+    description:
+      'Shift the covered side by the material thickness so the connection matches a physical wrap or lap.',
   },
   {
     id: 'customAllowance',
     label: 'Custom allowance',
-    description: 'Reserve space for a future custom offset value. The preview shows a manual allowance zone.',
+    description:
+      'Reserve space for a future custom offset value. The preview shows a manual allowance zone.',
+  },
+];
+
+export const createOverlapSideMeta = (
+  surfaceALabel: string,
+  surfaceBLabel: string,
+): OverlapSideMeta[] => [
+  {
+    id: 'surfaceA',
+    label: surfaceALabel,
+    description: `${surfaceALabel} extends past the seam while ${surfaceBLabel} stops at the connection line.`,
+  },
+  {
+    id: 'surfaceB',
+    label: surfaceBLabel,
+    description: `${surfaceBLabel} extends past the seam while ${surfaceALabel} stops at the connection line.`,
+  },
+  {
+    id: 'both',
+    label: 'Both surfaces',
+    description: 'Both surfaces are allowed to extend past the seam.',
   },
 ];
 
@@ -165,84 +204,402 @@ const Frame = ({ children }: { children: ReactNode }) => (
   </svg>
 );
 
-export const ConnectionTypePreview = ({
-  type,
-}: {
-  type: SurfaceConnection['connectionType'];
-}) => {
+export const ConnectionTypePreview = ({ type }: { type: SurfaceConnection['connectionType'] }) => {
   switch (type) {
     case 'outsideCorner':
       return (
         <Frame>
-          <path d="M 20 12 H 54 V 24 H 32 V 42 H 20 Z" fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} />
-          <path d="M 54 12 H 68 V 42 H 56 V 24 H 54 Z" fill={THICKNESS_FILL} stroke={THICKNESS_STROKE} strokeWidth={2} />
+          <path
+            d="M 20 12 H 54 V 24 H 32 V 42 H 20 Z"
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+          />
+          <path
+            d="M 54 12 H 68 V 42 H 56 V 24 H 54 Z"
+            fill={THICKNESS_FILL}
+            stroke={THICKNESS_STROKE}
+            strokeWidth={2}
+          />
           <path d="M 54 12 V 42" stroke={SEAM_STROKE} strokeWidth={2} strokeDasharray="4 3" />
         </Frame>
       );
     case 'insideCorner':
       return (
         <Frame>
-          <path d="M 20 12 H 66 V 24 H 32 V 42 H 20 Z" fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} />
-          <path d="M 32 24 H 44 V 42 H 32 Z" fill={THICKNESS_FILL} stroke={THICKNESS_STROKE} strokeWidth={2} />
-          <path d="M 32 24 H 44 V 42" stroke={SEAM_STROKE} strokeWidth={2} strokeDasharray="4 3" fill="none" />
+          <path
+            d="M 20 12 H 66 V 24 H 32 V 42 H 20 Z"
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+          />
+          <path
+            d="M 32 24 H 44 V 42 H 32 Z"
+            fill={THICKNESS_FILL}
+            stroke={THICKNESS_STROKE}
+            strokeWidth={2}
+          />
+          <path
+            d="M 32 24 H 44 V 42"
+            stroke={SEAM_STROKE}
+            strokeWidth={2}
+            strokeDasharray="4 3"
+            fill="none"
+          />
         </Frame>
       );
     case 'flatContinuation':
       return (
         <Frame>
-          <rect x={12} y={18} width={28} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={48} y={18} width={28} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <line x1={44} y1={14} x2={44} y2={40} stroke={SEAM_STROKE} strokeWidth={2} strokeDasharray="4 3" />
+          <rect
+            x={12}
+            y={18}
+            width={28}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={48}
+            y={18}
+            width={28}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <line
+            x1={44}
+            y1={14}
+            x2={44}
+            y2={40}
+            stroke={SEAM_STROKE}
+            strokeWidth={2}
+            strokeDasharray="4 3"
+          />
+        </Frame>
+      );
+    case 'mitreCut':
+      return (
+        <Frame>
+          <path
+            d="M 18 38 L 40 16 L 40 38 Z"
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+          />
+          <path
+            d="M 70 16 L 48 38 L 48 16 Z"
+            fill={THICKNESS_FILL}
+            stroke={THICKNESS_STROKE}
+            strokeWidth={2}
+          />
+          <line
+            x1={40}
+            y1={16}
+            x2={48}
+            y2={38}
+            stroke={SEAM_STROKE}
+            strokeWidth={2}
+            strokeDasharray="4 3"
+          />
         </Frame>
       );
     case 'buttJoint':
       return (
         <Frame>
-          <rect x={16} y={14} width={20} height={26} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={34} y={20} width={30} height={14} fill={THICKNESS_FILL} stroke={THICKNESS_STROKE} strokeWidth={2} rx={3} />
-          <rect x={36} y={20} width={8} height={14} fill={OVERLAP_FILL} stroke={OVERLAP_STROKE} strokeWidth={2} rx={2} />
-          <line x1={34} y1={16} x2={34} y2={38} stroke={SEAM_STROKE} strokeWidth={2} strokeDasharray="4 3" />
+          <rect
+            x={16}
+            y={14}
+            width={20}
+            height={26}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={34}
+            y={20}
+            width={30}
+            height={14}
+            fill={THICKNESS_FILL}
+            stroke={THICKNESS_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={36}
+            y={20}
+            width={8}
+            height={14}
+            fill={OVERLAP_FILL}
+            stroke={OVERLAP_STROKE}
+            strokeWidth={2}
+            rx={2}
+          />
+          <line
+            x1={34}
+            y1={16}
+            x2={34}
+            y2={38}
+            stroke={SEAM_STROKE}
+            strokeWidth={2}
+            strokeDasharray="4 3"
+          />
         </Frame>
       );
     case 'custom':
       return (
         <Frame>
-          <path d="M 16 34 L 34 18 L 54 24 L 70 14" fill="none" stroke={FACE_STROKE} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
-          <path d="M 34 18 A 18 18 0 0 1 52 26" fill="none" stroke={OVERLAP_STROKE} strokeWidth={2} />
-          <text x={58} y={39} textAnchor="middle" fontSize={14} fontWeight={700} fill={SEAM_STROKE}>?</text>
+          <path
+            d="M 16 34 L 34 18 L 54 24 L 70 14"
+            fill="none"
+            stroke={FACE_STROKE}
+            strokeWidth={4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 34 18 A 18 18 0 0 1 52 26"
+            fill="none"
+            stroke={OVERLAP_STROKE}
+            strokeWidth={2}
+          />
+          <text x={58} y={39} textAnchor="middle" fontSize={14} fontWeight={700} fill={SEAM_STROKE}>
+            ?
+          </text>
         </Frame>
       );
   }
 };
 
-export const ThicknessModePreview = ({
-  mode,
-}: {
-  mode: SurfaceConnection['thicknessMode'];
-}) => {
+export const OverlapSidePreview = ({ side }: { side: SurfaceConnectionOverlapSide }) => {
+  if (side === 'surfaceA') {
+    return (
+      <Frame>
+        <rect
+          x={12}
+          y={18}
+          width={30}
+          height={18}
+          fill={FACE_FILL}
+          stroke={FACE_STROKE}
+          strokeWidth={2}
+          rx={3}
+        />
+        <rect
+          x={42}
+          y={18}
+          width={10}
+          height={18}
+          fill={OVERLAP_FILL}
+          stroke={OVERLAP_STROKE}
+          strokeWidth={2}
+          rx={2}
+        />
+        <rect
+          x={54}
+          y={18}
+          width={22}
+          height={18}
+          fill={THICKNESS_FILL}
+          stroke={THICKNESS_STROKE}
+          strokeWidth={2}
+          rx={3}
+        />
+      </Frame>
+    );
+  }
+  if (side === 'surfaceB') {
+    return (
+      <Frame>
+        <rect
+          x={12}
+          y={18}
+          width={22}
+          height={18}
+          fill={FACE_FILL}
+          stroke={FACE_STROKE}
+          strokeWidth={2}
+          rx={3}
+        />
+        <rect
+          x={36}
+          y={18}
+          width={10}
+          height={18}
+          fill={OVERLAP_FILL}
+          stroke={OVERLAP_STROKE}
+          strokeWidth={2}
+          rx={2}
+        />
+        <rect
+          x={46}
+          y={18}
+          width={30}
+          height={18}
+          fill={THICKNESS_FILL}
+          stroke={THICKNESS_STROKE}
+          strokeWidth={2}
+          rx={3}
+        />
+      </Frame>
+    );
+  }
+  return (
+    <Frame>
+      <rect
+        x={12}
+        y={18}
+        width={24}
+        height={18}
+        fill={FACE_FILL}
+        stroke={FACE_STROKE}
+        strokeWidth={2}
+        rx={3}
+      />
+      <rect
+        x={32}
+        y={18}
+        width={8}
+        height={18}
+        fill={OVERLAP_FILL}
+        stroke={OVERLAP_STROKE}
+        strokeWidth={2}
+        rx={2}
+      />
+      <rect
+        x={48}
+        y={18}
+        width={24}
+        height={18}
+        fill={THICKNESS_FILL}
+        stroke={THICKNESS_STROKE}
+        strokeWidth={2}
+        rx={3}
+      />
+      <rect
+        x={44}
+        y={18}
+        width={8}
+        height={18}
+        fill={OVERLAP_FILL}
+        stroke={OVERLAP_STROKE}
+        strokeWidth={2}
+        rx={2}
+      />
+    </Frame>
+  );
+};
+
+export const ThicknessModePreview = ({ mode }: { mode: SurfaceConnection['thicknessMode'] }) => {
   switch (mode) {
     case 'ignoreThickness':
       return (
         <Frame>
-          <rect x={14} y={18} width={24} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={48} y={18} width={24} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <line x1={43} y1={14} x2={43} y2={40} stroke={SEAM_STROKE} strokeWidth={2} strokeDasharray="4 3" />
+          <rect
+            x={14}
+            y={18}
+            width={24}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={48}
+            y={18}
+            width={24}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <line
+            x1={43}
+            y1={14}
+            x2={43}
+            y2={40}
+            stroke={SEAM_STROKE}
+            strokeWidth={2}
+            strokeDasharray="4 3"
+          />
         </Frame>
       );
     case 'showThicknessOnly':
       return (
         <Frame>
-          <rect x={14} y={18} width={24} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={48} y={18} width={24} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={38} y={16} width={8} height={22} fill={THICKNESS_FILL} stroke={THICKNESS_STROKE} strokeWidth={2} rx={2} />
+          <rect
+            x={14}
+            y={18}
+            width={24}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={48}
+            y={18}
+            width={24}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={38}
+            y={16}
+            width={8}
+            height={22}
+            fill={THICKNESS_FILL}
+            stroke={THICKNESS_STROKE}
+            strokeWidth={2}
+            rx={2}
+          />
         </Frame>
       );
     case 'compensateCoveredEdge':
       return (
         <Frame>
-          <rect x={14} y={18} width={24} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={46} y={18} width={24} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={38} y={18} width={10} height={18} fill={OVERLAP_FILL} stroke={OVERLAP_STROKE} strokeWidth={2} rx={2} />
+          <rect
+            x={14}
+            y={18}
+            width={24}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={46}
+            y={18}
+            width={24}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={38}
+            y={18}
+            width={10}
+            height={18}
+            fill={OVERLAP_FILL}
+            stroke={OVERLAP_STROKE}
+            strokeWidth={2}
+            rx={2}
+          />
           <path d="M 32 10 H 54" stroke={SEAM_STROKE} strokeWidth={2} />
           <path d="M 32 10 L 36 7" stroke={SEAM_STROKE} strokeWidth={2} />
           <path d="M 32 10 L 36 13" stroke={SEAM_STROKE} strokeWidth={2} />
@@ -253,10 +610,40 @@ export const ThicknessModePreview = ({
     case 'customAllowance':
       return (
         <Frame>
-          <rect x={14} y={18} width={24} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={46} y={18} width={24} height={18} fill={FACE_FILL} stroke={FACE_STROKE} strokeWidth={2} rx={3} />
-          <rect x={38} y={16} width={10} height={22} fill={OVERLAP_FILL} stroke={OVERLAP_STROKE} strokeWidth={2} rx={2} opacity={0.75} />
-          <text x={43} y={14} textAnchor="middle" fontSize={10} fontWeight={700} fill={SEAM_STROKE}>x</text>
+          <rect
+            x={14}
+            y={18}
+            width={24}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={46}
+            y={18}
+            width={24}
+            height={18}
+            fill={FACE_FILL}
+            stroke={FACE_STROKE}
+            strokeWidth={2}
+            rx={3}
+          />
+          <rect
+            x={38}
+            y={16}
+            width={10}
+            height={22}
+            fill={OVERLAP_FILL}
+            stroke={OVERLAP_STROKE}
+            strokeWidth={2}
+            rx={2}
+            opacity={0.75}
+          />
+          <text x={43} y={14} textAnchor="middle" fontSize={10} fontWeight={700} fill={SEAM_STROKE}>
+            x
+          </text>
         </Frame>
       );
   }

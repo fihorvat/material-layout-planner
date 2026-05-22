@@ -1,10 +1,5 @@
 import { create } from 'zustand';
-import {
-  useEditorStore,
-  useProjectStore,
-  useSelectionStore,
-  type SelectionEntry,
-} from '@/state';
+import { useEditorStore, useProjectStore, useSelectionStore, type SelectionEntry } from '@/state';
 import type {
   DimensionEntity,
   DrawingEntity,
@@ -205,7 +200,9 @@ export const buildClipboardSnapshot = (
 
   const drawingIds = new Set(
     copiedSelection
-      .filter((entry) => entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon')
+      .filter(
+        (entry) => entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon',
+      )
       .map((entry) => entry.id),
   );
   const surfaceIds = new Set(
@@ -305,7 +302,7 @@ export const pasteClipboardIntoProject = (
         id: newEdgeRuleId(),
         surfaceId: nextSurfaceId,
         connectedSurfaceId: rule.connectedSurfaceId
-          ? surfaceIdMap.get(rule.connectedSurfaceId) ?? rule.connectedSurfaceId
+          ? (surfaceIdMap.get(rule.connectedSurfaceId) ?? rule.connectedSurfaceId)
           : undefined,
       })),
       connections: [],
@@ -448,7 +445,9 @@ export const translateSelectionInProject = (
 
   const selectedDrawingIds = new Set(
     selection
-      .filter((entry) => entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon')
+      .filter(
+        (entry) => entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon',
+      )
       .map((entry) => entry.id),
   );
   const selectedSurfaceIds = new Set(

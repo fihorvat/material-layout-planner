@@ -19,10 +19,7 @@ import { useSaveProject } from './useSaveProject';
 import { useExportPdf } from './useExportPdf';
 import { FileMenu } from './FileMenu';
 import { getActiveStage } from './canvas/activeStage';
-import {
-  computeFitViewport,
-  computeProjectContentBounds,
-} from './canvas/fitToContent';
+import { computeFitViewport, computeProjectContentBounds } from './canvas/fitToContent';
 import styles from './editor.module.css';
 
 export const EditorToolbar = () => {
@@ -75,10 +72,20 @@ export const EditorToolbar = () => {
     <div className={styles.toolbar} role="toolbar" aria-label="Editor toolbar">
       <FileMenu />
       <span className={styles.toolbarSep} aria-hidden />
-      <IconButton label="Undo" shortcut="Ctrl+Z" disabled={past.length === 0} onClick={() => undo()}>
+      <IconButton
+        label="Undo"
+        shortcut="Ctrl+Z"
+        disabled={past.length === 0}
+        onClick={() => undo()}
+      >
         <span aria-hidden>{'\u21B6'}</span>
       </IconButton>
-      <IconButton label="Redo" shortcut="Ctrl+Shift+Z" disabled={future.length === 0} onClick={() => redo()}>
+      <IconButton
+        label="Redo"
+        shortcut="Ctrl+Shift+Z"
+        disabled={future.length === 0}
+        onClick={() => redo()}
+      >
         <span aria-hidden>{'\u21B7'}</span>
       </IconButton>
       <IconButton
@@ -109,7 +116,9 @@ export const EditorToolbar = () => {
       <IconButton label="Zoom out" shortcut="-" onClick={() => zoomAt(center, 1 / 1.2)}>
         <span aria-hidden>-</span>
       </IconButton>
-      <span className={styles.zoomValue} aria-label="Zoom percent">{zoomPercent}%</span>
+      <span className={styles.zoomValue} aria-label="Zoom percent">
+        {zoomPercent}%
+      </span>
       <IconButton label="Zoom in" shortcut="+" onClick={() => zoomAt(center, 1.2)}>
         <span aria-hidden>+</span>
       </IconButton>
@@ -133,14 +142,28 @@ export const EditorToolbar = () => {
       >
         <span aria-hidden>{'\u26F6'}</span>
       </IconButton>
-      <IconButton label="Reset zoom" shortcut="0" onClick={() => setViewport({ ...viewport, scale: clampZoom(1) })}>
+      <IconButton
+        label="Reset zoom"
+        shortcut="0"
+        onClick={() => setViewport({ ...viewport, scale: clampZoom(1) })}
+      >
         <span aria-hidden>1:1</span>
       </IconButton>
       <span className={styles.toolbarSep} aria-hidden />
-      <IconButton label={gridVisible ? 'Hide grid' : 'Show grid'} shortcut="G" active={gridVisible} onClick={() => setGridVisible(!gridVisible)}>
+      <IconButton
+        label={gridVisible ? 'Hide grid' : 'Show grid'}
+        shortcut="G"
+        active={gridVisible}
+        onClick={() => setGridVisible(!gridVisible)}
+      >
         <span aria-hidden>#</span>
       </IconButton>
-      <IconButton label={snapEnabled ? 'Disable snap' : 'Enable snap'} shortcut="S" active={snapEnabled} onClick={() => setSnap(!snapEnabled)}>
+      <IconButton
+        label={snapEnabled ? 'Disable snap' : 'Enable snap'}
+        shortcut="S"
+        active={snapEnabled}
+        onClick={() => setSnap(!snapEnabled)}
+      >
         <span aria-hidden>{'\u25C7'}</span>
       </IconButton>
       <IconButton
@@ -187,7 +210,11 @@ export const EditorToolbar = () => {
             }
           }}
         />
-        {isDirty ? <span className={styles.dirty} title="Unsaved changes">{'\u2022'}</span> : null}
+        {isDirty ? (
+          <span className={styles.dirty} title="Unsaved changes">
+            {'\u2022'}
+          </span>
+        ) : null}
         <span title={lastSavedAt ?? 'never'}>
           {lastSavedAt ? `Saved ${new Date(lastSavedAt).toLocaleTimeString()}` : 'Not saved'}
         </span>

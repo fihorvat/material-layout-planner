@@ -5,6 +5,7 @@ import { createSurface } from '@/domain/surfaces/createSurface';
 import {
   createConnectionDefaults,
   getConnectionTypeDefaults,
+  normalizeConnectionFormValues,
 } from '../connectionDefaults';
 
 describe('connectionDialogMeta', () => {
@@ -14,14 +15,27 @@ describe('connectionDialogMeta', () => {
       angleDeg: 90,
       jointAtConnectionMm: 3,
       allowPhysicalOverlap: false,
+      physicalOverlapSide: 'both',
       defaultOverlapMm: 0,
       thicknessMode: 'ignoreThickness',
     });
   });
 
+  it('normalizes missing overlap side on older connections', () => {
+    expect(normalizeConnectionFormValues({ allowPhysicalOverlap: true })).toMatchObject({
+      allowPhysicalOverlap: true,
+      physicalOverlapSide: 'both',
+    });
+  });
+
   it('uses assigned material thickness for butt-joint presets', () => {
     const project = createEmptyProject('Connection defaults');
-    const material = createMaterial({ name: 'Tile', unitWidthMm: 300, unitHeightMm: 600, thicknessMm: 12 });
+    const material = createMaterial({
+      name: 'Tile',
+      unitWidthMm: 300,
+      unitHeightMm: 600,
+      thicknessMm: 12,
+    });
     const surfaceA = {
       ...createSurface({
         name: 'A',
@@ -59,6 +73,7 @@ describe('connectionDialogMeta', () => {
       angleDeg: 90,
       jointAtConnectionMm: 0,
       allowPhysicalOverlap: true,
+      physicalOverlapSide: 'surfaceA',
       defaultOverlapMm: 12,
       thicknessMode: 'compensateCoveredEdge',
     });
@@ -94,8 +109,18 @@ describe('connectionDialogMeta', () => {
       }),
     ).toMatchObject({
       allowPhysicalOverlap: true,
+      physicalOverlapSide: 'surfaceA',
       defaultOverlapMm: 10,
       thicknessMode: 'compensateCoveredEdge',
+    });
+  });
+
+  it('provides a preset for mitre cut connections', () => {
+    expect(getConnectionTypeDefaults('mitreCut')).toMatchObject({
+      angleDeg: 90,
+      jointAtConnectionMm: 0,
+      allowPhysicalOverlap: false,
+      thicknessMode: 'showThicknessOnly',
     });
   });
 });

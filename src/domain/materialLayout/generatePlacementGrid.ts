@@ -41,7 +41,10 @@ const rotatedAabb = (aabb: Aabb, origin: Point2D, angleDeg: number): Aabb => {
     { x: aabb.maxX, y: aabb.maxY },
     { x: aabb.minX, y: aabb.maxY },
   ].map((p) => rotate(p, -angleDeg, origin));
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   for (const p of corners) {
     if (p.x < minX) minX = p.x;
     if (p.y < minY) minY = p.y;
@@ -56,21 +59,29 @@ export const generatePlacementGrid = (input: {
   material: Material;
   pattern: PlacementPattern;
   workingAabb: Aabb;
+  patternAnchorSurface?: Surface;
+  patternOriginTranslation?: Point2D;
 }): UnitRectangle[] => {
-  const { surface, material, pattern, workingAabb } = input;
+  const { material, pattern, workingAabb, patternAnchorSurface, patternOriginTranslation } = input;
   const { unitW, unitH } = swapDimsIfVertical(pattern, material);
   const joint = pattern.jointMm;
   const stepX = unitW + joint;
   const stepY = unitH + joint;
   const rowOffset = effectiveRowOffsetMm(pattern, material);
 
-  const rawOrigin = computeEffectivePatternOrigin(pattern, surface);
+  const baseOrigin = computeEffectivePatternOrigin(pattern, patternAnchorSurface ?? input.surface);
+  const rawOrigin = {
+    x: baseOrigin.x + (patternOriginTranslation?.x ?? 0),
+    y: baseOrigin.y + (patternOriginTranslation?.y ?? 0),
+  };
   const cornerOffsetX =
-    pattern.originMode === 'topLeft' || pattern.originMode === 'bottomLeft'
-      ? unitW / 2
-      : 0;
+    pattern.originMode === 'topLeft' || pattern.originMode === 'bottomLeft' ? unitW / 2 : 0;
   const cornerOffsetY =
-    pattern.originMode === 'topLeft' ? unitH / 2 : pattern.originMode === 'bottomLeft' ? -unitH / 2 : 0;
+    pattern.originMode === 'topLeft'
+      ? unitH / 2
+      : pattern.originMode === 'bottomLeft'
+        ? -unitH / 2
+        : 0;
   const origin: Point2D = {
     x: rawOrigin.x + cornerOffsetX,
     y: rawOrigin.y + cornerOffsetY,

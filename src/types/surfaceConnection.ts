@@ -10,6 +10,10 @@ export const SurfaceConnectionRefSchema = z
 
 export type SurfaceConnectionRef = z.infer<typeof SurfaceConnectionRefSchema>;
 
+export const SurfaceConnectionOverlapSideSchema = z.enum(['surfaceA', 'surfaceB', 'both']);
+
+export type SurfaceConnectionOverlapSide = z.infer<typeof SurfaceConnectionOverlapSideSchema>;
+
 export const SurfaceConnectionSchema = z
   .object({
     id: idString,
@@ -21,6 +25,7 @@ export const SurfaceConnectionSchema = z
       'outsideCorner',
       'insideCorner',
       'flatContinuation',
+      'mitreCut',
       'buttJoint',
       'custom',
     ]),
@@ -28,6 +33,7 @@ export const SurfaceConnectionSchema = z
     jointAtConnectionMm: z.number().finite().nonnegative(),
     allowPatternContinuation: z.boolean(),
     allowPhysicalOverlap: z.boolean(),
+    physicalOverlapSide: SurfaceConnectionOverlapSideSchema.optional(),
     defaultOverlapMm: z.number().finite().nonnegative(),
     overlapOpacity: z.number().min(0).max(1),
     thicknessMode: z.enum([

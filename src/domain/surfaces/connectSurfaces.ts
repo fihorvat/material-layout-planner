@@ -24,6 +24,7 @@ type ConnectionInput = {
   jointAtConnectionMm?: number;
   allowPatternContinuation?: boolean;
   allowPhysicalOverlap?: boolean;
+  physicalOverlapSide?: SurfaceConnection['physicalOverlapSide'];
   defaultOverlapMm?: number;
   overlapOpacity?: number;
   thicknessMode?: SurfaceConnection['thicknessMode'];
@@ -36,12 +37,11 @@ export const makeConnection = (input: ConnectionInput): SurfaceConnection => ({
   surfaceBId: input.surfaceBId,
   edgeBId: encodeEdgeId(input.surfaceBId, input.edgeBIndex),
   connectionType: input.connectionType,
-  angleDeg:
-    input.angleDeg ??
-    (input.connectionType === 'flatContinuation' ? 180 : 90),
+  angleDeg: input.angleDeg ?? (input.connectionType === 'flatContinuation' ? 180 : 90),
   jointAtConnectionMm: input.jointAtConnectionMm ?? 3,
   allowPatternContinuation: input.allowPatternContinuation ?? false,
   allowPhysicalOverlap: input.allowPhysicalOverlap ?? false,
+  physicalOverlapSide: input.physicalOverlapSide ?? 'both',
   defaultOverlapMm: input.defaultOverlapMm ?? 0,
   overlapOpacity: input.overlapOpacity ?? 0.25,
   thicknessMode: input.thicknessMode ?? 'ignoreThickness',
@@ -80,7 +80,10 @@ export const validateConnection = (
       (c.edgeAId === aEdgeId && c.edgeBId === bEdgeId) ||
       (c.edgeAId === bEdgeId && c.edgeBId === aEdgeId)
     ) {
-      issues.push({ code: 'duplicateConnection', message: 'Connection already exists between these edges' });
+      issues.push({
+        code: 'duplicateConnection',
+        message: 'Connection already exists between these edges',
+      });
       break;
     }
   }
@@ -92,7 +95,10 @@ export const validateConnection = (
     const lenA = distance(aA, aB);
     const lenB = distance(bA, bB);
     if (Math.abs(lenA - lenB) > 1) {
-      warnings.push({ code: 'edgeLengthMismatch', message: `Edge lengths differ (${lenA.toFixed(1)} vs ${lenB.toFixed(1)} mm)` });
+      warnings.push({
+        code: 'edgeLengthMismatch',
+        message: `Edge lengths differ (${lenA.toFixed(1)} vs ${lenB.toFixed(1)} mm)`,
+      });
     }
   }
   return { valid: issues.length === 0, issues, warnings };

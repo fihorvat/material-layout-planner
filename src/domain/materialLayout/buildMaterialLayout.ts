@@ -5,6 +5,7 @@ import type {
   EdgeRule,
   MaterialPiece,
   MaterialLayout,
+  Point2D,
 } from '@/types';
 import type { Polygon } from '@/domain/geometry';
 import { pointsToAabb, polygonCentroid, polygonArea } from '@/domain/geometry';
@@ -34,11 +35,24 @@ const isAxisAlignedRectangle = (
   return Math.abs(w - unitW) < 1 && Math.abs(h - unitH) < 1;
 };
 
+const translatePoints = (points: Point2D[], delta: Point2D): Point2D[] =>
+  delta.x === 0 && delta.y === 0
+    ? points
+    : points.map((point) => ({ x: point.x + delta.x, y: point.y + delta.y }));
+
+const translatePolygon = (polygon: Polygon, delta: Point2D): Polygon => ({
+  outer: translatePoints(polygon.outer, delta),
+  holes: polygon.holes?.map((hole) => translatePoints(hole, delta)),
+});
+
 type BuildMaterialLayoutInput = {
   surface: Surface;
   surfaceIndex: number;
   material: Material;
   pattern: PlacementPattern;
+  patternAnchorSurface?: Surface;
+  patternVirtualOffset?: Point2D;
+  patternOriginTranslation?: Point2D;
   edgeRules: EdgeRule[];
   visibleSurfacePolygon: Polygon;
   physicalWorkingPolygon: Polygon;
@@ -46,12 +60,25 @@ type BuildMaterialLayoutInput = {
 };
 
 export const buildMaterialLayout = (input: BuildMaterialLayoutInput): MaterialLayout => {
-  const workingAabb = pointsToAabb(input.physicalWorkingPolygon.outer);
+  const patternVirtualOffset = input.patternVirtualOffset ?? { x: 0, y: 0 };
+  const renderOffset =
+    patternVirtualOffset.x === 0 && patternVirtualOffset.y === 0
+      ? null
+      : { x: -patternVirtualOffset.x, y: -patternVirtualOffset.y };
+  const visibleSurfacePolygon = renderOffset
+    ? translatePolygon(input.visibleSurfacePolygon, patternVirtualOffset)
+    : input.visibleSurfacePolygon;
+  const physicalWorkingPolygon = renderOffset
+    ? translatePolygon(input.physicalWorkingPolygon, patternVirtualOffset)
+    : input.physicalWorkingPolygon;
+  const workingAabb = pointsToAabb(physicalWorkingPolygon.outer);
   const grid = generatePlacementGrid({
     surface: input.surface,
     material: input.material,
     pattern: input.pattern,
     workingAabb,
+    patternAnchorSurface: input.patternAnchorSurface,
+    patternOriginTranslation: input.patternOriginTranslation,
   });
   const surfaceLetter = buildSurfaceLetter(input.surfaceIndex);
   const pieces: MaterialPiece[] = [];
@@ -59,11 +86,20 @@ export const buildMaterialLayout = (input: BuildMaterialLayoutInput): MaterialLa
   for (const unit of grid) {
     const result = clipMaterialPieceToSurface({
       unit,
-      visibleSurfacePolygon: input.visibleSurfacePolygon,
-      physicalWorkingPolygon: input.physicalWorkingPolygon,
+      visibleSurfacePolygon,
+      physicalWorkingPolygon,
     });
     if (!result) continue;
-    const labelPos = polygonCentroid(result.visiblePolygon);
+    const visiblePolygon = renderOffset
+      ? translatePoints(result.visiblePolygon, renderOffset)
+      : result.visiblePolygon;
+    const physicalPolygon = renderOffset
+      ? translatePoints(result.physicalPolygon, renderOffset)
+      : result.physicalPolygon;
+    const overlapPolygons = renderOffset
+      ? result.overlapPolygons.map((polygon) => translatePoints(polygon, renderOffset))
+      : result.overlapPolygons;
+    const labelPos = polygonCentroid(visiblePolygon);
     const fullUnit = isFullUnitPolygon(unit, result.physicalPolygon);
     const irregular = !isAxisAlignedRectangle(result.physicalPolygon, unit.widthMm, unit.heightMm);
     pieces.push({
@@ -71,9 +107,9 @@ export const buildMaterialLayout = (input: BuildMaterialLayoutInput): MaterialLa
       surfaceId: input.surface.id,
       materialId: input.material.id,
       pieceCode: buildPieceCode({ surfaceLetter, index }),
-      physicalPolygon: result.physicalPolygon,
-      visiblePolygon: result.visiblePolygon,
-      overlapPolygons: result.overlapPolygons,
+      physicalPolygon,
+      visiblePolygon,
+      overlapPolygons,
       boundingWidthMm: result.boundingWidthMm,
       boundingHeightMm: result.boundingHeightMm,
       thicknessMm: input.material.thicknessMm,

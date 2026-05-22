@@ -12,6 +12,7 @@ const COLORS: Record<SurfaceConnection['connectionType'], string> = {
   outsideCorner: '#2563eb',
   insideCorner: '#16a34a',
   flatContinuation: '#a855f7',
+  mitreCut: '#dc2626',
   buttJoint: '#f97316',
   custom: '#64748b',
 };
@@ -95,7 +96,7 @@ export const ConnectionVisualizer = () => {
           selectConnection(c.id);
         };
         const elements: React.ReactNode[] = [];
-        if (ea && eb && selected) {
+        if (ea && eb) {
           elements.push(
             <KLine
               key={`link:${c.id}`}
@@ -105,12 +106,17 @@ export const ConnectionVisualizer = () => {
                 (eb.ax + eb.bx) / 2,
                 (eb.ay + eb.by) / 2,
               ]}
-              stroke={color}
-              strokeWidth={1}
+              stroke="#dc2626"
+              strokeWidth={selected ? 2.5 : 1.75}
               strokeScaleEnabled={false}
-              dash={[3, 4]}
+              dash={[7, 5]}
               dashEnabled
-              listening={false}
+              lineCap="round"
+              lineJoin="round"
+              listening
+              hitStrokeWidth={16}
+              onClick={onSelect}
+              onTap={onSelect}
             />,
           );
         }

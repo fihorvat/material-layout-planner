@@ -1,7 +1,13 @@
 import { Group, Line as KLine, Text } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { SceneContext } from 'konva/lib/Context';
-import { useEditorStore, useProjectStore, useSelectionStore, useThemeStore, type Theme } from '@/state';
+import {
+  useEditorStore,
+  useProjectStore,
+  useSelectionStore,
+  useThemeStore,
+  type Theme,
+} from '@/state';
 import { surfaceCentroid, surfaceArea, surfaceEdges } from '@/domain/surfaces/surfaceGeometry';
 import type { Surface, Point2D } from '@/types';
 import { EditableEdgeLabel } from '@/features/drawingTools/dimension/EditableEdgeLabel';
@@ -158,5 +164,9 @@ export const SurfaceLayer = () => {
   const selectedIds = new Set(
     selected.filter((entry) => entry.kind === 'surface').map((entry) => entry.id),
   );
-  return <Group>{surfaces.map((surface) => renderSurface(surface, theme, selectedIds, activeTool))}</Group>;
+  return (
+    <Group>
+      {surfaces.map((surface) => renderSurface(surface, theme, selectedIds, activeTool))}
+    </Group>
+  );
 };

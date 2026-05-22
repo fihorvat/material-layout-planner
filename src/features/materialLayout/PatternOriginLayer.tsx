@@ -5,6 +5,7 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import { useProjectStore, useEditorStore } from '@/state';
 import { dispatchCommand, updatePlacementPatternCommand } from '@/domain/commands';
 import { computeEffectivePatternOrigin, snapOffset } from '@/domain/placementPatterns/manualOffset';
+import { buildPatternContinuationPlacementMap } from '@/domain/materialLayout/patternContinuation';
 import type { PlacementPattern, Surface, Point2D } from '@/types';
 
 type Handle = {
@@ -31,12 +32,7 @@ const PatternOriginHandle = ({ handle, scale }: { handle: Handle; scale: number 
 
   const commit = (rawDelta: Point2D, persist: boolean) => {
     const material = project.project.materials.find((m) => m.id === handle.materialId) ?? null;
-    const snapped = snapOffset(
-      rawDelta,
-      snapEnabled ? '5mm' : 'none',
-      handle.pattern,
-      material,
-    );
+    const snapped = snapOffset(rawDelta, snapEnabled ? '5mm' : 'none', handle.pattern, material);
     const nextOffsetX = handle.pattern.offsetXmm + snapped.x;
     const nextOffsetY = handle.pattern.offsetYmm + snapped.y;
     if (persist) {
@@ -72,7 +68,10 @@ const PatternOriginHandle = ({ handle, scale }: { handle: Handle; scale: number 
       }}
       onDragMove={(e: KonvaEventObject<DragEvent>) => {
         if (!startRef.current) return;
-        commit({ x: e.target.x() - startRef.current.x, y: e.target.y() - startRef.current.y }, false);
+        commit(
+          { x: e.target.x() - startRef.current.x, y: e.target.y() - startRef.current.y },
+          false,
+        );
       }}
       onDragEnd={(e: KonvaEventObject<DragEvent>) => {
         if (!startRef.current) return;
@@ -110,24 +109,38 @@ const PatternOriginHandle = ({ handle, scale }: { handle: Handle; scale: number 
 export const PatternOriginLayer = () => {
   const surfaces = useProjectStore((s) => s.project.surfaces);
   const patterns = useProjectStore((s) => s.project.placementPatterns);
+  const connections = useProjectStore((s) => s.project.surfaceConnections);
   const activeTool = useEditorStore((s) => s.activeTool);
   const scale = useEditorStore((s) => s.viewport.scale);
 
   const handles = useMemo<Handle[]>(() => {
+    const placements = buildPatternContinuationPlacementMap({
+      surfaces,
+      surfaceConnections: connections,
+    });
     const out: Handle[] = [];
     for (const surface of surfaces) {
       if (!surface.placementPatternId) continue;
       const pattern = patterns.find((p) => p.id === surface.placementPatternId);
       if (!pattern) continue;
+      const placement = placements.get(surface.id);
+      const anchorSurfaceId = placement?.anchorSurfaceId ?? surface.id;
+      const anchorSurface = surfaces.find((entry) => entry.id === anchorSurfaceId) ?? surface;
+      const virtualOrigin = computeEffectivePatternOrigin(pattern, anchorSurface);
+      const originTranslation = placement?.originTranslation ?? { x: 0, y: 0 };
+      const virtualOffset = placement?.virtualOffset ?? { x: 0, y: 0 };
       out.push({
         surface,
         pattern,
-        origin: computeEffectivePatternOrigin(pattern, surface),
+        origin: {
+          x: virtualOrigin.x + originTranslation.x - virtualOffset.x,
+          y: virtualOrigin.y + originTranslation.y - virtualOffset.y,
+        },
         materialId: surface.materialId,
       });
     }
     return out;
-  }, [surfaces, patterns]);
+  }, [surfaces, patterns, connections]);
 
   if (activeTool !== 'patternOrigin' || handles.length === 0) return null;
 

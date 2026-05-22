@@ -7,6 +7,7 @@ const TYPE_LABEL = {
   outsideCorner: 'Outside corner',
   insideCorner: 'Inside corner',
   flatContinuation: 'Flat continuation',
+  mitreCut: 'Mitre cut',
   buttJoint: 'Butt joint',
   custom: 'Custom',
 } as const;
@@ -47,9 +48,16 @@ export const ConnectionList = () => {
             onClick={() => select({ kind: 'connection', id: c.id })}
           >
             <td>{TYPE_LABEL[c.connectionType]}</td>
-            <td>{surfaceName(c.surfaceAId)} ({edgeLabel(c.edgeAId)})</td>
-            <td>{surfaceName(c.surfaceBId)} ({edgeLabel(c.edgeBId)})</td>
-            <td>{c.angleDeg}{'°'}</td>
+            <td>
+              {surfaceName(c.surfaceAId)} ({edgeLabel(c.edgeAId)})
+            </td>
+            <td>
+              {surfaceName(c.surfaceBId)} ({edgeLabel(c.edgeBId)})
+            </td>
+            <td>
+              {c.angleDeg}
+              {'°'}
+            </td>
             <td>{c.jointAtConnectionMm}</td>
             <td>{c.allowPhysicalOverlap ? `${c.defaultOverlapMm} mm` : '\u2014'}</td>
             <td>

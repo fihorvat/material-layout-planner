@@ -29,7 +29,12 @@ export const getEffectiveEdgeRule = (
   connections: SurfaceConnection[],
 ): ResolvedEdgeRule => {
   const conn = findEdgeConnection(surface.id, edgeIndex, connections);
-  if (conn && conn.allowPhysicalOverlap) {
+  const overlapAppliesToSurface =
+    conn?.physicalOverlapSide == null ||
+    conn.physicalOverlapSide === 'both' ||
+    (conn.physicalOverlapSide === 'surfaceA' && conn.surfaceAId === surface.id) ||
+    (conn.physicalOverlapSide === 'surfaceB' && conn.surfaceBId === surface.id);
+  if (conn && conn.allowPhysicalOverlap && overlapAppliesToSurface) {
     const otherEdge = conn.edgeAId.startsWith(surface.id) ? conn.edgeBId : conn.edgeAId;
     const other = decodeEdgeId(otherEdge);
     return {
@@ -39,8 +44,7 @@ export const getEffectiveEdgeRule = (
       overlapOpacity: conn.overlapOpacity,
       applyThicknessCompensation: conn.thicknessMode !== 'ignoreThickness',
       source: 'connection',
-      customThicknessAllowanceMm:
-        conn.thicknessMode === 'customAllowance' ? undefined : undefined,
+      customThicknessAllowanceMm: conn.thicknessMode === 'customAllowance' ? undefined : undefined,
       ...(other ? {} : {}),
     };
   }

@@ -1,19 +1,14 @@
 import { Group, Line as KLine, Rect } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import { useEditorStore, useProjectStore, useSelectionStore, useThemeStore, type Theme } from '@/state';
-import type {
-  Point2D,
-  DrawingEntity,
-  LineEntity,
-  RectangleEntity,
-  PolygonEntity,
-} from '@/types';
 import {
-  lineLength,
-  lineAngleDeg,
-  distance,
-  radToDeg,
-} from '@/domain/geometry';
+  useEditorStore,
+  useProjectStore,
+  useSelectionStore,
+  useThemeStore,
+  type Theme,
+} from '@/state';
+import type { Point2D, DrawingEntity, LineEntity, RectangleEntity, PolygonEntity } from '@/types';
+import { lineLength, lineAngleDeg, distance, radToDeg } from '@/domain/geometry';
 import { EditableEdgeLabel } from './dimension/EditableEdgeLabel';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { translateCurrentSelection } from '@/features/editor/selectionClipboard';
@@ -226,8 +221,12 @@ export const ConstructionEntities = () => {
   const theme = useThemeStore((s) => s.theme);
   const selectedIds = new Set(
     selected
-      .filter((entry) => entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon')
+      .filter(
+        (entry) => entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon',
+      )
       .map((entry) => entry.id),
   );
-  return <Group>{entities.map((entity) => renderEntity(entity, theme, selectedIds, activeTool))}</Group>;
+  return (
+    <Group>{entities.map((entity) => renderEntity(entity, theme, selectedIds, activeTool))}</Group>
+  );
 };

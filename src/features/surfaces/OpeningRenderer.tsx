@@ -165,4 +165,3 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
   }
   return <Group>{items}</Group>;
 };
-

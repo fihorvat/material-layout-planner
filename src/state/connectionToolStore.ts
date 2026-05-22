@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
-import type { SurfaceConnection } from '@/types';
+import type { ConnectionFormValues } from '@/features/surfaces/connectionDefaults';
 import { createConnectionDefaults } from '@/features/surfaces/connectionDefaults';
 
 export type ConnectionToolPhase =
@@ -19,17 +19,7 @@ export type ConnectionToolState = {
   /** Selected connection id, used by the properties panel. */
   selectedId: string | null;
   /** Defaults used to pre-populate the dialog. */
-  defaults: Pick<
-    SurfaceConnection,
-    | 'connectionType'
-    | 'angleDeg'
-    | 'jointAtConnectionMm'
-    | 'allowPatternContinuation'
-    | 'allowPhysicalOverlap'
-    | 'defaultOverlapMm'
-    | 'overlapOpacity'
-    | 'thicknessMode'
-  >;
+  defaults: ConnectionFormValues;
 
   reset: () => void;
   pickFirst: (surfaceAId: string, edgeAIndex: number) => void;
@@ -70,11 +60,9 @@ export const useConnectionToolStore = create<ConnectionToolState>()(
       }),
     closeDialog: () => set({ phase: { kind: 'pickA' } }),
     selectConnection: (selectedId) => set({ selectedId }),
-    updateDefaults: (patch) =>
-      set((s) => ({ defaults: { ...s.defaults, ...patch } })),
+    updateDefaults: (patch) => set((s) => ({ defaults: { ...s.defaults, ...patch } })),
     resetForTests: () => set(buildInitial()),
   })),
 );
 
-export const getConnectionTool = (): ConnectionToolState =>
-  useConnectionToolStore.getState();
+export const getConnectionTool = (): ConnectionToolState => useConnectionToolStore.getState();

@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createEmptyProject, defaultDimensionStyle, defaultDrawingStyle, defaultSurfaceStyle, defaultTextStyle, type LabelEntity, type Project, type Surface } from '@/types';
+import {
+  createEmptyProject,
+  defaultDimensionStyle,
+  defaultDrawingStyle,
+  defaultSurfaceStyle,
+  defaultTextStyle,
+  type LabelEntity,
+  type Project,
+  type Surface,
+} from '@/types';
 import { encodeEdgeId } from '@/domain/surfaces/connectSurfaces';
 import { useHistoryStore, useProjectStore, useSelectionStore } from '@/state';
 import {
