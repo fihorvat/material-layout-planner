@@ -7,7 +7,12 @@ import type {
   PolygonEntity,
   RectangleEntity,
 } from '@/types';
-import { useEditorStore, useProjectStore, useSelectionStore } from '@/state';
+import {
+  useEditorStore,
+  useProjectStore,
+  useSelectionStore,
+  useSelectedVertexStore,
+} from '@/state';
 import { screenToWorld } from '@/features/editor/canvas/coords';
 import { hitTest, entitiesIntersectingAabb } from './HitTest';
 import {
@@ -66,6 +71,7 @@ export const useSelectInteractions = (stageRef: React.RefObject<Konva.Stage | nu
         layers,
       });
       const sel = useSelectionStore.getState();
+      useSelectedVertexStore.getState().clear();
       const shift = e.evt.shiftKey;
       if (result.topHit) {
         if (shift) {
@@ -295,6 +301,7 @@ export const useSelectInteractions = (stageRef: React.RefObject<Konva.Stage | nu
 export const deleteSelected = (): void => {
   const sel = useSelectionStore.getState().selected;
   const project = useProjectStore.getState().project;
+  useSelectedVertexStore.getState().clear();
   for (const entry of sel) {
     if (entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon') {
       const exists = project.drawingEntities.some((e) => e.id === entry.id);

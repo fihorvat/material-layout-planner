@@ -1,7 +1,17 @@
 import { useEffect } from 'react';
 import { undo, redo } from '@/domain/commands';
-import { useSelectionStore, useEditorStore, useDimensionEditStore } from '@/state';
-import { deleteSelected, duplicateSelected, selectAll } from '@/features/drawingTools/select/useSelectInteractions';
+import {
+  useSelectionStore,
+  useEditorStore,
+  useDimensionEditStore,
+  useSelectedVertexStore,
+} from '@/state';
+import {
+  deleteSelected,
+  duplicateSelected,
+  selectAll,
+} from '@/features/drawingTools/select/useSelectInteractions';
+import { deleteSelectedVertex } from '@/features/drawingTools/select/deleteSelectedVertex';
 import { cancelAllDrawings } from '@/features/drawingTools/drawingCancelRegistry';
 import { copySelection, pasteSelection } from './selectionClipboard';
 import { isToolEnabled } from './toolAvailability';
@@ -75,11 +85,17 @@ export const useKeyboardShortcuts = (): void => {
       if (e.key === 'Escape') {
         useDimensionEditStore.getState().cancelEdit();
         useSelectionStore.getState().clear();
+        useSelectedVertexStore.getState().clear();
         useEditorStore.getState().clearPendingDraw();
         cancelAllDrawings();
         return;
       }
       if (!mod && (e.key === 'Delete' || e.key === 'Backspace')) {
+        if (useSelectedVertexStore.getState().selectedVertex) {
+          e.preventDefault();
+          deleteSelectedVertex();
+          return;
+        }
         if (useSelectionStore.getState().selected.length > 0) {
           e.preventDefault();
           deleteSelected();

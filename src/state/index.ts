@@ -30,6 +30,14 @@ export {
 } from './selectionStore';
 
 export {
+  useSelectedVertexStore,
+  getSelectedVertex,
+  sameSelectedVertex,
+  type SelectedVertex,
+  type SelectedVertexState,
+} from './selectedVertexStore';
+
+export {
   useHistoryStore,
   getHistory,
   DEFAULT_HISTORY_DEPTH,

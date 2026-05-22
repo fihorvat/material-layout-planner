@@ -5,6 +5,9 @@ import {
   useProjectStore,
   useSelectionStore,
   useEditorStore,
+  useSelectedVertexStore,
+  sameSelectedVertex,
+  type SelectedVertex,
 } from '@/state';
 import type {
   Point2D,
@@ -53,6 +56,27 @@ type HandleSpec = {
   key: string;
   position: Point2D;
   drag: DragKey;
+};
+
+const toSelectedVertex = (drag: DragKey): SelectedVertex | null => {
+  if (drag.kind === 'rectCorner') {
+    return { kind: 'rectCorner', entityId: drag.entityId, corner: drag.corner };
+  }
+  if (drag.kind === 'polygonVertex') {
+    return { kind: 'polygonVertex', entityId: drag.entityId, index: drag.index };
+  }
+  if (drag.kind === 'surfaceVertex') {
+    return { kind: 'surfaceVertex', surfaceId: drag.surfaceId, index: drag.index };
+  }
+  if (drag.kind === 'openingVertex') {
+    return {
+      kind: 'openingVertex',
+      surfaceId: drag.surfaceId,
+      openingId: drag.openingId,
+      index: drag.index,
+    };
+  }
+  return null;
 };
 
 // Collect every vertex point in the project that the user might want to
@@ -167,12 +191,16 @@ const computeRectAfterCornerMove = (
 const DraggableHandle = ({
   spec,
   scale,
+  isActive,
+  onActivate,
   onPreview,
   onCommit,
   onDragVisualChange,
 }: {
   spec: HandleSpec;
   scale: number;
+  isActive: boolean;
+  onActivate: (vertex: SelectedVertex) => void;
   onPreview: (drag: DragKey, world: Point2D, mods: DragMods) => Point2D | null;
   onCommit: (
     drag: DragKey,
@@ -187,21 +215,26 @@ const DraggableHandle = ({
   const startProjectRef = useRef<Project | null>(null);
   const isJoint = spec.drag.kind === 'lineJoint';
   const r = (isJoint ? HANDLE_RADIUS_PX + 1 : HANDLE_RADIUS_PX) / scale;
+  const vertexSelection = toSelectedVertex(spec.drag);
+  const fill = isActive ? '#fef3c7' : isJoint ? '#fef3c7' : '#ffffff';
+  const stroke = isActive ? '#d97706' : isJoint ? '#d97706' : '#2563eb';
   return (
     <Circle
       x={spec.position.x}
       y={spec.position.y}
       radius={r}
-      fill={isJoint ? '#fef3c7' : '#ffffff'}
-      stroke={isJoint ? '#d97706' : '#2563eb'}
+      fill={fill}
+      stroke={stroke}
       strokeWidth={1.5}
       strokeScaleEnabled={false}
       draggable
       onMouseDown={(e: KonvaEventObject<MouseEvent>) => {
         e.cancelBubble = true;
+        if (vertexSelection) onActivate(vertexSelection);
       }}
       onDragStart={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
+        if (vertexSelection) onActivate(vertexSelection);
         startProjectRef.current = useProjectStore.getState().project;
         onDragVisualChange({ x: e.target.x(), y: e.target.y() });
       }}
@@ -251,6 +284,8 @@ export const SelectionEditHandles = () => {
   const project = useProjectStore((s) => s.project);
   const activeTool = useEditorStore((s) => s.activeTool);
   const scale = useEditorStore((s) => s.viewport.scale);
+  const selectedVertex = useSelectedVertexStore((s) => s.selectedVertex);
+  const selectVertex = useSelectedVertexStore((s) => s.selectVertex);
   // Position of the currently-dragging handle, used to render live
   // distance guides (OrthoMeasureGuides) while the user resizes a shape.
   // `null` when no handle is being dragged.
@@ -610,14 +645,22 @@ export const SelectionEditHandles = () => {
           static selection state stays uncluttered. */}
       {dragPos ? <OrthoMeasureGuides cursor={dragPos} /> : null}
       {allSpecs.map((spec) => (
+        (() => {
+          const vertex = toSelectedVertex(spec.drag);
+          const isActive = !!(vertex && selectedVertex && sameSelectedVertex(vertex, selectedVertex));
+          return (
         <DraggableHandle
           key={spec.key}
           spec={spec}
           scale={scale}
+          isActive={isActive}
+          onActivate={selectVertex}
           onPreview={onPreview}
           onCommit={onCommit}
           onDragVisualChange={setDragPos}
         />
+          );
+        })()
       ))}
     </Group>
   );
