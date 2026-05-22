@@ -2,12 +2,19 @@ import { useEffect, useState } from 'react';
 import { IconButton, ThemeToggle } from '@/components';
 import {
   useEditorStore,
+  useSelectionStore,
   useProjectStore,
   useHistoryStore,
   clampZoom,
 } from '@/state';
 import { undo, redo } from '@/domain/commands';
 import { useGenerateLayout } from '@/features/materialLayout/useGenerateLayout';
+import {
+  copySelection,
+  hasCopyableSelection,
+  pasteSelection,
+  useSelectionClipboardStore,
+} from './selectionClipboard';
 import { useSaveProject } from './useSaveProject';
 import { useExportPdf } from './useExportPdf';
 import { FileMenu } from './FileMenu';
@@ -31,9 +38,11 @@ export const EditorToolbar = () => {
   const toggleDrawingMode = useEditorStore((s) => s.toggleDrawingMode);
 
   const project = useProjectStore((s) => s.project);
+  const selection = useSelectionStore((s) => s.selected);
   const isDirty = useProjectStore((s) => s.isDirty);
   const lastSavedAt = useProjectStore((s) => s.lastSavedAt);
   const patchProject = useProjectStore((s) => s.patchProject);
+  const hasClipboard = useSelectionClipboardStore((s) => s.snapshot !== null);
 
   const past = useHistoryStore((s) => s.past);
   const future = useHistoryStore((s) => s.future);
@@ -41,6 +50,7 @@ export const EditorToolbar = () => {
   const { generateAndPersist, running: generating } = useGenerateLayout();
   const { saveProject, saving } = useSaveProject();
   const { exportPdf, exporting } = useExportPdf();
+  const canCopy = hasCopyableSelection(selection);
 
   const [name, setName] = useState(project.name);
   useEffect(() => {
@@ -70,6 +80,22 @@ export const EditorToolbar = () => {
       </IconButton>
       <IconButton label="Redo" shortcut="Ctrl+Shift+Z" disabled={future.length === 0} onClick={() => redo()}>
         <span aria-hidden>{'\u21B7'}</span>
+      </IconButton>
+      <IconButton
+        label="Copy selection"
+        shortcut="Ctrl+C"
+        disabled={!canCopy}
+        onClick={() => void copySelection()}
+      >
+        <span aria-hidden>{'\u29c9'}</span>
+      </IconButton>
+      <IconButton
+        label="Paste selection"
+        shortcut="Ctrl+V"
+        disabled={!hasClipboard}
+        onClick={() => void pasteSelection(10)}
+      >
+        <span aria-hidden>{'\u2398'}</span>
       </IconButton>
       <IconButton
         label={saving ? 'Saving\u2026' : 'Save project'}

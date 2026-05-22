@@ -17,6 +17,8 @@ const ROWS: Row[] = [
   { group: 'Editing', keys: 'Ctrl/Cmd + Z', action: 'Undo' },
   { group: 'Editing', keys: 'Ctrl/Cmd + Shift + Z / Ctrl + Y', action: 'Redo' },
   { group: 'Editing', keys: 'Ctrl/Cmd + D', action: 'Duplicate selection' },
+  { group: 'Editing', keys: 'Ctrl/Cmd + C', action: 'Copy selection' },
+  { group: 'Editing', keys: 'Ctrl/Cmd + V', action: 'Paste selection' },
   { group: 'Editing', keys: 'Ctrl/Cmd + A', action: 'Select all' },
   { group: 'Editing', keys: 'Esc', action: 'Cancel / clear selection' },
   { group: 'Editing', keys: 'Enter', action: 'Confirm numeric / close polygon' },

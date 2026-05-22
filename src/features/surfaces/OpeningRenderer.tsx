@@ -6,6 +6,7 @@ import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { polygonCentroid, radToDeg, distance } from '@/domain/geometry';
 import { EditableEdgeLabel } from '@/features/drawingTools/dimension/EditableEdgeLabel';
 import { dispatchCommand, updateOpeningCommand } from '@/domain/commands';
+import { translateCurrentSelection } from '@/features/editor/selectionClipboard';
 
 const flat = (pts: Point2D[]): number[] => {
   const out: number[] = [];
@@ -58,7 +59,8 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
       ? themedShapeColor(meta.style.fillColor, theme)
       : undefined;
     const fillOpacity = meta?.style.fillOpacity ?? 1;
-    items.push(
+    const isDraggable = activeTool === 'select' && isSelected;
+    const openingNodes: React.ReactNode[] = [
       <KLine
         key={`opn-outline:${surface.id}:${i}`}
         points={flat(hole)}
@@ -70,18 +72,17 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
         dashEnabled={isSelected}
         fill={fillColor}
         opacity={fillColor ? fillOpacity : 1}
-        listening={false}
+        listening={!meta?.name || !isDraggable}
       />,
-    );
+    ];
     if (meta?.name) {
       const c = polygonCentroid(hole);
       const offset = meta.labelOffset ?? { x: 0, y: 0 };
       const labelX = c.x + offset.x;
       const labelY = c.y + offset.y;
-      const isDraggable = activeTool === 'select' && isSelected;
       const surfaceId = surface.id;
       const openingId = meta.id;
-      items.push(
+      openingNodes.push(
         <Text
           key={`opn-name:${surface.id}:${i}`}
           x={labelX}
@@ -124,7 +125,7 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
     if (meta?.showDimensions) {
       for (const e of holeEdges(hole)) {
         const angle = radToDeg(Math.atan2(e.b.y - e.a.y, e.b.x - e.a.x));
-        items.push(
+        openingNodes.push(
           <EditableEdgeLabel
             key={`opn-dim:${surface.id}:${i}:${e.index}`}
             midpoint={e.midpoint}
@@ -137,6 +138,30 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
         );
       }
     }
+    items.push(
+      <Group
+        key={`opn:${surface.id}:${i}`}
+        draggable={isDraggable}
+        onMouseDown={(e: KonvaEventObject<MouseEvent>) => {
+          if (isDraggable) e.cancelBubble = true;
+        }}
+        onDragStart={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+        }}
+        onDragMove={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+        }}
+        onDragEnd={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+          const dx = e.target.x();
+          const dy = e.target.y();
+          e.target.position({ x: 0, y: 0 });
+          translateCurrentSelection(dx, dy);
+        }}
+      >
+        {openingNodes}
+      </Group>,
+    );
   }
   return <Group>{items}</Group>;
 };

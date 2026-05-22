@@ -3,6 +3,7 @@ import { undo, redo } from '@/domain/commands';
 import { useSelectionStore, useEditorStore, useDimensionEditStore } from '@/state';
 import { deleteSelected, duplicateSelected, selectAll } from '@/features/drawingTools/select/useSelectInteractions';
 import { cancelAllDrawings } from '@/features/drawingTools/drawingCancelRegistry';
+import { copySelection, pasteSelection } from './selectionClipboard';
 import { isToolEnabled } from './toolAvailability';
 import { useSaveProject } from './useSaveProject';
 
@@ -47,6 +48,18 @@ export const useKeyboardShortcuts = (): void => {
       if (mod && key === 'd') {
         e.preventDefault();
         duplicateSelected(10);
+        return;
+      }
+      if (mod && key === 'c' && !e.shiftKey) {
+        if (copySelection()) {
+          e.preventDefault();
+        }
+        return;
+      }
+      if (mod && key === 'v' && !e.shiftKey) {
+        if (pasteSelection(10)) {
+          e.preventDefault();
+        }
         return;
       }
       if (mod && key === 'a' && !e.shiftKey) {

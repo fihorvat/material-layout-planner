@@ -1,5 +1,6 @@
 import { Group, Line as KLine, Rect } from 'react-konva';
-import { useProjectStore, useThemeStore, type Theme } from '@/state';
+import type { KonvaEventObject } from 'konva/lib/Node';
+import { useEditorStore, useProjectStore, useSelectionStore, useThemeStore, type Theme } from '@/state';
 import type {
   Point2D,
   DrawingEntity,
@@ -15,6 +16,7 @@ import {
 } from '@/domain/geometry';
 import { EditableEdgeLabel } from './dimension/EditableEdgeLabel';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
+import { translateCurrentSelection } from '@/features/editor/selectionClipboard';
 
 const flat = (points: Point2D[]): number[] => {
   const out: number[] = [];
@@ -104,11 +106,36 @@ const PolygonDimensions = ({ entity, theme }: { entity: PolygonEntity; theme: Th
   return <>{items}</>;
 };
 
-const renderEntity = (entity: DrawingEntity, theme: Theme) => {
+const renderEntity = (
+  entity: DrawingEntity,
+  theme: Theme,
+  selectedIds: Set<string>,
+  activeTool: ReturnType<typeof useEditorStore.getState>['activeTool'],
+) => {
   const stroke = themedShapeColor(entity.style.strokeColor, theme);
+  const isDraggable = activeTool === 'select' && selectedIds.has(entity.id);
   if (entity.type === 'line') {
     return (
-      <Group key={entity.id}>
+      <Group
+        key={entity.id}
+        draggable={isDraggable}
+        onMouseDown={(e: KonvaEventObject<MouseEvent>) => {
+          if (isDraggable) e.cancelBubble = true;
+        }}
+        onDragStart={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+        }}
+        onDragMove={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+        }}
+        onDragEnd={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+          const dx = e.target.x();
+          const dy = e.target.y();
+          e.target.position({ x: 0, y: 0 });
+          translateCurrentSelection(dx, dy);
+        }}
+      >
         <KLine
           points={[entity.start.x, entity.start.y, entity.end.x, entity.end.y]}
           stroke={stroke}
@@ -121,7 +148,26 @@ const renderEntity = (entity: DrawingEntity, theme: Theme) => {
   }
   if (entity.type === 'rectangle') {
     return (
-      <Group key={entity.id}>
+      <Group
+        key={entity.id}
+        draggable={isDraggable}
+        onMouseDown={(e: KonvaEventObject<MouseEvent>) => {
+          if (isDraggable) e.cancelBubble = true;
+        }}
+        onDragStart={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+        }}
+        onDragMove={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+        }}
+        onDragEnd={(e: KonvaEventObject<DragEvent>) => {
+          e.cancelBubble = true;
+          const dx = e.target.x();
+          const dy = e.target.y();
+          e.target.position({ x: 0, y: 0 });
+          translateCurrentSelection(dx, dy);
+        }}
+      >
         <Rect
           x={entity.origin.x}
           y={entity.origin.y}
@@ -139,7 +185,26 @@ const renderEntity = (entity: DrawingEntity, theme: Theme) => {
     );
   }
   return (
-    <Group key={entity.id}>
+    <Group
+      key={entity.id}
+      draggable={isDraggable}
+      onMouseDown={(e: KonvaEventObject<MouseEvent>) => {
+        if (isDraggable) e.cancelBubble = true;
+      }}
+      onDragStart={(e: KonvaEventObject<DragEvent>) => {
+        e.cancelBubble = true;
+      }}
+      onDragMove={(e: KonvaEventObject<DragEvent>) => {
+        e.cancelBubble = true;
+      }}
+      onDragEnd={(e: KonvaEventObject<DragEvent>) => {
+        e.cancelBubble = true;
+        const dx = e.target.x();
+        const dy = e.target.y();
+        e.target.position({ x: 0, y: 0 });
+        translateCurrentSelection(dx, dy);
+      }}
+    >
       <KLine
         points={flat(entity.points)}
         closed
@@ -156,6 +221,13 @@ const renderEntity = (entity: DrawingEntity, theme: Theme) => {
 
 export const ConstructionEntities = () => {
   const entities = useProjectStore((s) => s.project.drawingEntities);
+  const activeTool = useEditorStore((s) => s.activeTool);
+  const selected = useSelectionStore((s) => s.selected);
   const theme = useThemeStore((s) => s.theme);
-  return <Group>{entities.map((e) => renderEntity(e, theme))}</Group>;
+  const selectedIds = new Set(
+    selected
+      .filter((entry) => entry.kind === 'line' || entry.kind === 'rectangle' || entry.kind === 'polygon')
+      .map((entry) => entry.id),
+  );
+  return <Group>{entities.map((entity) => renderEntity(entity, theme, selectedIds, activeTool))}</Group>;
 };

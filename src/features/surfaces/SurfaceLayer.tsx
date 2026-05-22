@@ -1,12 +1,14 @@
 import { Group, Line as KLine, Text } from 'react-konva';
+import type { KonvaEventObject } from 'konva/lib/Node';
 import type { SceneContext } from 'konva/lib/Context';
-import { useProjectStore, useThemeStore, type Theme } from '@/state';
+import { useEditorStore, useProjectStore, useSelectionStore, useThemeStore, type Theme } from '@/state';
 import { surfaceCentroid, surfaceArea, surfaceEdges } from '@/domain/surfaces/surfaceGeometry';
 import type { Surface, Point2D } from '@/types';
 import { EditableEdgeLabel } from '@/features/drawingTools/dimension/EditableEdgeLabel';
 import { radToDeg } from '@/domain/geometry';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { OpeningRenderer } from './OpeningRenderer';
+import { translateCurrentSelection } from '@/features/editor/selectionClipboard';
 
 const flat = (pts: Point2D[]): number[] => {
   const out: number[] = [];
@@ -14,11 +16,17 @@ const flat = (pts: Point2D[]): number[] => {
   return out;
 };
 
-const renderSurface = (s: Surface, theme: Theme) => {
+const renderSurface = (
+  s: Surface,
+  theme: Theme,
+  selectedIds: Set<string>,
+  activeTool: ReturnType<typeof useEditorStore.getState>['activeTool'],
+) => {
   const centroid = surfaceCentroid(s);
   const stroke = themedShapeColor(s.style.strokeColor, theme);
   const fill = themedShapeColor(s.style.fillColor, theme);
   const text = themedShapeColor(s.style.textColor, theme);
+  const isDraggable = activeTool === 'select' && selectedIds.has(s.id);
   const lines: React.ReactNode[] = [];
   // Clip the surface's filled outer boundary by the even-odd combination of
   // outer + each hole subpath, so that opening regions are not painted at
@@ -116,7 +124,26 @@ const renderSurface = (s: Surface, theme: Theme) => {
     );
   }
   return (
-    <Group key={s.id}>
+    <Group
+      key={s.id}
+      draggable={isDraggable}
+      onMouseDown={(e: KonvaEventObject<MouseEvent>) => {
+        if (isDraggable) e.cancelBubble = true;
+      }}
+      onDragStart={(e: KonvaEventObject<DragEvent>) => {
+        e.cancelBubble = true;
+      }}
+      onDragMove={(e: KonvaEventObject<DragEvent>) => {
+        e.cancelBubble = true;
+      }}
+      onDragEnd={(e: KonvaEventObject<DragEvent>) => {
+        e.cancelBubble = true;
+        const dx = e.target.x();
+        const dy = e.target.y();
+        e.target.position({ x: 0, y: 0 });
+        translateCurrentSelection(dx, dy);
+      }}
+    >
       {lines}
       <OpeningRenderer surface={s} />
     </Group>
@@ -125,6 +152,11 @@ const renderSurface = (s: Surface, theme: Theme) => {
 
 export const SurfaceLayer = () => {
   const surfaces = useProjectStore((s) => s.project.surfaces);
+  const activeTool = useEditorStore((s) => s.activeTool);
+  const selected = useSelectionStore((s) => s.selected);
   const theme = useThemeStore((s) => s.theme);
-  return <Group>{surfaces.map((s) => renderSurface(s, theme))}</Group>;
+  const selectedIds = new Set(
+    selected.filter((entry) => entry.kind === 'surface').map((entry) => entry.id),
+  );
+  return <Group>{surfaces.map((surface) => renderSurface(surface, theme, selectedIds, activeTool))}</Group>;
 };
