@@ -18,6 +18,8 @@ export const createSurface = (input: CreateSurfaceInput): Surface => {
     holeMeta: [],
     materialId: null,
     placementPatternId: null,
+    patternOffsetXmm: 0,
+    patternOffsetYmm: 0,
     edgeRules: [],
     connections: [],
     showName: true,
@@ -36,4 +38,3 @@ export const rectangleToSurface = (rect: RectangleEntity, name: string): Surface
   ];
   return createSurface({ name, outerBoundary: points });
 };
-

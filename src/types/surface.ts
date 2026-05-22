@@ -29,6 +29,8 @@ export const SurfaceSchema = z
 
     materialId: idString.nullable(),
     placementPatternId: idString.nullable(),
+    patternOffsetXmm: z.number().finite().optional(),
+    patternOffsetYmm: z.number().finite().optional(),
 
     edgeRules: z.array(EdgeRuleSchema),
     connections: z.array(SurfaceConnectionRefSchema),

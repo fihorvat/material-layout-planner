@@ -1,6 +1,12 @@
 import { useProjectStore, useSelectionStore } from '@/state';
-import { dispatchCommand, updateSurfaceCommand, deleteSurfaceCommand, renameSurfaceCommand } from '@/domain/commands';
+import {
+  dispatchCommand,
+  updateSurfaceCommand,
+  deleteSurfaceCommand,
+  renameSurfaceCommand,
+} from '@/domain/commands';
 import { AssignPatternControl, PlacementPatternPanel } from '@/features/placementPatterns';
+import { getSurfacePatternOffsetAxes } from '@/domain/placementPatterns/manualOffset';
 
 export const SurfaceProperties = () => {
   const selection = useSelectionStore((s) => s.selected);
@@ -10,9 +16,16 @@ export const SurfaceProperties = () => {
   if (!entry) return null;
   const surface = project.surfaces.find((s) => s.id === entry.id);
   if (!surface) return null;
+  const pattern = surface.placementPatternId
+    ? (project.placementPatterns.find((candidate) => candidate.id === surface.placementPatternId) ??
+      null)
+    : null;
+  const offsetAxes = pattern ? getSurfacePatternOffsetAxes(pattern) : null;
 
-  const onPatch = <K extends keyof typeof surface>(key: K, value: typeof surface[K]) => {
-    dispatchCommand(updateSurfaceCommand({ id: surface.id, patch: { [key]: value } as Partial<typeof surface> }));
+  const onPatch = <K extends keyof typeof surface>(key: K, value: (typeof surface)[K]) => {
+    dispatchCommand(
+      updateSurfaceCommand({ id: surface.id, patch: { [key]: value } as Partial<typeof surface> }),
+    );
   };
 
   return (
@@ -34,7 +47,9 @@ export const SurfaceProperties = () => {
         >
           <option value="">— None —</option>
           {project.materials.map((m) => (
-            <option key={m.id} value={m.id}>{m.name}</option>
+            <option key={m.id} value={m.id}>
+              {m.name}
+            </option>
           ))}
         </select>
       </label>
@@ -48,21 +63,60 @@ export const SurfaceProperties = () => {
             patternId={surface.placementPatternId}
             contextMaterialId={surface.materialId ?? null}
           />
+          {pattern ? (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+              <label>
+                Surface offset X{' '}
+                <input
+                  type="number"
+                  step={1}
+                  value={surface.patternOffsetXmm ?? 0}
+                  disabled={!offsetAxes?.allowX}
+                  onChange={(e) => onPatch('patternOffsetXmm', Number(e.target.value) || 0)}
+                />
+              </label>
+              <label>
+                Surface offset Y{' '}
+                <input
+                  type="number"
+                  step={1}
+                  value={surface.patternOffsetYmm ?? 0}
+                  disabled={!offsetAxes?.allowY}
+                  onChange={(e) => onPatch('patternOffsetYmm', Number(e.target.value) || 0)}
+                />
+              </label>
+            </div>
+          ) : null}
         </details>
       )}
       <label>
-        <input type="checkbox" checked={surface.showName} onChange={(e) => onPatch('showName', e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={surface.showName}
+          onChange={(e) => onPatch('showName', e.target.checked)}
+        />
         Show name
       </label>
       <label>
-        <input type="checkbox" checked={surface.showDimensions} onChange={(e) => onPatch('showDimensions', e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={surface.showDimensions}
+          onChange={(e) => onPatch('showDimensions', e.target.checked)}
+        />
         Show dimensions
       </label>
       <label>
-        <input type="checkbox" checked={surface.showArea} onChange={(e) => onPatch('showArea', e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={surface.showArea}
+          onChange={(e) => onPatch('showArea', e.target.checked)}
+        />
         Show area
       </label>
-      <button type="button" onClick={() => dispatchCommand(deleteSurfaceCommand({ id: surface.id }))}>
+      <button
+        type="button"
+        onClick={() => dispatchCommand(deleteSurfaceCommand({ id: surface.id }))}
+      >
         Delete surface
       </button>
     </div>

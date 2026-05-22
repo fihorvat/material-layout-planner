@@ -245,4 +245,82 @@ describe('integration: connection pattern continuation', () => {
       normalizeLabelPositions(bottomLayout!, bottomProject.surfaceB.outerBoundary),
     );
   });
+
+  it('lets a continued surface keep its own local offset override', () => {
+    const project = createEmptyProject('Continuation local offset');
+    const material = createMaterial({
+      name: 'Tile',
+      unitWidthMm: 60,
+      unitHeightMm: 60,
+      thicknessMm: 10,
+    });
+    const pattern = createPlacementPattern({
+      name: 'Grid',
+      jointMm: 0,
+      originMode: 'topLeft',
+      orientation: 'horizontal',
+      type: 'stacked',
+    });
+    const surfaceA = {
+      ...createSurface({
+        name: 'A',
+        outerBoundary: [
+          { x: 0, y: 0 },
+          { x: 100, y: 0 },
+          { x: 100, y: 100 },
+          { x: 0, y: 100 },
+        ],
+      }),
+      materialId: material.id,
+      placementPatternId: pattern.id,
+    };
+    const surfaceB = {
+      ...createSurface({
+        name: 'B',
+        outerBoundary: [
+          { x: 100, y: 0 },
+          { x: 200, y: 0 },
+          { x: 200, y: 100 },
+          { x: 100, y: 100 },
+        ],
+      }),
+      materialId: material.id,
+      placementPatternId: pattern.id,
+      patternOffsetXmm: 20,
+      patternOffsetYmm: 35,
+    };
+    project.materials.push(material);
+    project.placementPatterns.push(pattern);
+    project.surfaces.push(surfaceA, surfaceB);
+    project.surfaceConnections.push(
+      makeConnection({
+        surfaceAId: surfaceA.id,
+        edgeAIndex: 1,
+        surfaceBId: surfaceB.id,
+        edgeBIndex: 3,
+        connectionType: 'flatContinuation',
+        allowPatternContinuation: true,
+      }),
+    );
+
+    const firstLayouts = generateLayoutsForProject(project);
+    const layoutA = firstLayouts.find((layout) => layout.surfaceId === surfaceA.id);
+    const shiftedLayoutB = firstLayouts.find((layout) => layout.surfaceId === surfaceB.id);
+    expect(layoutA).toBeTruthy();
+    expect(shiftedLayoutB).toBeTruthy();
+
+    project.surfaces[1] = { ...surfaceB, patternOffsetXmm: 0, patternOffsetYmm: 99 };
+    const secondLayouts = generateLayoutsForProject(project);
+    const secondLayoutA = secondLayouts.find((layout) => layout.surfaceId === surfaceA.id);
+    const unshiftedLayoutB = secondLayouts.find((layout) => layout.surfaceId === surfaceB.id);
+    expect(secondLayoutA).toBeTruthy();
+    expect(unshiftedLayoutB).toBeTruthy();
+
+    expect(normalizeLabelPositions(secondLayoutA!, surfaceA.outerBoundary)).toEqual(
+      normalizeLabelPositions(layoutA!, surfaceA.outerBoundary),
+    );
+    expect(normalizeLabelPositions(shiftedLayoutB!, surfaceB.outerBoundary)).not.toEqual(
+      normalizeLabelPositions(unshiftedLayoutB!, surfaceB.outerBoundary),
+    );
+  });
 });

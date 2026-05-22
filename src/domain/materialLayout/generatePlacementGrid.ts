@@ -1,7 +1,10 @@
 import type { Surface, Material, PlacementPattern, Point2D } from '@/types';
 import type { Aabb } from '@/domain/geometry';
 import { rotate } from '@/domain/geometry';
-import { computeEffectivePatternOrigin } from '@/domain/placementPatterns/manualOffset';
+import {
+  computeEffectivePatternOrigin,
+  getSurfacePatternOffset,
+} from '@/domain/placementPatterns/manualOffset';
 import { effectiveRowOffsetMm } from '@/domain/placementPatterns/placementPattern';
 import type { UnitRectangle } from './types';
 
@@ -70,9 +73,10 @@ export const generatePlacementGrid = (input: {
   const rowOffset = effectiveRowOffsetMm(pattern, material);
 
   const baseOrigin = computeEffectivePatternOrigin(pattern, patternAnchorSurface ?? input.surface);
+  const surfaceOffset = getSurfacePatternOffset(input.surface, pattern);
   const rawOrigin = {
-    x: baseOrigin.x + (patternOriginTranslation?.x ?? 0),
-    y: baseOrigin.y + (patternOriginTranslation?.y ?? 0),
+    x: baseOrigin.x + (patternOriginTranslation?.x ?? 0) + surfaceOffset.x,
+    y: baseOrigin.y + (patternOriginTranslation?.y ?? 0) + surfaceOffset.y,
   };
   const cornerOffsetX =
     pattern.originMode === 'topLeft' || pattern.originMode === 'bottomLeft' ? unitW / 2 : 0;

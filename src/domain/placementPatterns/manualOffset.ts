@@ -4,6 +4,45 @@ import { surfaceCentroid } from '@/domain/surfaces/surfaceGeometry';
 
 type SnapStep = 'none' | '1mm' | '5mm' | '10mm' | 'jointStep' | 'unitStep';
 
+export type SurfacePatternOffsetAxes = {
+  allowX: boolean;
+  allowY: boolean;
+};
+
+export const getSurfacePatternOffsetAxes = (
+  pattern: PlacementPattern,
+): SurfacePatternOffsetAxes => {
+  if (pattern.orientation === 'customAngle' || pattern.type === 'diagonal') {
+    return { allowX: true, allowY: true };
+  }
+  if (pattern.orientation === 'vertical' || pattern.type === 'verticalStacked') {
+    return { allowX: false, allowY: true };
+  }
+  return { allowX: true, allowY: false };
+};
+
+export const constrainSurfacePatternOffset = (
+  delta: Point2D,
+  pattern: PlacementPattern,
+): Point2D => {
+  const axes = getSurfacePatternOffsetAxes(pattern);
+  return {
+    x: axes.allowX ? delta.x : 0,
+    y: axes.allowY ? delta.y : 0,
+  };
+};
+
+export const getSurfacePatternOffset = (
+  surface: Pick<Surface, 'patternOffsetXmm' | 'patternOffsetYmm'>,
+  pattern: PlacementPattern,
+): Point2D => {
+  const axes = getSurfacePatternOffsetAxes(pattern);
+  return {
+    x: axes.allowX ? (surface.patternOffsetXmm ?? 0) : 0,
+    y: axes.allowY ? (surface.patternOffsetYmm ?? 0) : 0,
+  };
+};
+
 export const computeEffectivePatternOrigin = (
   pattern: PlacementPattern,
   surface: Surface,

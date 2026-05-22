@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { computeEffectivePatternOrigin, snapOffset } from '../manualOffset';
+import {
+  constrainSurfacePatternOffset,
+  computeEffectivePatternOrigin,
+  getSurfacePatternOffset,
+  getSurfacePatternOffsetAxes,
+  snapOffset,
+} from '../manualOffset';
 import { createPlacementPattern } from '../placementPattern';
 import { createMaterial } from '@/domain/materials/material';
 import { createSurface } from '@/domain/surfaces/createSurface';
@@ -39,5 +45,29 @@ describe('manualOffset', () => {
     const r = snapOffset({ x: 700, y: 320 }, 'unitStep', p, m);
     expect(r.x).toBe(603);
     expect(r.y).toBe(303);
+  });
+
+  it('limits per-surface offsets to the horizontal axis for horizontal patterns', () => {
+    const p = createPlacementPattern({ name: 'P', orientation: 'horizontal', type: 'stacked' });
+    expect(getSurfacePatternOffsetAxes(p)).toEqual({ allowX: true, allowY: false });
+    expect(getSurfacePatternOffset({ patternOffsetXmm: 12, patternOffsetYmm: 9 }, p)).toEqual({
+      x: 12,
+      y: 0,
+    });
+    expect(constrainSurfacePatternOffset({ x: 13, y: 17 }, p)).toEqual({ x: 13, y: 0 });
+  });
+
+  it('limits per-surface offsets to the vertical axis for vertical patterns', () => {
+    const p = createPlacementPattern({
+      name: 'P',
+      orientation: 'vertical',
+      type: 'verticalStacked',
+    });
+    expect(getSurfacePatternOffsetAxes(p)).toEqual({ allowX: false, allowY: true });
+    expect(getSurfacePatternOffset({ patternOffsetXmm: 12, patternOffsetYmm: 9 }, p)).toEqual({
+      x: 0,
+      y: 9,
+    });
+    expect(constrainSurfacePatternOffset({ x: 13, y: 17 }, p)).toEqual({ x: 0, y: 17 });
   });
 });

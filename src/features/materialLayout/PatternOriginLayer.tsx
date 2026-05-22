@@ -3,8 +3,13 @@ import { Group, Circle, Line as KLine } from 'react-konva';
 import type Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import { useProjectStore, useEditorStore } from '@/state';
-import { dispatchCommand, updatePlacementPatternCommand } from '@/domain/commands';
-import { computeEffectivePatternOrigin, snapOffset } from '@/domain/placementPatterns/manualOffset';
+import { dispatchCommand, updateSurfaceCommand } from '@/domain/commands';
+import {
+  constrainSurfacePatternOffset,
+  computeEffectivePatternOrigin,
+  getSurfacePatternOffset,
+  snapOffset,
+} from '@/domain/placementPatterns/manualOffset';
 import { buildPatternContinuationPlacementMap } from '@/domain/materialLayout/patternContinuation';
 import type { PlacementPattern, Surface, Point2D } from '@/types';
 
@@ -12,6 +17,7 @@ type Handle = {
   surface: Surface;
   pattern: PlacementPattern;
   origin: Point2D;
+  surfaceOffset: Point2D;
   materialId: string | null;
 };
 
@@ -32,27 +38,33 @@ const PatternOriginHandle = ({ handle, scale }: { handle: Handle; scale: number 
 
   const commit = (rawDelta: Point2D, persist: boolean) => {
     const material = project.project.materials.find((m) => m.id === handle.materialId) ?? null;
-    const snapped = snapOffset(rawDelta, snapEnabled ? '5mm' : 'none', handle.pattern, material);
-    const nextOffsetX = handle.pattern.offsetXmm + snapped.x;
-    const nextOffsetY = handle.pattern.offsetYmm + snapped.y;
+    const snapped = constrainSurfacePatternOffset(
+      snapOffset(rawDelta, snapEnabled ? '5mm' : 'none', handle.pattern, material),
+      handle.pattern,
+    );
+    const nextOffsetX = handle.surfaceOffset.x + snapped.x;
+    const nextOffsetY = handle.surfaceOffset.y + snapped.y;
+    const nextPosition = {
+      x: handle.origin.x - handle.surfaceOffset.x + nextOffsetX,
+      y: handle.origin.y - handle.surfaceOffset.y + nextOffsetY,
+    };
     if (persist) {
-      if (nextOffsetX === handle.pattern.offsetXmm && nextOffsetY === handle.pattern.offsetYmm) {
+      if (nextOffsetX === handle.surfaceOffset.x && nextOffsetY === handle.surfaceOffset.y) {
+        groupRef.current?.position(nextPosition);
         return;
       }
+      groupRef.current?.position(nextPosition);
       dispatchCommand(
-        updatePlacementPatternCommand(
+        updateSurfaceCommand(
           {
-            id: handle.pattern.id,
-            patch: { offsetXmm: nextOffsetX, offsetYmm: nextOffsetY },
+            id: handle.surface.id,
+            patch: { patternOffsetXmm: nextOffsetX, patternOffsetYmm: nextOffsetY },
           },
-          `Move pattern origin (${handle.pattern.name})`,
+          `Adjust surface pattern offset (${handle.surface.name})`,
         ),
       );
     } else if (groupRef.current) {
-      // Live preview: snap the visual handle to the snapped position without dispatching.
-      const baseX = handle.origin.x - handle.pattern.offsetXmm;
-      const baseY = handle.origin.y - handle.pattern.offsetYmm;
-      groupRef.current.position({ x: baseX + nextOffsetX, y: baseY + nextOffsetY });
+      groupRef.current.position(nextPosition);
     }
   };
 
@@ -129,13 +141,15 @@ export const PatternOriginLayer = () => {
       const virtualOrigin = computeEffectivePatternOrigin(pattern, anchorSurface);
       const originTranslation = placement?.originTranslation ?? { x: 0, y: 0 };
       const virtualOffset = placement?.virtualOffset ?? { x: 0, y: 0 };
+      const surfaceOffset = getSurfacePatternOffset(surface, pattern);
       out.push({
         surface,
         pattern,
         origin: {
-          x: virtualOrigin.x + originTranslation.x - virtualOffset.x,
-          y: virtualOrigin.y + originTranslation.y - virtualOffset.y,
+          x: virtualOrigin.x + originTranslation.x - virtualOffset.x + surfaceOffset.x,
+          y: virtualOrigin.y + originTranslation.y - virtualOffset.y + surfaceOffset.y,
         },
+        surfaceOffset,
         materialId: surface.materialId,
       });
     }
