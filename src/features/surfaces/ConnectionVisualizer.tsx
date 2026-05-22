@@ -31,6 +31,14 @@ const edgeGeom = (
   return { ax: a.x, ay: a.y, bx: b.x, by: b.y };
 };
 
+export const shouldEnableConnectionHitTargets = (
+  activeTool: ReturnType<typeof useEditorStore.getState>['activeTool'],
+  selectionEntries: ReturnType<typeof useSelectionStore.getState>['selected'],
+): boolean => {
+  if (activeTool !== 'select') return true;
+  return !selectionEntries.some((entry) => entry.kind === 'surface' || entry.kind === 'opening');
+};
+
 /**
  * Build a closed-triangle chevron centered on the edge midpoint, pointing
  * perpendicular to the edge. Returned points are in world coordinates;
@@ -61,9 +69,11 @@ export const ConnectionVisualizer = () => {
   const connections = useProjectStore((s) => s.project.surfaceConnections);
   const surfaces = useProjectStore((s) => s.project.surfaces);
   const scale = useEditorStore((s) => s.viewport.scale);
+  const activeTool = useEditorStore((s) => s.activeTool);
   const selectionEntries = useSelectionStore((s) => s.selected);
   const selectConnection = useConnectionToolStore((s) => s.selectConnection);
   const setSelection = useSelectionStore((s) => s.select);
+  const interactive = shouldEnableConnectionHitTargets(activeTool, selectionEntries);
 
   const selectedIds = new Set(
     selectionEntries.filter((e) => e.kind === 'connection').map((e) => e.id),
@@ -89,7 +99,12 @@ export const ConnectionVisualizer = () => {
           elements.push(
             <KLine
               key={`link:${c.id}`}
-              points={[(ea.ax + ea.bx) / 2, (ea.ay + ea.by) / 2, (eb.ax + eb.bx) / 2, (eb.ay + eb.by) / 2]}
+              points={[
+                (ea.ax + ea.bx) / 2,
+                (ea.ay + ea.by) / 2,
+                (eb.ax + eb.bx) / 2,
+                (eb.ay + eb.by) / 2,
+              ]}
               stroke={color}
               strokeWidth={1}
               strokeScaleEnabled={false}
@@ -99,7 +114,10 @@ export const ConnectionVisualizer = () => {
             />,
           );
         }
-        for (const [key, edge] of [['a', ea], ['b', eb]] as const) {
+        for (const [key, edge] of [
+          ['a', ea],
+          ['b', eb],
+        ] as const) {
           if (!edge) continue;
           const pts = chevronPoints(edge, sizeWorld);
           if (pts.length === 0) continue;
@@ -112,6 +130,7 @@ export const ConnectionVisualizer = () => {
               stroke={selected ? '#dc2626' : '#0f172a'}
               strokeWidth={selected ? 2 : 0.75}
               strokeScaleEnabled={false}
+              listening={interactive}
               onClick={onSelect}
               onTap={onSelect}
             />,

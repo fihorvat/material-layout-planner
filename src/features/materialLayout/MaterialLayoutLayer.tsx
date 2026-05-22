@@ -1,7 +1,13 @@
 import { useMemo } from 'react';
 import { Group, Line as KLine, Text } from 'react-konva';
 import type { Point2D, MaterialLayout, Material } from '@/types';
-import { useProjectStore, useEditorStore, useThemeStore, type Theme } from '@/state';
+import {
+  useProjectStore,
+  useEditorStore,
+  useSelectionStore,
+  useThemeStore,
+  type Theme,
+} from '@/state';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { generateLayoutsForProject } from '@/domain/materialLayout/generateLayoutsForProject';
 
@@ -17,6 +23,14 @@ const LINE_GAP_PX = 18;
 const APPROX_CHAR_WIDTH = 0.62;
 const FIT_PADDING = 0.9;
 
+export const shouldEnableMaterialPieceHitTargets = (
+  activeTool: ReturnType<typeof useEditorStore.getState>['activeTool'],
+  selectionEntries: ReturnType<typeof useSelectionStore.getState>['selected'],
+): boolean => {
+  if (activeTool !== 'select') return true;
+  return !selectionEntries.some((entry) => entry.kind === 'surface' || entry.kind === 'opening');
+};
+
 const renderPiece = (
   layout: MaterialLayout,
   material: Material,
@@ -24,6 +38,7 @@ const renderPiece = (
   showLabels: boolean,
   theme: Theme,
   scale: number,
+  interactive: boolean,
 ) => {
   const piece = layout.pieces[pieceIdx]!;
   const fill = material.style.fillColor;
@@ -43,8 +58,7 @@ const renderPiece = (
   const availH = piece.boundingHeightMm * FIT_PADDING;
 
   const fitsName = showLabels && nameWidthMm <= availW && nameFont <= availH;
-  const fitsBoth =
-    fitsName && dimWidthMm <= availW && nameFont + lineGap + dimFont / 2 <= availH;
+  const fitsBoth = fitsName && dimWidthMm <= availW && nameFont + lineGap + dimFont / 2 <= availH;
 
   // Vertically center the label block at labelPosition.
   const cx = piece.labelPosition.x;
@@ -53,7 +67,7 @@ const renderPiece = (
   const dimY = cy + lineGap / 2 - dimFont / 2;
 
   return (
-    <Group key={`${layout.surfaceId}:${pieceIdx}`} listening>
+    <Group key={`${layout.surfaceId}:${pieceIdx}`} listening={interactive}>
       <KLine
         points={flat(piece.visiblePolygon)}
         closed
@@ -118,9 +132,12 @@ const renderPiece = (
  */
 export const MaterialLayoutLayer = () => {
   const project = useProjectStore((s) => s.project);
+  const activeTool = useEditorStore((s) => s.activeTool);
+  const selectionEntries = useSelectionStore((s) => s.selected);
   const scale = useEditorStore((s) => s.viewport.scale);
   const theme = useThemeStore((s) => s.theme);
   const showLabels = scale > 0.4;
+  const interactive = shouldEnableMaterialPieceHitTargets(activeTool, selectionEntries);
 
   const layouts = useMemo<MaterialLayout[]>(() => {
     const live = generateLayoutsForProject(project);
@@ -155,7 +172,9 @@ export const MaterialLayoutLayer = () => {
         if (!material) return null;
         return (
           <Group key={`${layout.surfaceId}:${layout.materialId}:${layout.placementPatternId}`}>
-            {layout.pieces.map((_, i) => renderPiece(layout, material, i, showLabels, theme, scale))}
+            {layout.pieces.map((_, i) =>
+              renderPiece(layout, material, i, showLabels, theme, scale, interactive),
+            )}
           </Group>
         );
       })}
