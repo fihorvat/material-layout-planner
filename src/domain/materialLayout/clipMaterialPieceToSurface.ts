@@ -27,7 +27,10 @@ const subtractVisibleParts = (physical: Polygon, visibleParts: Polygon[]): Polyg
 };
 
 const localBoundingBox = (poly: Point2D[], origin: Point2D, rotationDeg: number) => {
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    maxX = -Infinity,
+    maxY = -Infinity;
   for (const p of poly) {
     const local = rotationDeg === 0 ? p : rotate(p, -rotationDeg, origin);
     if (local.x < minX) minX = local.x;
@@ -73,11 +76,15 @@ export const clipMaterialPieceToSurface = (input: {
   overlapZones?: OverlapZone[];
 }): ClipResult[] => {
   const unitPoly = cornersToPolygon(input.unit.corners);
-  const physicalParts = significantParts(polygonIntersection(unitPoly, input.physicalWorkingPolygon));
+  const physicalParts = significantParts(
+    polygonIntersection(unitPoly, input.physicalWorkingPolygon),
+  );
 
   return physicalParts
     .map((physical) => {
-      const visibleParts = significantParts(polygonIntersection(physical, input.visibleSurfacePolygon));
+      const visibleParts = significantParts(
+        polygonIntersection(physical, input.visibleSurfacePolygon),
+      );
       if (visibleParts.length === 0) return null;
 
       let visible = visibleParts[0]!;
@@ -90,11 +97,17 @@ export const clipMaterialPieceToSurface = (input: {
         }
       }
 
-      const overlapPolygons = subtractVisibleParts(physical, visibleParts).map((part) => part.outer);
+      const overlapPolygons = subtractVisibleParts(physical, visibleParts).map(
+        (part) => part.outer,
+      );
       const overlapPolygonOpacities = overlapPolygons.map((polygon) =>
         resolveOverlapOpacity(polygon, input.overlapZones ?? []),
       );
-      const local = localBoundingBox(physical.outer, input.unit.centerWorld, input.unit.rotationDeg);
+      const local = localBoundingBox(
+        physical.outer,
+        input.unit.centerWorld,
+        input.unit.rotationDeg,
+      );
       return {
         visiblePolygon: visible.outer,
         physicalPolygon: physical.outer,

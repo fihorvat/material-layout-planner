@@ -11,7 +11,10 @@ const countPurchasedUnits = (layout: MaterialLayout): number => {
       sourceUnits.add(piece.sourceUnitIndex);
     }
   }
-  if (layout.pieces.length > 0 && layout.pieces.every((piece) => typeof piece.sourceUnitIndex === 'number')) {
+  if (
+    layout.pieces.length > 0 &&
+    layout.pieces.every((piece) => typeof piece.sourceUnitIndex === 'number')
+  ) {
     return sourceUnits.size;
   }
   return layout.pieces.length;
@@ -154,7 +157,8 @@ export const computeProjectStats = (
       cutPieces: e.cutPieces,
       purchasedAreaMm2: e.purchasedAreaMm2,
       wasteAreaMm2: e.wasteAreaMm2,
-      wastePercent: e.purchasedAreaMm2 > 0 ? Math.min(100, (e.wasteAreaMm2 / e.purchasedAreaMm2) * 100) : 0,
+      wastePercent:
+        e.purchasedAreaMm2 > 0 ? Math.min(100, (e.wasteAreaMm2 / e.purchasedAreaMm2) * 100) : 0,
     })),
   };
 };

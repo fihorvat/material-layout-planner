@@ -112,7 +112,11 @@ export const buildMaterialLayout = (input: BuildMaterialLayoutInput): MaterialLa
       const overlapPolygonOpacities = result.overlapPolygonOpacities;
       const labelPos = polygonCentroid(visiblePolygon);
       const fullUnit = isFullUnitPolygon(unit, result.physicalPolygon);
-      const irregular = !isAxisAlignedRectangle(result.physicalPolygon, unit.widthMm, unit.heightMm);
+      const irregular = !isAxisAlignedRectangle(
+        result.physicalPolygon,
+        unit.widthMm,
+        unit.heightMm,
+      );
       pieces.push({
         id: newMaterialPieceId(),
         surfaceId: input.surface.id,

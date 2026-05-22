@@ -9,7 +9,10 @@ const countPurchasedUnits = (layout: MaterialLayout): number => {
       sourceUnits.add(piece.sourceUnitIndex);
     }
   }
-  if (layout.pieces.length > 0 && layout.pieces.every((piece) => typeof piece.sourceUnitIndex === 'number')) {
+  if (
+    layout.pieces.length > 0 &&
+    layout.pieces.every((piece) => typeof piece.sourceUnitIndex === 'number')
+  ) {
     return sourceUnits.size;
   }
   return layout.pieces.length;
