@@ -42,6 +42,9 @@ export const EditableEdgeLabel = ({
     ('surfaceId' in target && 'surfaceId' in editing
       ? editing.surfaceId === target.surfaceId
       : true) &&
+    ('openingId' in target && 'openingId' in editing
+      ? editing.openingId === target.openingId
+      : true) &&
     ('edgeIndex' in target && 'edgeIndex' in editing
       ? editing.edgeIndex === target.edgeIndex
       : true);

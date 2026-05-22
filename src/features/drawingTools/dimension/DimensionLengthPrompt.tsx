@@ -57,7 +57,9 @@ const PromptInner = () => {
           ? 'Rectangle height'
           : editing.kind === 'polygonEdge'
             ? `Polygon edge ${editing.edgeIndex + 1}`
-            : `Surface edge ${editing.edgeIndex + 1}`;
+            : editing.kind === 'surfaceEdge'
+              ? `Surface edge ${editing.edgeIndex + 1}`
+              : `Opening edge ${editing.edgeIndex + 1}`;
 
   return (
     <div

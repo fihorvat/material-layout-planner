@@ -30,6 +30,7 @@ import { constrainAngle } from '@/domain/geometry';
 import { snap } from '@/features/editor/canvas/snap';
 import { snapDroppedLineEndpoint } from './endpointSnap';
 import { OrthoMeasureGuides } from '@/features/drawingTools/OrthoMeasureGuides';
+import { useSelectionMovePreviewStore } from './SelectionMoveGuides';
 
 type DragMods = { shift: boolean; alt: boolean; ctrl: boolean };
 
@@ -286,6 +287,7 @@ export const SelectionEditHandles = () => {
   const scale = useEditorStore((s) => s.viewport.scale);
   const selectedVertex = useSelectedVertexStore((s) => s.selectedVertex);
   const selectVertex = useSelectedVertexStore((s) => s.selectVertex);
+  const preview = useSelectionMovePreviewStore((s) => s.preview);
   // Position of the currently-dragging handle, used to render live
   // distance guides (OrthoMeasureGuides) while the user resizes a shape.
   // `null` when no handle is being dragged.
@@ -405,7 +407,12 @@ export const SelectionEditHandles = () => {
       mergedSpecs.push(a);
     }
   }
-  const allSpecs = [...otherSpecs, ...mergedSpecs];
+  const allSpecs = [...otherSpecs, ...mergedSpecs].map((spec) => ({
+    ...spec,
+    position: preview
+      ? { x: spec.position.x + preview.dx, y: spec.position.y + preview.dy }
+      : spec.position,
+  }));
 
   // Build the Command that represents the move described by `drag`+`world`,
   // without applying it. Also returns the resolved world-space position the

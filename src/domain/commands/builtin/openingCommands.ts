@@ -33,8 +33,21 @@ const buildMeta = (input: OpeningMetaInput | undefined): SurfaceHoleMeta => ({
 const findSurface = (project: Project, surfaceId: string): Surface | undefined =>
   project.surfaces.find((s) => s.id === surfaceId);
 
-const findOpeningIndex = (surface: Surface, openingId: string): number =>
-  surface.holeMeta.findIndex((m) => m.id === openingId);
+const findOpeningIndex = (surface: Surface, openingId: string): number => {
+  const metaIndex = surface.holeMeta.findIndex((m) => m.id === openingId);
+  if (metaIndex >= 0) return metaIndex;
+  const prefix = `${surface.id}:hole:`;
+  if (!openingId.startsWith(prefix)) return -1;
+  const rawIndex = Number(openingId.slice(prefix.length));
+  if (!Number.isInteger(rawIndex) || rawIndex < 0 || rawIndex >= surface.holes.length) return -1;
+  return rawIndex;
+};
+
+const fallbackMeta = (openingId: string): SurfaceHoleMeta => ({
+  id: openingId,
+  showDimensions: true,
+  style: defaultDrawingStyle(),
+});
 
 const addOpeningAt = (
   payload: { surfaceId: string; hole: Point2D[]; meta: SurfaceHoleMeta; index: number },
@@ -117,7 +130,7 @@ const removeOpeningCmd = (
     const idx = findOpeningIndex(s, payload.openingId);
     if (idx < 0) throw new Error('removeOpening: opening not found');
     const hole = s.holes[idx]!;
-    const meta = s.holeMeta[idx]!;
+    const meta = s.holeMeta[idx] ?? fallbackMeta(payload.openingId);
     return addOpeningAt(
       { surfaceId: payload.surfaceId, hole, meta, index: idx },
       `Undo ${label}`,
@@ -157,7 +170,9 @@ const updateOpeningCmd = (
       const holes = s.holes.slice();
       const meta = s.holeMeta.slice();
       if (payload.patch.hole) holes[idx] = payload.patch.hole;
-      if (payload.patch.meta) meta[idx] = mergeMeta(meta[idx]!, payload.patch.meta);
+      if (payload.patch.meta) {
+        meta[idx] = mergeMeta(meta[idx] ?? fallbackMeta(payload.openingId), payload.patch.meta);
+      }
       return { ...s, holes, holeMeta: meta };
     }),
   }),
@@ -167,7 +182,7 @@ const updateOpeningCmd = (
     const idx = findOpeningIndex(s, payload.openingId);
     if (idx < 0) throw new Error('updateOpening: opening not found');
     const prevHole = s.holes[idx]!;
-    const prevMeta = s.holeMeta[idx]!;
+    const prevMeta = s.holeMeta[idx] ?? fallbackMeta(payload.openingId);
     const inversePatch: UpdateOpeningPayload['patch'] = {};
     if (payload.patch.hole) inversePatch.hole = prevHole;
     if (payload.patch.meta) {

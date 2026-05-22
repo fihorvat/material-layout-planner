@@ -18,7 +18,7 @@ export type OpeningToolState = {
 const buildInitial = () => ({
   mode: 'rectangle' as OpeningToolMode,
   style: defaultDrawingStyle(),
-  showDimensions: false,
+  showDimensions: true,
 });
 
 export const useOpeningToolStore = create<OpeningToolState>()(

@@ -3,262 +3,344 @@ import type Konva from 'konva';
 import type {
   Point2D,
   Project,
-  DrawingEntity,
   LineEntity,
   RectangleEntity,
   PolygonEntity,
+  Surface,
 } from '@/types';
 import { useEditorStore, useProjectStore } from '@/state';
-import { snap } from '@/features/editor/canvas/snap';
 import {
-  degToRad,
+  closestEdgeOfPoints,
+  closestPointOnSegment,
   distance,
   ensureCCW,
-  segmentsIntersect,
+  rectangleToPoints,
 } from '@/domain/geometry';
-import {
-  collectSnapCandidates,
-  resolveWorldFromStage,
-} from '@/features/drawingTools/drawingCoords';
+import { resolveWorldFromStage } from '@/features/drawingTools/drawingCoords';
 import { dispatchCommand, replaceProjectCommand } from '@/domain/commands';
 import { newDrawingEntityId } from '@/domain/ids';
 
-type CutDrawState =
-  | { phase: 'pickFirst' }
-  | { phase: 'pickSecond'; first: Point2D; cursor: Point2D };
+type CutCandidate =
+  | {
+      kind: 'line';
+      entityId: string;
+      point: Point2D;
+      edge: { a: Point2D; b: Point2D };
+      distanceMm: number;
+    }
+  | {
+      kind: 'polygon';
+      entityId: string;
+      edgeIndex: number;
+      point: Point2D;
+      edge: { a: Point2D; b: Point2D };
+      distanceMm: number;
+    }
+  | {
+      kind: 'rectangle';
+      entityId: string;
+      edgeIndex: number;
+      point: Point2D;
+      edge: { a: Point2D; b: Point2D };
+      distanceMm: number;
+    }
+  | {
+      kind: 'surface';
+      surfaceId: string;
+      edgeIndex: number;
+      point: Point2D;
+      edge: { a: Point2D; b: Point2D };
+      distanceMm: number;
+    }
+  | {
+      kind: 'opening';
+      surfaceId: string;
+      openingId: string;
+      edgeIndex: number;
+      point: Point2D;
+      edge: { a: Point2D; b: Point2D };
+      distanceMm: number;
+    };
+
+type CutDrawState = { candidate: CutCandidate | null };
 
 export type ModifierKeys = { shift: boolean; alt: boolean; ctrl: boolean };
 
-// Minimum distance between two distinct vertices we allow when splitting/
-// inserting points on shape edges (mm). Avoids degenerate zero-length edges
-// from cuts that graze a corner.
+// Minimum distance between two distinct vertices we allow when inserting
+// points on shape edges (mm). Avoids degenerate zero-length edges when the
+// click lands effectively on an existing vertex.
 const VERTEX_EPSILON_MM = 1e-3;
+const CUT_TOLERANCE_PX = 12;
 
 const resolveWorld = (
   stageRef: React.RefObject<Konva.Stage | null>,
-  mods: ModifierKeys,
 ): Point2D | null => {
-  const raw = resolveWorldFromStage(stageRef);
-  if (!raw) return null;
-  const editor = useEditorStore.getState();
-  const v = editor.viewport;
-  const project = useProjectStore.getState().project;
-  const settings = project.settings;
-  const snapEnabled = editor.snapEnabled && !mods.alt;
-  const result = snap({
-    worldPoint: raw,
-    tolerancePx: editor.snapTolerancePx,
-    scale: v.scale,
-    gridSizeMm: settings.gridSizeMm,
-    snapEnabled,
-    snapModes: ['endpoint', 'point', 'grid'],
-    candidatePoints: collectSnapCandidates(project),
-  });
-  return result.point;
+  return resolveWorldFromStage(stageRef);
 };
 
-const rectCornersCCW = (rect: RectangleEntity): Point2D[] => {
-  const rad = degToRad(rect.rotationDeg);
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  const w = rect.widthMm;
-  const h = rect.heightMm;
-  const local: Point2D[] = [
-    { x: 0, y: 0 },
-    { x: w, y: 0 },
-    { x: w, y: h },
-    { x: 0, y: h },
-  ];
-  const corners = local.map((p) => ({
-    x: rect.origin.x + p.x * cos - p.y * sin,
-    y: rect.origin.y + p.x * sin + p.y * cos,
-  }));
-  return ensureCCW(corners);
-};
+const rectCornersCCW = (rect: RectangleEntity): Point2D[] =>
+  ensureCCW(rectangleToPoints(rect.origin, rect.widthMm, rect.heightMm, rect.rotationDeg));
 
-type RingInsertion = { edgeIndex: number; point: Point2D; tAlongEdge: number };
+const insertPointOnRing = (ring: Point2D[], edgeIndex: number, point: Point2D): Point2D[] => [
+  ...ring.slice(0, edgeIndex + 1),
+  point,
+  ...ring.slice(edgeIndex + 1),
+];
 
-const collectRingHits = (
+const tryRingCandidate = (
   ring: Point2D[],
-  cutA: Point2D,
-  cutB: Point2D,
-): RingInsertion[] => {
-  const n = ring.length;
-  const out: RingInsertion[] = [];
-  for (let i = 0; i < n; i++) {
-    const a = ring[i]!;
-    const b = ring[(i + 1) % n]!;
-    const hit = segmentsIntersect(cutA, cutB, a, b);
-    if (!hit) continue;
-    if (distance(hit, a) < VERTEX_EPSILON_MM) continue;
-    if (distance(hit, b) < VERTEX_EPSILON_MM) continue;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const len = Math.hypot(dx, dy);
-    const t = len < 1e-9 ? 0 : ((hit.x - a.x) * dx + (hit.y - a.y) * dy) / (len * len);
-    out.push({ edgeIndex: i, point: hit, tAlongEdge: t });
+  world: Point2D,
+  toleranceMm: number,
+): { edgeIndex: number; point: Point2D; edge: { a: Point2D; b: Point2D }; distanceMm: number } | null => {
+  const edge = closestEdgeOfPoints(world, ring, true);
+  if (!edge || edge.distance > toleranceMm) return null;
+  const a = ring[edge.edgeIndex]!;
+  const b = ring[(edge.edgeIndex + 1) % ring.length]!;
+  if (
+    distance(edge.projection, a) < VERTEX_EPSILON_MM ||
+    distance(edge.projection, b) < VERTEX_EPSILON_MM
+  ) {
+    return null;
   }
-  return out;
+  return {
+    edgeIndex: edge.edgeIndex,
+    point: edge.projection,
+    edge: { a, b },
+    distanceMm: edge.distance,
+  };
 };
 
-const insertHitsIntoRing = (
-  ring: Point2D[],
-  hits: RingInsertion[],
-): Point2D[] => {
-  if (hits.length === 0) return ring;
-  // Group hits by edgeIndex and sort within each edge by tAlongEdge ASC.
-  const byEdge = new Map<number, RingInsertion[]>();
-  for (const h of hits) {
-    const arr = byEdge.get(h.edgeIndex) ?? [];
-    arr.push(h);
-    byEdge.set(h.edgeIndex, arr);
-  }
-  for (const arr of byEdge.values()) {
-    arr.sort((x, y) => x.tAlongEdge - y.tAlongEdge);
-  }
-  const next: Point2D[] = [];
-  for (let i = 0; i < ring.length; i++) {
-    next.push(ring[i]!);
-    const inserts = byEdge.get(i);
-    if (inserts) {
-      for (const h of inserts) {
-        // Avoid duplicates within an edge (e.g. cut passing exactly through
-        // a previously inserted point).
-        const last = next[next.length - 1]!;
-        if (distance(last, h.point) >= VERTEX_EPSILON_MM) {
-          next.push(h.point);
-        }
-      }
-    }
-  }
-  return next;
+const pickBetterCandidate = (best: CutCandidate | null, next: CutCandidate | null): CutCandidate | null => {
+  if (!next) return best;
+  if (!best || next.distanceMm < best.distanceMm) return next;
+  return best;
 };
 
-const applyCutToProject = (
-  project: Project,
-  cutA: Point2D,
-  cutB: Point2D,
-): { next: Project; changed: number } => {
-  if (distance(cutA, cutB) < VERTEX_EPSILON_MM) {
-    return { next: project, changed: 0 };
-  }
-  let changed = 0;
-  const nextEntities: DrawingEntity[] = [];
+const resolveCandidate = (project: Project, world: Point2D): CutCandidate | null => {
+  const toleranceMm = CUT_TOLERANCE_PX / Math.max(useEditorStore.getState().viewport.scale, 1e-9);
+  let best: CutCandidate | null = null;
+
   for (const entity of project.drawingEntities) {
     if (entity.type === 'line') {
-      const hit = segmentsIntersect(cutA, cutB, entity.start, entity.end);
+      const point = closestPointOnSegment(world, { a: entity.start, b: entity.end });
+      const dist = distance(world, point);
       if (
-        !hit ||
-        distance(hit, entity.start) < VERTEX_EPSILON_MM ||
-        distance(hit, entity.end) < VERTEX_EPSILON_MM
+        dist <= toleranceMm &&
+        distance(point, entity.start) >= VERTEX_EPSILON_MM &&
+        distance(point, entity.end) >= VERTEX_EPSILON_MM
       ) {
-        nextEntities.push(entity);
-        continue;
+        best = pickBetterCandidate(best, {
+          kind: 'line',
+          entityId: entity.id,
+          point,
+          edge: { a: entity.start, b: entity.end },
+          distanceMm: dist,
+        });
       }
-      const partA: LineEntity = {
-        ...entity,
-        id: newDrawingEntityId(),
-        start: entity.start,
-        end: hit,
-      };
-      const partB: LineEntity = {
-        ...entity,
-        id: newDrawingEntityId(),
-        start: hit,
-        end: entity.end,
-      };
-      nextEntities.push(partA, partB);
-      changed += 1;
       continue;
     }
 
     if (entity.type === 'rectangle') {
-      const corners = rectCornersCCW(entity);
-      const hits = collectRingHits(corners, cutA, cutB);
-      if (hits.length === 0) {
-        nextEntities.push(entity);
-        continue;
-      }
-      const nextPoints = insertHitsIntoRing(corners, hits);
-      if (nextPoints.length < 3) {
-        nextEntities.push(entity);
-        continue;
-      }
+      const hit = tryRingCandidate(rectCornersCCW(entity), world, toleranceMm);
+      best = pickBetterCandidate(
+        best,
+        hit
+          ? {
+              kind: 'rectangle',
+              entityId: entity.id,
+              edgeIndex: hit.edgeIndex,
+              point: hit.point,
+              edge: hit.edge,
+              distanceMm: hit.distanceMm,
+            }
+          : null,
+      );
+      continue;
+    }
+
+    if (entity.type === 'polygon') {
+      const hit = tryRingCandidate(entity.points, world, toleranceMm);
+      best = pickBetterCandidate(
+        best,
+        hit
+          ? {
+              kind: 'polygon',
+              entityId: entity.id,
+              edgeIndex: hit.edgeIndex,
+              point: hit.point,
+              edge: hit.edge,
+              distanceMm: hit.distanceMm,
+            }
+          : null,
+      );
+    }
+  }
+
+  for (const surface of project.surfaces) {
+    const surfaceHit = tryRingCandidate(surface.outerBoundary, world, toleranceMm);
+    best = pickBetterCandidate(
+      best,
+      surfaceHit
+        ? {
+            kind: 'surface',
+            surfaceId: surface.id,
+            edgeIndex: surfaceHit.edgeIndex,
+            point: surfaceHit.point,
+            edge: surfaceHit.edge,
+            distanceMm: surfaceHit.distanceMm,
+          }
+        : null,
+    );
+
+    for (let index = 0; index < surface.holes.length; index += 1) {
+      const openingId = surface.holeMeta[index]?.id;
+      const hole = surface.holes[index];
+      if (!openingId || !hole) continue;
+      const openingHit = tryRingCandidate(hole, world, toleranceMm);
+      best = pickBetterCandidate(
+        best,
+        openingHit
+          ? {
+              kind: 'opening',
+              surfaceId: surface.id,
+              openingId,
+              edgeIndex: openingHit.edgeIndex,
+              point: openingHit.point,
+              edge: openingHit.edge,
+              distanceMm: openingHit.distanceMm,
+            }
+          : null,
+      );
+    }
+  }
+
+  return best;
+};
+
+const updateSurfaceBoundary = (surface: Surface, edgeIndex: number, point: Point2D): Surface => ({
+  ...surface,
+  outerBoundary: insertPointOnRing(surface.outerBoundary, edgeIndex, point),
+});
+
+export const applyCutCandidateToProject = (
+  project: Project,
+  candidate: CutCandidate,
+): { next: Project; label: string } => {
+  if (candidate.kind === 'line') {
+    const nextEntities = project.drawingEntities.flatMap((entity) => {
+      if (entity.id !== candidate.entityId || entity.type !== 'line') return [entity];
+      const partA: LineEntity = {
+        ...entity,
+        id: newDrawingEntityId(),
+        end: candidate.point,
+      };
+      const partB: LineEntity = {
+        ...entity,
+        id: newDrawingEntityId(),
+        start: candidate.point,
+      };
+      return [partA, partB];
+    });
+    return {
+      next: { ...project, drawingEntities: nextEntities },
+      label: 'Add point on line',
+    };
+  }
+
+  if (candidate.kind === 'polygon') {
+    const nextEntities = project.drawingEntities.map((entity) =>
+      entity.id === candidate.entityId && entity.type === 'polygon'
+        ? { ...entity, points: insertPointOnRing(entity.points, candidate.edgeIndex, candidate.point) }
+        : entity,
+    );
+    return {
+      next: { ...project, drawingEntities: nextEntities },
+      label: 'Add point on polygon',
+    };
+  }
+
+  if (candidate.kind === 'rectangle') {
+    const nextEntities = project.drawingEntities.map((entity) => {
+      if (entity.id !== candidate.entityId || entity.type !== 'rectangle') return entity;
       const replacement: PolygonEntity = {
         id: newDrawingEntityId(),
         type: 'polygon',
-        points: nextPoints,
+        points: insertPointOnRing(rectCornersCCW(entity), candidate.edgeIndex, candidate.point),
         name: entity.name,
         showSegmentDimensions: entity.showDimensions,
         showArea: false,
         style: entity.style,
       };
-      nextEntities.push(replacement);
-      changed += 1;
-      continue;
-    }
-
-    if (entity.type === 'polygon') {
-      const hits = collectRingHits(entity.points, cutA, cutB);
-      if (hits.length === 0) {
-        nextEntities.push(entity);
-        continue;
-      }
-      const nextPoints = insertHitsIntoRing(entity.points, hits);
-      if (nextPoints.length < 3) {
-        nextEntities.push(entity);
-        continue;
-      }
-      nextEntities.push({ ...entity, points: nextPoints });
-      changed += 1;
-      continue;
-    }
-
-    nextEntities.push(entity);
+      return replacement;
+    });
+    return {
+      next: { ...project, drawingEntities: nextEntities },
+      label: 'Add point on rectangle',
+    };
   }
-  if (changed === 0) return { next: project, changed: 0 };
+
+  if (candidate.kind === 'surface') {
+    return {
+      next: {
+        ...project,
+        surfaces: project.surfaces.map((surface) =>
+          surface.id === candidate.surfaceId
+            ? updateSurfaceBoundary(surface, candidate.edgeIndex, candidate.point)
+            : surface,
+        ),
+      },
+      label: 'Add point on surface',
+    };
+  }
+
   return {
-    next: { ...project, drawingEntities: nextEntities },
-    changed,
+    next: {
+      ...project,
+      surfaces: project.surfaces.map((surface) => {
+        if (surface.id !== candidate.surfaceId) return surface;
+        return {
+          ...surface,
+          holes: surface.holes.map((hole, index) =>
+            surface.holeMeta[index]?.id === candidate.openingId
+              ? insertPointOnRing(hole, candidate.edgeIndex, candidate.point)
+              : hole,
+          ),
+        };
+      }),
+    },
+    label: 'Add point on opening',
   };
 };
 
 export const useCutDraw = (stageRef: React.RefObject<Konva.Stage | null>) => {
-  const [state, setState] = useState<CutDrawState>({ phase: 'pickFirst' });
+  const [state, setState] = useState<CutDrawState>({ candidate: null });
 
   const onPointerDown = useCallback(
-    (mods: ModifierKeys) => {
-      const point = resolveWorld(stageRef, mods);
+    (_mods: ModifierKeys) => {
+      const point = resolveWorld(stageRef);
       if (!point) return;
-      if (state.phase === 'pickFirst') {
-        setState({ phase: 'pickSecond', first: point, cursor: point });
-        return;
-      }
-      // Second click: commit cut.
       const project = useProjectStore.getState().project;
-      const { next, changed } = applyCutToProject(project, state.first, point);
-      if (changed > 0) {
-        dispatchCommand(
-          replaceProjectCommand({ next }, `Cut (${changed} shape${changed > 1 ? 's' : ''})`),
-        );
-      }
-      setState({ phase: 'pickFirst' });
+      const candidate = resolveCandidate(project, point);
+      if (!candidate) return;
+      const { next, label } = applyCutCandidateToProject(project, candidate);
+      dispatchCommand(replaceProjectCommand({ next }, label));
+      setState({ candidate: resolveCandidate(next, point) });
     },
-    [stageRef, state],
+    [stageRef],
   );
 
   const onPointerMove = useCallback(
-    (mods: ModifierKeys) => {
-      if (state.phase !== 'pickSecond') return;
-      const point = resolveWorld(stageRef, mods);
+    (_mods: ModifierKeys) => {
+      const point = resolveWorld(stageRef);
       if (!point) return;
-      setState({ phase: 'pickSecond', first: state.first, cursor: point });
+      const project = useProjectStore.getState().project;
+      setState({ candidate: resolveCandidate(project, point) });
     },
-    [stageRef, state],
+    [stageRef],
   );
 
   const cancel = useCallback(() => {
-    setState({ phase: 'pickFirst' });
+    setState({ candidate: null });
   }, []);
 
   return { state, onPointerDown, onPointerMove, cancel };

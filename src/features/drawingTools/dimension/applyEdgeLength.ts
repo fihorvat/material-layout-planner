@@ -4,6 +4,8 @@ import {
   dispatchCommand,
   updateDrawingEntityCommand,
   updateSurfaceCommand,
+  updateOpeningCommand,
+  findOpeningSurface,
 } from '@/domain/commands';
 
 const setEndPointAtLength = (a: Point2D, b: Point2D, newLengthMm: number): Point2D => {
@@ -102,6 +104,31 @@ export const applyEdgeLength = (
     return true;
   }
 
+  if (target.kind === 'openingEdge') {
+    const found = findOpeningSurface(project, target.openingId);
+    if (!found || found.surface.id !== target.surfaceId) return false;
+    const hole = found.surface.holes[found.index];
+    if (!hole) return false;
+    const a = hole[target.edgeIndex];
+    const b = hole[(target.edgeIndex + 1) % hole.length];
+    if (!a || !b) return false;
+    const newB = setEndPointAtLength(a, b, newLengthMm);
+    const nextHole = hole.map((point, index) =>
+      index === (target.edgeIndex + 1) % hole.length ? newB : point,
+    );
+    dispatchCommand(
+      updateOpeningCommand(
+        {
+          surfaceId: target.surfaceId,
+          openingId: target.openingId,
+          patch: { hole: nextHole },
+        },
+        `Resize opening edge ${target.edgeIndex + 1}`,
+      ),
+    );
+    return true;
+  }
+
   return false;
 };
 
@@ -132,6 +159,16 @@ export const getEdgeLength = (
     if (!s) return null;
     const a = s.outerBoundary[target.edgeIndex];
     const b = s.outerBoundary[(target.edgeIndex + 1) % s.outerBoundary.length];
+    if (!a || !b) return null;
+    return Math.hypot(b.x - a.x, b.y - a.y);
+  }
+  if (target.kind === 'openingEdge') {
+    const found = findOpeningSurface(project, target.openingId);
+    if (!found || found.surface.id !== target.surfaceId) return null;
+    const hole = found.surface.holes[found.index];
+    if (!hole) return null;
+    const a = hole[target.edgeIndex];
+    const b = hole[(target.edgeIndex + 1) % hole.length];
     if (!a || !b) return null;
     return Math.hypot(b.x - a.x, b.y - a.y);
   }

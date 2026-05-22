@@ -15,6 +15,10 @@ import { radToDeg } from '@/domain/geometry';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { OpeningRenderer } from './OpeningRenderer';
 import { translateCurrentSelection } from '@/features/editor/selectionClipboard';
+import {
+  resolveSelectionDragDelta,
+  useSelectionMovePreviewStore,
+} from '@/features/drawingTools/select/SelectionMoveGuides';
 
 const flat = (pts: Point2D[]): number[] => {
   const out: number[] = [];
@@ -138,15 +142,23 @@ const renderSurface = (
       }}
       onDragStart={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
+        useSelectionMovePreviewStore.getState().setPreview({ dx: 0, dy: 0 });
       }}
       onDragMove={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
+        const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+        if (next.x !== e.target.x() || next.y !== e.target.y()) {
+          e.target.position(next);
+        }
+        useSelectionMovePreviewStore.getState().setPreview({ dx: next.x, dy: next.y });
       }}
       onDragEnd={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
-        const dx = e.target.x();
-        const dy = e.target.y();
+        const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+        const dx = next.x;
+        const dy = next.y;
         e.target.position({ x: 0, y: 0 });
+        useSelectionMovePreviewStore.getState().clearPreview();
         translateCurrentSelection(dx, dy);
       }}
     >

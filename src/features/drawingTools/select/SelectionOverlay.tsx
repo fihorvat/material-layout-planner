@@ -2,10 +2,17 @@ import { Rect } from 'react-konva';
 import { useProjectStore, useSelectionStore } from '@/state';
 import { pointsToAabb } from '@/domain/geometry';
 import type { Point2D } from '@/types';
+import { useSelectionMovePreviewStore } from './SelectionMoveGuides';
+
+const translatePoints = (points: Point2D[], dx: number, dy: number): Point2D[] =>
+  points.map((point) => ({ x: point.x + dx, y: point.y + dy }));
 
 export const SelectionOverlay = () => {
   const project = useProjectStore((s) => s.project);
   const selected = useSelectionStore((s) => s.selected);
+  const preview = useSelectionMovePreviewStore((s) => s.preview);
+  const dx = preview?.dx ?? 0;
+  const dy = preview?.dy ?? 0;
 
   return (
     <>
@@ -37,7 +44,7 @@ export const SelectionOverlay = () => {
           }
         }
         if (!pts || pts.length === 0) return null;
-        const b = pointsToAabb(pts);
+        const b = pointsToAabb(translatePoints(pts, dx, dy));
         return (
           <Rect
             key={`${entry.kind}:${entry.id}`}

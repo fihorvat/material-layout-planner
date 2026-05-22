@@ -13,8 +13,8 @@ export const useCutTool = (stageRef: React.RefObject<Konva.Stage | null>) => {
   });
 
   const overlays =
-    draw.state.phase === 'pickSecond' ? (
-      <CutPreview first={draw.state.first} cursor={draw.state.cursor} />
+    draw.state.candidate ? (
+      <CutPreview edge={draw.state.candidate.edge} point={draw.state.candidate.point} />
     ) : null;
 
   return { onStagePointerDown, onStagePointerMove, overlays };

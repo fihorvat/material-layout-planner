@@ -5,7 +5,8 @@ export type DimensionEditTarget =
   | { kind: 'rectWidth'; entityId: string }
   | { kind: 'rectHeight'; entityId: string }
   | { kind: 'polygonEdge'; entityId: string; edgeIndex: number }
-  | { kind: 'surfaceEdge'; surfaceId: string; edgeIndex: number };
+  | { kind: 'surfaceEdge'; surfaceId: string; edgeIndex: number }
+  | { kind: 'openingEdge'; surfaceId: string; openingId: string; edgeIndex: number };
 
 export type DimensionEditState = {
   editing: DimensionEditTarget | null;

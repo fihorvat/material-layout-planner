@@ -56,6 +56,7 @@ describe('useOpeningDraw — rectangle mode', () => {
     const after = useProjectStore.getState().project.surfaces.find((s) => s.id === surface.id)!;
     expect(after.holes).toHaveLength(1);
     expect(after.holeMeta).toHaveLength(1);
+    expect(after.holeMeta[0]?.showDimensions).toBe(true);
   });
 
   it('rejects with toast when the first click is outside any surface', () => {

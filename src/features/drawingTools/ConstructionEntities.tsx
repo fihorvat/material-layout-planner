@@ -12,6 +12,10 @@ import { lineLength, lineAngleDeg, distance, radToDeg } from '@/domain/geometry'
 import { EditableEdgeLabel } from './dimension/EditableEdgeLabel';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { translateCurrentSelection } from '@/features/editor/selectionClipboard';
+import {
+  resolveSelectionDragDelta,
+  useSelectionMovePreviewStore,
+} from './select/SelectionMoveGuides';
 
 const flat = (points: Point2D[]): number[] => {
   const out: number[] = [];
@@ -119,15 +123,23 @@ const renderEntity = (
         }}
         onDragStart={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
+          useSelectionMovePreviewStore.getState().setPreview({ dx: 0, dy: 0 });
         }}
         onDragMove={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
+          const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+          if (next.x !== e.target.x() || next.y !== e.target.y()) {
+            e.target.position(next);
+          }
+          useSelectionMovePreviewStore.getState().setPreview({ dx: next.x, dy: next.y });
         }}
         onDragEnd={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
-          const dx = e.target.x();
-          const dy = e.target.y();
+          const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+          const dx = next.x;
+          const dy = next.y;
           e.target.position({ x: 0, y: 0 });
+          useSelectionMovePreviewStore.getState().clearPreview();
           translateCurrentSelection(dx, dy);
         }}
       >
@@ -151,15 +163,23 @@ const renderEntity = (
         }}
         onDragStart={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
+          useSelectionMovePreviewStore.getState().setPreview({ dx: 0, dy: 0 });
         }}
         onDragMove={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
+          const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+          if (next.x !== e.target.x() || next.y !== e.target.y()) {
+            e.target.position(next);
+          }
+          useSelectionMovePreviewStore.getState().setPreview({ dx: next.x, dy: next.y });
         }}
         onDragEnd={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
-          const dx = e.target.x();
-          const dy = e.target.y();
+          const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+          const dx = next.x;
+          const dy = next.y;
           e.target.position({ x: 0, y: 0 });
+          useSelectionMovePreviewStore.getState().clearPreview();
           translateCurrentSelection(dx, dy);
         }}
       >
@@ -188,15 +208,23 @@ const renderEntity = (
       }}
       onDragStart={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
+        useSelectionMovePreviewStore.getState().setPreview({ dx: 0, dy: 0 });
       }}
       onDragMove={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
+        const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+        if (next.x !== e.target.x() || next.y !== e.target.y()) {
+          e.target.position(next);
+        }
+        useSelectionMovePreviewStore.getState().setPreview({ dx: next.x, dy: next.y });
       }}
       onDragEnd={(e: KonvaEventObject<DragEvent>) => {
         e.cancelBubble = true;
-        const dx = e.target.x();
-        const dy = e.target.y();
+        const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+        const dx = next.x;
+        const dy = next.y;
         e.target.position({ x: 0, y: 0 });
+        useSelectionMovePreviewStore.getState().clearPreview();
         translateCurrentSelection(dx, dy);
       }}
     >

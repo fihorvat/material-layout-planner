@@ -2,11 +2,16 @@ import { Group, Line as KLine, Text } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Surface, Point2D } from '@/types';
 import { useEditorStore, useSelectionStore, useThemeStore } from '@/state';
+import { defaultDrawingStyle } from '@/types';
 import { themedShapeColor } from '@/features/editor/canvas/themeColors';
 import { polygonCentroid, radToDeg, distance } from '@/domain/geometry';
 import { EditableEdgeLabel } from '@/features/drawingTools/dimension/EditableEdgeLabel';
 import { dispatchCommand, updateOpeningCommand } from '@/domain/commands';
 import { translateCurrentSelection } from '@/features/editor/selectionClipboard';
+import {
+  resolveSelectionDragDelta,
+  useSelectionMovePreviewStore,
+} from '@/features/drawingTools/select/SelectionMoveGuides';
 
 const flat = (pts: Point2D[]): number[] => {
   const out: number[] = [];
@@ -51,14 +56,17 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
   for (let i = 0; i < surface.holes.length; i++) {
     const hole = surface.holes[i]!;
     const meta = surface.holeMeta[i];
-    const stroke = meta ? themedShapeColor(meta.style.strokeColor, theme) : '#1f2937';
-    const textColor = meta ? themedShapeColor(meta.style.textColor, theme) : '#111827';
-    const isSelected = meta ? selectedIds.has(meta.id) : false;
-    const strokeWidth = meta?.style.strokeWidthPx ?? 1;
-    const fillColor = meta?.style.fillColor
-      ? themedShapeColor(meta.style.fillColor, theme)
+    const openingId = meta?.id ?? `${surface.id}:hole:${i}`;
+    const style = meta?.style ?? defaultDrawingStyle();
+    const showDimensions = meta?.showDimensions ?? true;
+    const stroke = themedShapeColor(style.strokeColor, theme);
+    const textColor = themedShapeColor(style.textColor, theme);
+    const isSelected = selectedIds.has(openingId);
+    const strokeWidth = style.strokeWidthPx ?? 1;
+    const fillColor = style.fillColor
+      ? themedShapeColor(style.fillColor, theme)
       : undefined;
-    const fillOpacity = meta?.style.fillOpacity ?? 1;
+    const fillOpacity = style.fillOpacity ?? 1;
     const isDraggable = activeTool === 'select' && isSelected;
     const openingNodes: React.ReactNode[] = [
       <KLine
@@ -81,7 +89,6 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
       const labelX = c.x + offset.x;
       const labelY = c.y + offset.y;
       const surfaceId = surface.id;
-      const openingId = meta.id;
       openingNodes.push(
         <Text
           key={`opn-name:${surface.id}:${i}`}
@@ -122,7 +129,7 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
         />,
       );
     }
-    if (meta?.showDimensions) {
+    if (showDimensions) {
       for (const e of holeEdges(hole)) {
         const angle = radToDeg(Math.atan2(e.b.y - e.a.y, e.b.x - e.a.x));
         openingNodes.push(
@@ -132,8 +139,13 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
             lengthMm={e.lengthMm}
             angleDeg={angle}
             color={textColor}
-            fontSizePx={meta.style.fontSizePx}
-            target={{ kind: 'surfaceEdge', surfaceId: surface.id, edgeIndex: e.index }}
+            fontSizePx={style.fontSizePx}
+            target={{
+              kind: 'openingEdge',
+              surfaceId: surface.id,
+              openingId,
+              edgeIndex: e.index,
+            }}
           />,
         );
       }
@@ -147,15 +159,23 @@ export const OpeningRenderer = ({ surface }: OpeningRendererProps) => {
         }}
         onDragStart={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
+          useSelectionMovePreviewStore.getState().setPreview({ dx: 0, dy: 0 });
         }}
         onDragMove={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
+          const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+          if (next.x !== e.target.x() || next.y !== e.target.y()) {
+            e.target.position(next);
+          }
+          useSelectionMovePreviewStore.getState().setPreview({ dx: next.x, dy: next.y });
         }}
         onDragEnd={(e: KonvaEventObject<DragEvent>) => {
           e.cancelBubble = true;
-          const dx = e.target.x();
-          const dy = e.target.y();
+          const next = resolveSelectionDragDelta(e.target.x(), e.target.y(), e.evt.shiftKey);
+          const dx = next.x;
+          const dy = next.y;
           e.target.position({ x: 0, y: 0 });
+          useSelectionMovePreviewStore.getState().clearPreview();
           translateCurrentSelection(dx, dy);
         }}
       >
