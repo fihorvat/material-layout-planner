@@ -70,7 +70,7 @@ export const CanvasStage = () => {
   const drawingModeActive = useDrawingModeActive();
   const [hoverWorld, setHoverWorld] = useState<Point2D | null>(null);
   const editingLabel = editingLabelId
-    ? project.labels.find((entry) => entry.id === editingLabelId) ?? null
+    ? (project.labels.find((entry) => entry.id === editingLabelId) ?? null)
     : null;
 
   useEffect(() => {

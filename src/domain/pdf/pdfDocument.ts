@@ -22,6 +22,10 @@ export type PdfBuildInput = {
   cutList: MaterialCutListItem[];
   cuttingDiagrams: CuttingDiagram[];
   projectStats: ProjectStats;
+  overviewThumbnail?: {
+    bytes: Uint8Array;
+    mimeType: 'image/png' | 'image/jpeg';
+  };
 };
 
 export type PdfBuildContext = PdfBuildInput & {
@@ -38,7 +42,7 @@ export const buildPdfDocument = async (input: PdfBuildInput): Promise<Uint8Array
   const build: PdfBuildContext = { ...input, doc, fonts, contexts: [] };
 
   renderSummaryPage(build);
-  if (input.settings.includeFinalAppearance) renderFinalAppearancePage(build);
+  if (input.settings.includeFinalAppearance) await renderFinalAppearancePage(build);
   if (input.settings.includeTechnicalDrawing) renderTechnicalDrawingPage(build);
   if (input.settings.includeMaterialLayout) renderMaterialLayoutPage(build);
   if (input.settings.includeCutList) renderCutListPage(build);

@@ -42,7 +42,14 @@ const renderOne = (dim: DimensionEntity, project: Project, theme: Theme) => {
     return (
       <Group key={dim.id}>
         <KLine
-          points={[computed.armA.x, computed.armA.y, computed.vertex.x, computed.vertex.y, computed.armB.x, computed.armB.y]}
+          points={[
+            computed.armA.x,
+            computed.armA.y,
+            computed.vertex.x,
+            computed.vertex.y,
+            computed.armB.x,
+            computed.armB.y,
+          ]}
           stroke={stroke}
           strokeWidth={dim.style.strokeWidthPx}
           strokeScaleEnabled={false}

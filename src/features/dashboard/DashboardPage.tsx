@@ -25,11 +25,7 @@ const ProjectThumbnail = ({ project }: { project: ProjectSummary }) => {
   const url = useThumbnailUrl(project.thumbnailBlob);
   return (
     <div className={styles.thumb}>
-      {url ? (
-        <img src={url} alt={`Thumbnail of ${project.name}`} />
-      ) : (
-        <span>No preview yet</span>
-      )}
+      {url ? <img src={url} alt={`Thumbnail of ${project.name}`} /> : <span>No preview yet</span>}
     </div>
   );
 };
@@ -39,7 +35,17 @@ type DashboardPageProps = {
 };
 
 export const DashboardPage = ({ onOpenProject }: DashboardPageProps) => {
-  const { projects, loading, error, createProject, renameProject, duplicateProject, deleteProject, repo, refresh } = useDashboard();
+  const {
+    projects,
+    loading,
+    error,
+    createProject,
+    renameProject,
+    duplicateProject,
+    deleteProject,
+    repo,
+    refresh,
+  } = useDashboard();
   const [newName, setNewName] = useState('');
   const [importErr, setImportErr] = useState<string | null>(null);
 
@@ -112,9 +118,7 @@ export const DashboardPage = ({ onOpenProject }: DashboardPageProps) => {
             <article key={p.id} className={styles.card}>
               <ProjectThumbnail project={p} />
               <h3 className={styles.cardTitle}>{p.name}</h3>
-              <p className={styles.cardMeta}>
-                Updated {new Date(p.updatedAt).toLocaleString()}
-              </p>
+              <p className={styles.cardMeta}>Updated {new Date(p.updatedAt).toLocaleString()}</p>
               <p className={styles.cardMetaMuted}>
                 {p.surfaceCount} surfaces {'\u00B7'} {p.materialCount} materials
               </p>

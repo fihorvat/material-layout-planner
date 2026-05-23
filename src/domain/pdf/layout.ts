@@ -26,10 +26,16 @@ const PAPER_MM: Record<PdfExportSettings['paperSize'], { w: number; h: number }>
 
 const MARGIN_MM = 15;
 
-export const createPage = (doc: PDFDocument, settings: PdfExportSettings, fonts: Fonts): PageContext => {
+export const createPage = (
+  doc: PDFDocument,
+  settings: PdfExportSettings,
+  fonts: Fonts,
+  options: { orientation?: PdfExportSettings['orientation'] } = {},
+): PageContext => {
   const paperMm = PAPER_MM[settings.paperSize];
-  const widthMm = settings.orientation === 'landscape' ? paperMm.h : paperMm.w;
-  const heightMm = settings.orientation === 'landscape' ? paperMm.w : paperMm.h;
+  const orientation = options.orientation ?? settings.orientation;
+  const widthMm = orientation === 'landscape' ? paperMm.h : paperMm.w;
+  const heightMm = orientation === 'landscape' ? paperMm.w : paperMm.h;
   const widthPt = widthMm * PT_PER_MM;
   const heightPt = heightMm * PT_PER_MM;
   const page = doc.addPage([widthPt, heightPt]);
@@ -79,12 +85,23 @@ export const drawHeader = (ctx: PageContext, title: string, subtitle?: string): 
   return nextY - 14;
 };
 
-export const drawFooter = (ctx: PageContext, projectName: string, pageNumber: number, totalPages: number): void => {
+export const drawFooter = (
+  ctx: PageContext,
+  projectName: string,
+  pageNumber: number,
+  totalPages: number,
+): void => {
   const y = ctx.marginPt - 6;
   const left = `${projectName}`;
   const right = `Page ${pageNumber} of ${totalPages}`;
   const date = new Date().toLocaleDateString();
-  ctx.page.drawText(left, { x: ctx.contentBox.x, y, size: 8, font: ctx.fonts.regular, color: rgb(0.4, 0.4, 0.4) });
+  ctx.page.drawText(left, {
+    x: ctx.contentBox.x,
+    y,
+    size: 8,
+    font: ctx.fonts.regular,
+    color: rgb(0.4, 0.4, 0.4),
+  });
   ctx.page.drawText(date, {
     x: ctx.contentBox.x + ctx.contentBox.w / 2 - 20,
     y,
@@ -101,4 +118,3 @@ export const drawFooter = (ctx: PageContext, projectName: string, pageNumber: nu
     color: rgb(0.4, 0.4, 0.4),
   });
 };
-

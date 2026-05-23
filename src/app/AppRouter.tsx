@@ -12,9 +12,7 @@ import {
 const repo = createProjectRepository();
 const AUTOSAVE_INTERVAL_MS = 1000;
 
-type Route =
-  | { kind: 'dashboard' }
-  | { kind: 'project'; id: string };
+type Route = { kind: 'dashboard' } | { kind: 'project'; id: string };
 
 const parseHash = (): Route => {
   const hash = window.location.hash;

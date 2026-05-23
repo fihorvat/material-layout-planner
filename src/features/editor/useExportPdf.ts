@@ -6,10 +6,19 @@ import { buildCutList } from '@/domain/materialLayout/materialCutList';
 import { buildCuttingDiagram, type CuttingDiagram } from '@/domain/materialLayout/cuttingDiagram';
 import { computeProjectStats } from '@/domain/materialLayout/layoutStats';
 import { resolveCurrentMaterialLayouts } from '@/domain/materialLayout/resolveCurrentMaterialLayouts';
+import { captureProjectThumbnail, captureStageThumbnail } from './canvas/activeStage';
+import { createProjectRepository } from '@/storage';
+
+const repo = createProjectRepository();
 
 const sanitizeFileName = (name: string): string => {
   const trimmed = name.trim() || 'project';
   return trimmed.replace(/[\\/:*?"<>|]+/g, '_');
+};
+
+const normalizeThumbnailMimeType = (blob: Blob | null): 'image/png' | 'image/jpeg' | null => {
+  if (!blob) return null;
+  return blob.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
 };
 
 const triggerDownload = (bytes: Uint8Array, fileName: string): void => {
@@ -54,6 +63,26 @@ export const useExportPdf = () => {
       }
 
       const projectStats = computeProjectStats(projectForExport, diagramsByLayoutId);
+      const liveOverviewThumbnail = await captureStageThumbnail({
+        targetWidth: 3200,
+        mimeType: 'image/png',
+        quality: 1,
+        pixelRatio: 2.5,
+      });
+      const generatedOverviewThumbnail = liveOverviewThumbnail
+        ? null
+        : await captureProjectThumbnail(projectForExport, {
+            layouts,
+            targetWidth: 3200,
+            mimeType: 'image/png',
+            quality: 1,
+          });
+      const overviewThumbnail =
+        liveOverviewThumbnail ?? generatedOverviewThumbnail ?? (await repo.getThumbnail(project.id));
+      const overviewThumbnailBytes = overviewThumbnail
+        ? new Uint8Array(await overviewThumbnail.arrayBuffer())
+        : undefined;
+      const overviewThumbnailMimeType = normalizeThumbnailMimeType(overviewThumbnail);
 
       const bytes = await buildPdfDocument({
         project: projectForExport,
@@ -62,6 +91,10 @@ export const useExportPdf = () => {
         cutList,
         cuttingDiagrams,
         projectStats,
+        overviewThumbnail:
+          overviewThumbnailBytes && overviewThumbnailMimeType
+            ? { bytes: overviewThumbnailBytes, mimeType: overviewThumbnailMimeType }
+            : undefined,
       });
 
       triggerDownload(bytes, `${sanitizeFileName(project.name)}.pdf`);

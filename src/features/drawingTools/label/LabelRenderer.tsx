@@ -21,17 +21,14 @@ export const LabelRenderer = memo(function LabelRenderer({ labels, project }: La
   const setDragPreview = useLabelUiStore((s) => s.setDragPreview);
   const clearDragPreview = useLabelUiStore((s) => s.clearDragPreview);
   const startEdit = useLabelUiStore((s) => s.startEdit);
-  const selectedLabelIds = new Set(
-    selected.filter((e) => e.kind === 'label').map((e) => e.id),
-  );
+  const selectedLabelIds = new Set(selected.filter((e) => e.kind === 'label').map((e) => e.id));
   return (
     <Group>
       {labels.map((label) => {
         const anchorPos = computeAnchorPosition(label, project);
         if (!anchorPos) return null;
         const pos = dragPreviewPositions[label.id] ?? anchorPos;
-        const isDraggable =
-          activeTool === 'select' && selectedLabelIds.has(label.id);
+        const isDraggable = activeTool === 'select' && selectedLabelIds.has(label.id);
         const text = getLabelDisplayText(label.text, label.style);
         return (
           <Text

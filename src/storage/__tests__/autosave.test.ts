@@ -83,9 +83,11 @@ describe('autosave', () => {
   it('marks the project as saved after a successful flush', async () => {
     vi.useFakeTimers();
     const repo = createProjectRepository();
-    useProjectStore.getState().replaceProject(
-      createEmptyProject('Auto', { id: newProjectId(), now: new Date().toISOString() }),
-    );
+    useProjectStore
+      .getState()
+      .replaceProject(
+        createEmptyProject('Auto', { id: newProjectId(), now: new Date().toISOString() }),
+      );
     const stop = startAutosave({ repo, intervalMs: 50 });
     useProjectStore.getState().patchProject((d) => {
       d.name = 'dirty';
@@ -115,9 +117,9 @@ describe('autosave', () => {
     const thumbnail = new Blob(['thumb'], { type: 'image/jpeg' });
     const projectId = newProjectId();
 
-    useProjectStore.getState().replaceProject(
-      createEmptyProject('Auto', { id: projectId, now: new Date().toISOString() }),
-    );
+    useProjectStore
+      .getState()
+      .replaceProject(createEmptyProject('Auto', { id: projectId, now: new Date().toISOString() }));
 
     const stop = startAutosave({
       repo,
