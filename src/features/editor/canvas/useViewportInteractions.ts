@@ -12,6 +12,20 @@ export const useViewportInteractions = (stageRef: React.RefObject<StageEventTarg
   const spaceHeld = useRef(false);
   const panning = useRef(false);
   const lastPointer = useRef<{ x: number; y: number } | null>(null);
+  const pendingPan = useRef({ dx: 0, dy: 0 });
+  const panFrame = useRef<number | null>(null);
+
+  const flushPan = () => {
+    if (panFrame.current !== null) {
+      cancelAnimationFrame(panFrame.current);
+      panFrame.current = null;
+    }
+    const { dx, dy } = pendingPan.current;
+    pendingPan.current = { dx: 0, dy: 0 };
+    if (dx !== 0 || dy !== 0) {
+      panBy(dx, dy);
+    }
+  };
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -50,6 +64,9 @@ export const useViewportInteractions = (stageRef: React.RefObject<StageEventTarg
     return () => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('keyup', onKeyUp);
+      if (panFrame.current !== null) {
+        cancelAnimationFrame(panFrame.current);
+      }
     };
   }, [setViewport, zoomAt, resetViewport, stageRef]);
 
@@ -75,13 +92,21 @@ export const useViewportInteractions = (stageRef: React.RefObject<StageEventTarg
     const dx = e.evt.clientX - lastPointer.current.x;
     const dy = e.evt.clientY - lastPointer.current.y;
     lastPointer.current = { x: e.evt.clientX, y: e.evt.clientY };
-    panBy(dx, dy);
+    pendingPan.current.dx += dx;
+    pendingPan.current.dy += dy;
+    if (panFrame.current === null) {
+      panFrame.current = requestAnimationFrame(() => {
+        panFrame.current = null;
+        flushPan();
+      });
+    }
   };
   const onMouseUp = () => {
+    flushPan();
     panning.current = false;
     lastPointer.current = null;
     document.body.style.cursor = spaceHeld.current ? 'grab' : '';
   };
 
-  return { onWheel, onMouseDown, onMouseMove, onMouseUp };
+  return { onWheel, onMouseDown, onMouseMove, onMouseUp, isPanningRef: panning };
 };

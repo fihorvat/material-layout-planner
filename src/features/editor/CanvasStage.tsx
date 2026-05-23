@@ -81,6 +81,9 @@ export const CanvasStage = () => {
 
   const onMouseDown = (e: { evt: MouseEvent }) => {
     handlers.onMouseDown(e);
+    if (handlers.isPanningRef.current) {
+      return;
+    }
     if (activeTool === 'select') {
       select.onStagePointerDown(e as unknown as { evt: PointerEvent });
     } else if (activeTool === 'line') {
@@ -109,13 +112,20 @@ export const CanvasStage = () => {
   };
   const onMouseMove = (e: { evt: MouseEvent }) => {
     handlers.onMouseMove(e);
-    const stage = stageRef.current;
-    if (stage) {
-      const pos = stage.getPointerPosition();
-      if (pos) {
-        const v = useEditorStore.getState().viewport;
-        setHoverWorld(screenToWorld(pos.x, pos.y, v));
+    if (!handlers.isPanningRef.current) {
+      const stage = stageRef.current;
+      if (stage) {
+        const pos = stage.getPointerPosition();
+        if (pos) {
+          const v = useEditorStore.getState().viewport;
+          setHoverWorld(screenToWorld(pos.x, pos.y, v));
+        }
       }
+    } else if (hoverWorld !== null) {
+      setHoverWorld(null);
+    }
+    if (handlers.isPanningRef.current) {
+      return;
     }
     if (activeTool === 'select') {
       select.onStagePointerMove();
@@ -140,7 +150,11 @@ export const CanvasStage = () => {
     }
   };
   const onMouseUp = (e: { evt: MouseEvent }) => {
+    const wasPanning = handlers.isPanningRef.current;
     handlers.onMouseUp();
+    if (wasPanning) {
+      return;
+    }
     if (activeTool === 'select') {
       select.onStagePointerUp(e as unknown as { evt: PointerEvent });
     }

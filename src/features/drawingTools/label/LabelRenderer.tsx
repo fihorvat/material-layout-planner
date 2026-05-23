@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Group, Text } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { LabelEntity, Project } from '@/types';
@@ -12,7 +13,7 @@ type LabelRendererProps = {
   project: Project;
 };
 
-export const LabelRenderer = ({ labels, project }: LabelRendererProps) => {
+export const LabelRenderer = memo(function LabelRenderer({ labels, project }: LabelRendererProps) {
   const theme = useThemeStore((s) => s.theme);
   const selected = useSelectionStore((s) => s.selected);
   const activeTool = useEditorStore((s) => s.activeTool);
@@ -88,4 +89,4 @@ export const LabelRenderer = ({ labels, project }: LabelRendererProps) => {
       })}
     </Group>
   );
-};
+});

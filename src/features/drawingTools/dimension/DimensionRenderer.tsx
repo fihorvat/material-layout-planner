@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Group, Line as KLine, Text, Arrow } from 'react-konva';
 import type { DimensionEntity, Project } from '@/types';
 import { computeDimension } from './computeDimension';
@@ -80,7 +81,10 @@ const renderOne = (dim: DimensionEntity, project: Project, theme: Theme) => {
   );
 };
 
-export const DimensionRenderer = ({ dimensions, project }: DimensionRendererProps) => {
+export const DimensionRenderer = memo(function DimensionRenderer({
+  dimensions,
+  project,
+}: DimensionRendererProps) {
   const theme = useThemeStore((s) => s.theme);
   return <Group>{dimensions.map((d) => renderOne(d, project, theme))}</Group>;
-};
+});

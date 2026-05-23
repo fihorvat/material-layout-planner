@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Group, Line as KLine, Text } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { SceneContext } from 'konva/lib/Context';
@@ -168,7 +169,7 @@ const renderSurface = (
   );
 };
 
-export const SurfaceLayer = () => {
+export const SurfaceLayer = memo(function SurfaceLayer() {
   const surfaces = useProjectStore((s) => s.project.surfaces);
   const activeTool = useEditorStore((s) => s.activeTool);
   const selected = useSelectionStore((s) => s.selected);
@@ -181,4 +182,4 @@ export const SurfaceLayer = () => {
       {surfaces.map((surface) => renderSurface(surface, theme, selectedIds, activeTool))}
     </Group>
   );
-};
+});

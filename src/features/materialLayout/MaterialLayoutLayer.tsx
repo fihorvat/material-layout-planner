@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Group, Line as KLine, Text } from 'react-konva';
 import type { Point2D, MaterialLayout, Material } from '@/types';
 import {
@@ -130,7 +130,7 @@ const renderPiece = (
  * pair the persisted (optimized) version is preferred, otherwise a fresh
  * non-optimized preview is shown.
  */
-export const MaterialLayoutLayer = () => {
+export const MaterialLayoutLayer = memo(function MaterialLayoutLayer() {
   const project = useProjectStore((s) => s.project);
   const activeTool = useEditorStore((s) => s.activeTool);
   const selectionEntries = useSelectionStore((s) => s.selected);
@@ -158,4 +158,4 @@ export const MaterialLayoutLayer = () => {
       })}
     </Group>
   );
-};
+});

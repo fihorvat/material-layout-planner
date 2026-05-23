@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Group, Line as KLine } from 'react-konva';
 import {
   useConnectionToolStore,
@@ -66,7 +67,7 @@ const chevronPoints = (edge: EdgeGeom, sizeWorld: number): number[] => {
   return [tipX, tipY, baseL.x, baseL.y, baseR.x, baseR.y];
 };
 
-export const ConnectionVisualizer = () => {
+export const ConnectionVisualizer = memo(function ConnectionVisualizer() {
   const connections = useProjectStore((s) => s.project.surfaceConnections);
   const surfaces = useProjectStore((s) => s.project.surfaces);
   const scale = useEditorStore((s) => s.viewport.scale);
@@ -146,4 +147,4 @@ export const ConnectionVisualizer = () => {
       })}
     </Group>
   );
-};
+});
