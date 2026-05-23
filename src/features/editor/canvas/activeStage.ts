@@ -6,12 +6,27 @@ import { visibleWorldBounds } from './coords';
 import { rectangleToPoints } from '@/domain/geometry';
 
 let activeStage: Konva.Stage | null = null;
+let stageCaptureQueue: Promise<void> = Promise.resolve();
 
 export const setActiveStage = (stage: Konva.Stage | null): void => {
   activeStage = stage;
 };
 
 export const getActiveStage = (): Konva.Stage | null => activeStage;
+
+export const serializeStageCapture = async <T>(operation: () => Promise<T>): Promise<T> => {
+  const previous = stageCaptureQueue.catch(() => undefined);
+  let release!: () => void;
+  stageCaptureQueue = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await previous;
+  try {
+    return await operation();
+  } finally {
+    release();
+  }
+};
 
 type StageThumbnailOptions = {
   targetWidth?: number;
@@ -228,10 +243,16 @@ const tracePolygonPath = (
   if (points.length === 0) return;
   const first = points[0]!;
   ctx.beginPath();
-  ctx.moveTo(first.x * viewport.scale + viewport.offsetXPx, first.y * viewport.scale + viewport.offsetYPx);
+  ctx.moveTo(
+    first.x * viewport.scale + viewport.offsetXPx,
+    first.y * viewport.scale + viewport.offsetYPx,
+  );
   for (let index = 1; index < points.length; index++) {
     const point = points[index]!;
-    ctx.lineTo(point.x * viewport.scale + viewport.offsetXPx, point.y * viewport.scale + viewport.offsetYPx);
+    ctx.lineTo(
+      point.x * viewport.scale + viewport.offsetXPx,
+      point.y * viewport.scale + viewport.offsetYPx,
+    );
   }
   ctx.closePath();
 };
@@ -340,7 +361,14 @@ export const captureProjectThumbnail = async (
   }
 
   if (useEditorStore.getState().gridVisible) {
-    paintProjectGrid(ctx, plan.width, plan.height, viewport, project.settings.gridSizeMm, getTheme());
+    paintProjectGrid(
+      ctx,
+      plan.width,
+      plan.height,
+      viewport,
+      project.settings.gridSizeMm,
+      getTheme(),
+    );
   }
 
   ctx.lineJoin = 'round';
@@ -382,7 +410,8 @@ export const captureProjectThumbnail = async (
 
       for (const [index, overlap] of piece.overlapPolygons.entries()) {
         tracePolygonPath(ctx, overlap, viewport);
-        ctx.globalAlpha = piece.overlapPolygonOpacities?.[index] ?? project.settings.defaultOverlapOpacity;
+        ctx.globalAlpha =
+          piece.overlapPolygonOpacities?.[index] ?? project.settings.defaultOverlapOpacity;
         ctx.fillStyle = fillColor;
         ctx.fill();
         ctx.globalAlpha = 1;
@@ -407,8 +436,14 @@ export const captureProjectThumbnail = async (
 
     if (entity.type === 'line') {
       ctx.beginPath();
-      ctx.moveTo(entity.start.x * viewport.scale + viewport.offsetXPx, entity.start.y * viewport.scale + viewport.offsetYPx);
-      ctx.lineTo(entity.end.x * viewport.scale + viewport.offsetXPx, entity.end.y * viewport.scale + viewport.offsetYPx);
+      ctx.moveTo(
+        entity.start.x * viewport.scale + viewport.offsetXPx,
+        entity.start.y * viewport.scale + viewport.offsetYPx,
+      );
+      ctx.lineTo(
+        entity.end.x * viewport.scale + viewport.offsetXPx,
+        entity.end.y * viewport.scale + viewport.offsetYPx,
+      );
       ctx.stroke();
       continue;
     }
@@ -478,52 +513,54 @@ const renderLiveStageToCanvas = async (
 export const captureStageThumbnail = async (
   options: StageThumbnailOptions = {},
 ): Promise<Blob | null> => {
-  const stage = activeStage;
-  if (!stage) return null;
-  const mimeType = options.mimeType ?? 'image/png';
-  const quality = options.quality ?? 0.85;
-  const backgroundColor = options.backgroundColor ?? DEFAULT_THUMBNAIL_BACKGROUND;
-  const project = useProjectStore.getState().project;
-  const editor = useEditorStore.getState();
-  const plan = computeThumbnailExportPlan(project, options);
-  const worldLayer = stage.findOne<Konva.Layer>('.world');
-  const stageWidth = stage.width();
-  const stageHeight = stage.height();
-  if (stageWidth <= 0 || stageHeight <= 0) return null;
-  const desiredPixelRatio = Math.max(
-    1,
-    options.pixelRatio ?? (options.targetWidth ? options.targetWidth / stageWidth : 1),
-  );
+  return serializeStageCapture(async () => {
+    const stage = activeStage;
+    if (!stage) return null;
+    const mimeType = options.mimeType ?? 'image/png';
+    const quality = options.quality ?? 0.85;
+    const backgroundColor = options.backgroundColor ?? DEFAULT_THUMBNAIL_BACKGROUND;
+    const project = useProjectStore.getState().project;
+    const editor = useEditorStore.getState();
+    const plan = computeThumbnailExportPlan(project, options);
+    const worldLayer = stage.findOne<Konva.Layer>('.world');
+    const stageWidth = stage.width();
+    const stageHeight = stage.height();
+    if (stageWidth <= 0 || stageHeight <= 0) return null;
+    const desiredPixelRatio = Math.max(
+      1,
+      options.pixelRatio ?? (options.targetWidth ? options.targetWidth / stageWidth : 1),
+    );
 
-  let rendered: HTMLCanvasElement;
-  let grid: ThumbnailGridOptions | undefined;
-  if (worldLayer && plan.viewport) {
-    const capturePlan = computeThumbnailExportPlan(project, {
-      targetWidth: stageWidth,
-      targetHeight: stageHeight,
-      paddingPx: options.paddingPx,
-    });
-    grid = editor.gridVisible
-      ? {
-          viewport: capturePlan.viewport ?? plan.viewport,
-          gridSizeMm: project.settings.gridSizeMm,
-          theme: getTheme(),
-        }
-      : undefined;
-    rendered = capturePlan.viewport
-      ? await renderLiveStageToCanvas(stage, worldLayer, capturePlan.viewport, desiredPixelRatio)
-      : stage.toCanvas({ pixelRatio: desiredPixelRatio });
-  } else {
-    await settleStageForCapture(stage);
-    const domCanvas = stage.container().querySelector('canvas');
-    rendered =
-      domCanvas instanceof HTMLCanvasElement
-        ? desiredPixelRatio <= 1
-          ? cloneCanvasPixels(domCanvas)
-          : stage.toCanvas({ pixelRatio: desiredPixelRatio })
+    let rendered: HTMLCanvasElement;
+    let grid: ThumbnailGridOptions | undefined;
+    if (worldLayer && plan.viewport) {
+      const capturePlan = computeThumbnailExportPlan(project, {
+        targetWidth: stageWidth,
+        targetHeight: stageHeight,
+        paddingPx: options.paddingPx,
+      });
+      grid = editor.gridVisible
+        ? {
+            viewport: capturePlan.viewport ?? plan.viewport,
+            gridSizeMm: project.settings.gridSizeMm,
+            theme: getTheme(),
+          }
+        : undefined;
+      rendered = capturePlan.viewport
+        ? await renderLiveStageToCanvas(stage, worldLayer, capturePlan.viewport, desiredPixelRatio)
         : stage.toCanvas({ pixelRatio: desiredPixelRatio });
-  }
+    } else {
+      await settleStageForCapture(stage);
+      const domCanvas = stage.container().querySelector('canvas');
+      rendered =
+        domCanvas instanceof HTMLCanvasElement
+          ? desiredPixelRatio <= 1
+            ? cloneCanvasPixels(domCanvas)
+            : stage.toCanvas({ pixelRatio: desiredPixelRatio })
+          : stage.toCanvas({ pixelRatio: desiredPixelRatio });
+    }
 
-  const output = paintContainedCanvas(rendered, plan.width, plan.height, backgroundColor, grid);
-  return canvasToBlob(output, mimeType, quality);
+    const output = paintContainedCanvas(rendered, plan.width, plan.height, backgroundColor, grid);
+    return canvasToBlob(output, mimeType, quality);
+  });
 };

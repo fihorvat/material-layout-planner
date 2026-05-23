@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyProject, defaultSurfaceStyle } from '@/types';
 import { newProjectId, newSurfaceId } from '@/domain/ids';
-import { computeThumbnailExportPlan } from '../activeStage';
+import { computeThumbnailExportPlan, serializeStageCapture } from '../activeStage';
 
 describe('activeStage thumbnail export plan', () => {
   it('uses a 4:3 export frame and centers project content', () => {
@@ -47,5 +47,35 @@ describe('activeStage thumbnail export plan', () => {
     expect(plan.width).toBe(480);
     expect(plan.height).toBe(360);
     expect(plan.viewport).toBeNull();
+  });
+
+  it('serializes overlapping stage capture work', async () => {
+    const steps: string[] = [];
+    let releaseFirst!: () => void;
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+
+    const first = serializeStageCapture(async () => {
+      steps.push('first:start');
+      await firstGate;
+      steps.push('first:end');
+      return 'first';
+    });
+
+    const second = serializeStageCapture(async () => {
+      steps.push('second:start');
+      steps.push('second:end');
+      return 'second';
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(steps).toEqual(['first:start']);
+
+    releaseFirst();
+
+    await expect(Promise.all([first, second])).resolves.toEqual(['first', 'second']);
+    expect(steps).toEqual(['first:start', 'first:end', 'second:start', 'second:end']);
   });
 });

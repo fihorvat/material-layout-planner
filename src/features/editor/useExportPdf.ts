@@ -78,7 +78,9 @@ export const useExportPdf = () => {
             quality: 1,
           });
       const overviewThumbnail =
-        liveOverviewThumbnail ?? generatedOverviewThumbnail ?? (await repo.getThumbnail(project.id));
+        liveOverviewThumbnail ??
+        generatedOverviewThumbnail ??
+        (await repo.getThumbnail(project.id));
       const overviewThumbnailBytes = overviewThumbnail
         ? new Uint8Array(await overviewThumbnail.arrayBuffer())
         : undefined;
