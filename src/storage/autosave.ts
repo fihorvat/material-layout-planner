@@ -7,6 +7,7 @@ export type AutosaveOptions = {
   repo: ProjectRepository;
   intervalMs?: number;
   enabled?: () => boolean;
+  captureThumbnail?: () => Promise<Blob | null>;
 };
 
 export const startAutosave = (opts: AutosaveOptions): (() => void) => {
@@ -26,6 +27,16 @@ export const startAutosave = (opts: AutosaveOptions): (() => void) => {
     if (key === lastSavedKey) return;
     try {
       await opts.repo.saveProject(toSave);
+      if (opts.captureThumbnail) {
+        try {
+          const thumbnail = await opts.captureThumbnail();
+          if (thumbnail) {
+            await opts.repo.putThumbnail(toSave.id, thumbnail);
+          }
+        } catch {
+          // Thumbnail capture is best-effort; autosave must still persist project data.
+        }
+      }
       lastSavedKey = key;
       useProjectStore.getState().markSaved(new Date().toISOString());
     } catch (err) {

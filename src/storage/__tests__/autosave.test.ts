@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { IDBFactory } from 'fake-indexeddb';
 import { createProjectRepository } from '../projectRepository';
+import type { ProjectRepository } from '../projectRepository';
 import { resetDbConnectionForTests } from '../indexedDb';
 import { startAutosave } from '../autosave';
 import { useProjectStore } from '@/state';
@@ -93,6 +94,47 @@ describe('autosave', () => {
     await vi.advanceTimersByTimeAsync(80);
     expect(useProjectStore.getState().isDirty).toBe(false);
     expect(useProjectStore.getState().lastSavedAt).not.toBeNull();
+    stop();
+    vi.useRealTimers();
+  });
+
+  it('stores a thumbnail when autosave capture succeeds', async () => {
+    vi.useFakeTimers();
+    const repo = {
+      listProjects: vi.fn(),
+      getProject: vi.fn(),
+      saveProject: vi.fn().mockResolvedValue(undefined),
+      deleteProject: vi.fn(),
+      duplicateProject: vi.fn(),
+      putBlob: vi.fn(),
+      getBlob: vi.fn(),
+      deleteBlob: vi.fn(),
+      putThumbnail: vi.fn().mockResolvedValue(undefined),
+      getThumbnail: vi.fn(),
+    } satisfies ProjectRepository;
+    const thumbnail = new Blob(['thumb'], { type: 'image/jpeg' });
+    const projectId = newProjectId();
+
+    useProjectStore.getState().replaceProject(
+      createEmptyProject('Auto', { id: projectId, now: new Date().toISOString() }),
+    );
+
+    const stop = startAutosave({
+      repo,
+      intervalMs: 50,
+      captureThumbnail: vi.fn().mockResolvedValue(thumbnail),
+    });
+
+    useProjectStore.getState().patchProject((d) => {
+      d.name = 'with-thumb';
+    });
+
+    await vi.advanceTimersByTimeAsync(80);
+
+    expect(repo.saveProject).toHaveBeenCalledTimes(1);
+    expect(repo.putThumbnail).toHaveBeenCalledTimes(1);
+    expect(repo.putThumbnail).toHaveBeenCalledWith(projectId, thumbnail);
+
     stop();
     vi.useRealTimers();
   });

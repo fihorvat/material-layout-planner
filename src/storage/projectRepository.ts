@@ -104,7 +104,13 @@ export const createProjectRepository = (): ProjectRepository => {
         updatedAt: now,
       };
       const validated = ProjectSchema.parse(duplicated);
-      await db.put('projects', toRecord(validated));
+      const tx = db.transaction(['projects', 'thumbnails'], 'readwrite');
+      await tx.objectStore('projects').put(toRecord(validated));
+      const thumbnail = await tx.objectStore('thumbnails').get(id);
+      if (thumbnail) {
+        await tx.objectStore('thumbnails').put(thumbnail, validated.id);
+      }
+      await tx.done;
       return validated;
     },
 

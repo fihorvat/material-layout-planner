@@ -79,6 +79,7 @@ describe('projectRepository', () => {
     const repo = createProjectRepository();
     const original = makeProject({ name: 'Source' });
     await repo.saveProject(original);
+    await repo.putThumbnail(original.id, new Blob(['thumb']));
 
     await new Promise((r) => setTimeout(r, 5));
     const copy = await repo.duplicateProject(original.id, 'Source (copy)');
@@ -90,6 +91,9 @@ describe('projectRepository', () => {
 
     const list = await repo.listProjects();
     expect(list).toHaveLength(2);
+    const copiedThumbnail = await repo.getThumbnail(copy.id);
+    expect(copiedThumbnail).not.toBeNull();
+    expect(await copiedThumbnail!.text()).toBe('thumb');
   });
 
   it('deleteProject removes the project, its thumbnail, and its blobs', async () => {

@@ -3,7 +3,7 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { EditorPage } from '@/features/editor/EditorPage';
 import { useEditorStore, useProjectStore } from '@/state';
 import { createProjectRepository, startAutosave } from '@/storage';
-import { getActiveStage } from '@/features/editor/canvas/activeStage';
+import { captureStageThumbnail, getActiveStage } from '@/features/editor/canvas/activeStage';
 import {
   computeFitViewport,
   computeProjectContentBounds,
@@ -68,7 +68,16 @@ export const AppRouter = () => {
   useEffect(() => {
     if (route.kind !== 'project') return;
     if (loaded !== route.id) return;
-    const stop = startAutosave({ repo, intervalMs: AUTOSAVE_INTERVAL_MS });
+    const stop = startAutosave({
+      repo,
+      intervalMs: AUTOSAVE_INTERVAL_MS,
+      captureThumbnail: () =>
+        captureStageThumbnail({
+          targetWidth: 480,
+          mimeType: 'image/jpeg',
+          quality: 0.75,
+        }),
+    });
     return stop;
   }, [route, loaded]);
 

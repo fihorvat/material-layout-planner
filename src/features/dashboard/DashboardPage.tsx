@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDashboard } from './useDashboard';
 import { downloadProjectJson, parseProjectFromJson } from '@/storage';
 import type { ProjectSummary } from '@/storage';
@@ -6,13 +6,18 @@ import { ThemeToggle } from '@/components';
 import styles from './dashboard.module.css';
 
 const useThumbnailUrl = (blob: Blob | undefined): string | null => {
-  const url = useMemo(() => (blob ? URL.createObjectURL(blob) : null), [blob]);
+  const [url, setUrl] = useState<string | null>(null);
   useEffect(() => {
-    if (!url) return;
+    if (!blob) {
+      setUrl(null);
+      return;
+    }
+    const nextUrl = URL.createObjectURL(blob);
+    setUrl(nextUrl);
     return () => {
-      URL.revokeObjectURL(url);
+      URL.revokeObjectURL(nextUrl);
     };
-  }, [url]);
+  }, [blob]);
   return url;
 };
 
