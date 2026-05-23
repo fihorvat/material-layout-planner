@@ -9,6 +9,7 @@ import {
 } from '@/state';
 import { undo, redo } from '@/domain/commands';
 import { useGenerateLayout } from '@/features/materialLayout/useGenerateLayout';
+import { resolveCurrentMaterialLayoutEntries } from '@/domain/materialLayout/resolveCurrentMaterialLayouts';
 import {
   copySelection,
   hasCopyableSelection,
@@ -48,6 +49,11 @@ export const EditorToolbar = () => {
   const { saveProject, saving } = useSaveProject();
   const { exportPdf, exporting } = useExportPdf();
   const canCopy = hasCopyableSelection(selection);
+  const hasPreviewMaterialLayouts = resolveCurrentMaterialLayoutEntries(project).some(
+    (entry) => entry.status === 'preview',
+  );
+  const shouldPromptForLayoutGeneration =
+    project.pdfSettings.includeMaterialLayout && hasPreviewMaterialLayouts;
 
   const [name, setName] = useState(project.name);
   useEffect(() => {
@@ -67,6 +73,14 @@ export const EditorToolbar = () => {
 
   const center = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
   const zoomPercent = Math.round(viewport.scale * 100);
+
+  const runPdfExport = async () => {
+    if (shouldPromptForLayoutGeneration) {
+      const generated = await generateAndPersist();
+      if (!generated) return;
+    }
+    await exportPdf();
+  };
 
   return (
     <div className={styles.toolbar} role="toolbar" aria-label="Editor toolbar">
@@ -186,8 +200,8 @@ export const EditorToolbar = () => {
       <IconButton
         label={exporting ? 'Exporting PDF\u2026' : 'Export PDF'}
         shortcut=""
-        disabled={exporting}
-        onClick={() => void exportPdf()}
+        disabled={exporting || generating}
+        onClick={() => void runPdfExport()}
       >
         <span aria-hidden>PDF</span>
       </IconButton>

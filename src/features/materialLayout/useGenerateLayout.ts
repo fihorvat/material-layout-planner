@@ -45,18 +45,17 @@ export const useGenerateLayout = () => {
       const inputs = buildOptimizeInputs(project);
       if (inputs.length === 0) {
         pushToast('Assign a material and pattern to a surface to generate a layout.', 'warning');
-        return;
+        return false;
       }
       const results = await runOptimizer(inputs);
       const layouts: MaterialLayout[] = results.map((r) => r.layout);
       dispatchCommand(setMaterialLayoutsCommand({ layouts }));
-      pushToast(
-        `Generated ${layouts.length} layout${layouts.length === 1 ? '' : 's'}.`,
-        'success',
-      );
+      pushToast(`Generated ${layouts.length} layout${layouts.length === 1 ? '' : 's'}.`, 'success');
+      return true;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       useToastStore.getState().pushToast(`Layout generation failed: ${message}`, 'error');
+      return false;
     } finally {
       setRunning(false);
     }

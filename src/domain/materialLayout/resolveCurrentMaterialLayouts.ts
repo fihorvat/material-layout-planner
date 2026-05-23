@@ -6,6 +6,9 @@ export type ResolvedMaterialLayoutEntry = {
   status: 'optimized' | 'preview';
 };
 
+const sameSnapshotValue = (left: unknown, right: unknown): boolean =>
+  JSON.stringify(left) === JSON.stringify(right);
+
 const hasResolvedOverlapOpacities = (layout: MaterialLayout): boolean =>
   layout.pieces.every(
     (piece) =>
@@ -21,10 +24,16 @@ const isPersistedLayoutCurrent = (
   hasResolvedOverlapOpacities(persisted) &&
   persisted.materialId === live.materialId &&
   persisted.placementPatternId === live.placementPatternId &&
-  persisted.settingsSnapshot.material === live.settingsSnapshot.material &&
-  persisted.settingsSnapshot.placementPattern === live.settingsSnapshot.placementPattern &&
-  persisted.settingsSnapshot.edgeRules === live.settingsSnapshot.edgeRules &&
-  persisted.settingsSnapshot.surfaceConnections === live.settingsSnapshot.surfaceConnections;
+  sameSnapshotValue(persisted.settingsSnapshot.material, live.settingsSnapshot.material) &&
+  sameSnapshotValue(
+    persisted.settingsSnapshot.placementPattern,
+    live.settingsSnapshot.placementPattern,
+  ) &&
+  sameSnapshotValue(persisted.settingsSnapshot.edgeRules, live.settingsSnapshot.edgeRules) &&
+  sameSnapshotValue(
+    persisted.settingsSnapshot.surfaceConnections ?? [],
+    live.settingsSnapshot.surfaceConnections ?? [],
+  );
 
 export const resolveCurrentMaterialLayoutEntries = (
   project: Project,
